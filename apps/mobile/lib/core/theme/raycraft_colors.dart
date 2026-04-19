@@ -21,8 +21,13 @@ abstract class RaycraftColors {
   static const Color cream = Color(0xFFF2EFE9);
 
   static const Color success = Color(0xFF3D6B4F);
+  static const Color successLight = Color(0xFFEBF3EE);
   static const Color warning = Color(0xFF8B6914);
+  static const Color warningLight = Color(0xFFF5EDDB);
   static const Color danger = Color(0xFF8B2F2F);
+  static const Color dangerLight = Color(0xFFF5E6E6);
   static const Color error = Color(0xFF8B2F2F);
+  static const Color errorLight = Color(0xFFF5E6E6);
   static const Color info = Color(0xFF2F567A);
+  static const Color infoLight = Color(0xFFE6EEF5);
 }
