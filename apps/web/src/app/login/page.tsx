@@ -1,0 +1,134 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+
+import { Button } from "@/components/ui/button";
+import { homeRouteForRole } from "@/lib/auth/use-auth";
+
+// Dev-only quick-fill accounts (shown in a <details> element)
+const DEV_ACCOUNTS = [
+  { email: "admin@rvce.edu", password: "Admin@123", role: "Admin" },
+  { email: "teacher@rvce.edu", password: "Teacher@123", role: "Faculty" },
+  { email: "student@rvce.edu", password: "Student@123", role: "Student" },
+  { email: "parent@rvce.edu", password: "Parent@123", role: "Parent" },
+  { email: "hod@rvce.edu", password: "Hod@123", role: "HoD" },
+  { email: "principal@rvce.edu", password: "Principal@123", role: "Principal" },
+] as const;
+
+export default function LoginPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+
+  // Already authenticated → redirect to role-appropriate home
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      router.replace(homeRouteForRole(session.user.role));
+    }
+  }, [status, session, router]);
+
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      if (res?.error) {
+        setError("Invalid email or password. Try one of the test accounts below.");
+        return;
+      }
+      // Session update triggers the useEffect above
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background p-6">
+      <section className="w-full max-w-md rounded-lg border border-border bg-surface p-8 shadow">
+        <p className="label-track">EdAI · RV Trust</p>
+        <h1 className="text-4xl">Sign In</h1>
+        <span className="ray-rule ml-0" />
+
+        <form className="mt-4 space-y-4" onSubmit={(e) => void onSubmit(e)}>
+          <div>
+            <label className="label-track" htmlFor="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              autoComplete="email"
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full rounded border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="you@rvce.edu"
+              required
+            />
+          </div>
+          <div>
+            <label className="label-track" htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              autoComplete="current-password"
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded border border-border bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Enter password"
+              required
+            />
+          </div>
+
+          {error ? (
+            <p className="rounded bg-danger/10 px-3 py-2 text-sm text-danger">
+              {error}
+            </p>
+          ) : null}
+
+          <Button className="w-full" type="submit" disabled={pending}>
+            {pending ? "Signing in…" : "Continue"}
+          </Button>
+        </form>
+
+        {/* Dev test accounts — collapse in production or hide via env */}
+        <details className="mt-6">
+          <summary className="cursor-pointer select-none text-xs text-text-secondary hover:text-primary">
+            Test accounts (dev only)
+          </summary>
+          <ul className="mt-2 space-y-1">
+            {DEV_ACCOUNTS.map((a) => (
+              <li key={a.email}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail(a.email);
+                    setPassword(a.password);
+                  }}
+                  className="w-full rounded px-2 py-1 text-left text-xs hover:bg-surface"
+                >
+                  <span className="font-semibold text-primary">{a.role}</span>
+                  {" — "}
+                  <span className="font-mono">{a.email}</span>
+                  {" / "}
+                  <span className="font-mono text-text-secondary">{a.password}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+
+        <p className="mt-4 text-center text-xs text-text-secondary">
+          Your role is determined by the server. Contact your admin if you cannot sign in.
+        </p>
+      </section>
+    </main>
+  );
+}

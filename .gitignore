@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build output
+apps/web/.next/
+apps/web/out/
+
+# Environment files (contain secrets)
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo

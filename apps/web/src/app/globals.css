@@ -1,0 +1,62 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f2efe9;
+  --surface: #eae6de;
+  --surface-2: #e0dbd1;
+  --border: #d0c9bc;
+  --border-strong: #b8b0a2;
+  --text-primary: #1c1810;
+  --text-secondary: #6b6358;
+  --text-muted: #9b9489;
+  --text-inverse: #f2efe9;
+  --primary: #1c1810;
+  --primary-hover: #2e2720;
+  --primary-active: #0e0d0a;
+  --radius: 4px;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--text-primary);
+    font-family: "Inter", sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.625;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  .display {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+}
+
+.label-track {
+  font-size: 0.6875rem;
+  font-weight: 300;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.ray-rule {
+  display: block;
+  width: 40px;
+  height: 1px;
+  background: var(--border-strong);
+  margin: 1.5rem auto;
+}

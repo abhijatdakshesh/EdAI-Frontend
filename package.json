@@ -1,0 +1,10 @@
+{
+  "name": "rv-trust-frontend",
+  "private": true,
+  "packageManager": "pnpm@9.12.2",
+  "scripts": {
+    "dev:web": "pnpm --filter @rv/web dev",
+    "build:web": "pnpm --filter @rv/web build",
+    "lint:web": "pnpm --filter @rv/web lint"
+  }
+}

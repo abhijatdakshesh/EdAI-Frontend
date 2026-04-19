@@ -1,0 +1,23 @@
+/* Raycraft overlay for ag-theme-alpine — EdAI Complete Build Guide (STEP F-2) */
+
+.ag-theme-raycraft {
+  --ag-background-color: #f2efe9;
+  --ag-header-background-color: #eae6de;
+  --ag-odd-row-background-color: #f7f5f1;
+  --ag-row-hover-color: #e0dbd1;
+  --ag-border-color: #d0c9bc;
+  --ag-header-foreground-color: #1c1810;
+  --ag-foreground-color: #1c1810;
+  --ag-secondary-foreground-color: #6b6358;
+  --ag-font-family: Inter, system-ui, sans-serif;
+  --ag-font-size: 13px;
+  --ag-selected-row-background-color: #e6eef5;
+  --ag-range-selection-border-color: #2f567a;
+}
+
+.ag-theme-raycraft .ag-header-cell {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
