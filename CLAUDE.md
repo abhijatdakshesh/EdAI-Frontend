@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ Branch + PR Workflow (HARD RULE)
+
+**Never push directly to `main`.** Every change must:
+1. `git checkout main && git pull && git checkout -b <type>/<short-desc>`
+2. Commit on the branch
+3. `git push -u origin HEAD && gh pr create --fill`
+4. STOP — user reviews and merges manually after CI passes
+
+The pre-push hook (`.githooks/pre-push`) enforces this and auto-creates the PR.
+
 ## Project
 
 EdAI Frontend — pnpm monorepo with a Next.js 14 web portal (faculty/admin/student/parent) and a Flutter mobile app (parent/student). Connects to EdAI-Backend identity service on port 3001.
