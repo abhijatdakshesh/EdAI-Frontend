@@ -215,7 +215,7 @@ export function ParentCallsLive() {
             <div key={c.id} className="rounded border border-border bg-surface p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{c.triggeredBy.replace(/_/g, " ")}</p>
+                  <p className="font-medium text-sm">{(c.triggeredBy ?? "GENERAL").replace(/_/g, " ")}</p>
                   <p className="text-xs text-text-muted mt-0.5">
                     {new Date(c.calledAt).toLocaleString("en-IN", {
                       dateStyle: "medium",

@@ -122,10 +122,10 @@ export function ParentFees() {
             ) : fees ? (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
-                  { label: "Total Due", value: `₹${fees.totalDue.toLocaleString()}` },
-                  { label: "Paid", value: `₹${fees.totalPaid.toLocaleString()}` },
-                  { label: "Outstanding", value: `₹${fees.totalOutstanding.toLocaleString()}`, warn: fees.totalOutstanding > 0 },
-                  { label: "Status", value: fees.status, warn: fees.status !== "PAID" },
+                  { label: "Total Due", value: `₹${(fees.totalDue ?? 0).toLocaleString()}` },
+                  { label: "Paid", value: `₹${(fees.totalPaid ?? 0).toLocaleString()}` },
+                  { label: "Outstanding", value: `₹${(fees.totalOutstanding ?? 0).toLocaleString()}`, warn: (fees.totalOutstanding ?? 0) > 0 },
+                  { label: "Status", value: fees.status ?? "PENDING", warn: fees.status !== "PAID" },
                 ].map((s) => (
                   <div key={s.label} className={cn("rounded border-l-4 bg-surface p-4",
                     (s as { warn?: boolean }).warn ? "border-l-[#8B6914]" : "border-l-[#3D6B4F]")}>
