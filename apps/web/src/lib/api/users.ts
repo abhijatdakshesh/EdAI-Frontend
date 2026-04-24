@@ -35,11 +35,11 @@ export interface UsersListResult {
 }
 
 export interface UsersFilter {
-  role?: string;
-  status?: string;
-  search?: string;
-  page?: number;
-  limit?: number;
+  role?: string | undefined;
+  status?: string | undefined;
+  search?: string | undefined;
+  page?: number | undefined;
+  limit?: number | undefined;
 }
 
 export interface CreateUserPayload {

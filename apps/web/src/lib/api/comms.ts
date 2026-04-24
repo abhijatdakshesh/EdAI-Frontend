@@ -30,7 +30,8 @@ export interface AiCallLog {
   calledAt: string;
   duration: number; // seconds
   outcome: "ANSWERED" | "NO_ANSWER" | "BUSY" | "FAILED";
-  transcript?: string;
+  transcript?: string | undefined;
+  summary?: string | undefined;
   language: string;
 }
 

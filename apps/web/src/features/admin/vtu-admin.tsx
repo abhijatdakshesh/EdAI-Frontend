@@ -124,11 +124,13 @@ export function VTUAdmin() {
                       <p className="text-xs text-text-muted mt-0.5">
                         {w.examMonth} · {w.openDate} → {w.closeDate}
                       </p>
-                      <p className="text-xs text-text-muted">
-                        Min attendance: {w.eligibilityRules.minAttendancePct}% ·
-                        Max backlogs: {w.eligibilityRules.maxBacklogs} ·
-                        Fee: {w.eligibilityRules.feeClearance ? "Required" : "Not required"}
-                      </p>
+                      {w.eligibilityRules && (
+                        <p className="text-xs text-text-muted">
+                          Min attendance: {w.eligibilityRules.minAttendancePct}% ·
+                          Max backlogs: {w.eligibilityRules.maxBacklogs} ·
+                          Fee: {w.eligibilityRules.feeClearance ? "Required" : "Not required"}
+                        </p>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       {w.status === "OPEN" && (

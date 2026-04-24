@@ -21,7 +21,7 @@ const catColors: Record<string, string> = {
 };
 
 export function StudentAnnouncements() {
-  const [selected, setSelected] = useState(ANNOUNCEMENTS[0]);
+  const [selected, setSelected] = useState(() => ANNOUNCEMENTS[0]!);
 
   return (
     <AppShell title="Announcements">

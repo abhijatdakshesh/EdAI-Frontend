@@ -94,7 +94,7 @@ export function ManualCallPanel() {
                       Parent: {s.parentPhone}
                       {s.lastCallDate && ` · Last call: ${s.lastCallDate}`}
                     </p>
-                    {s.consecutiveAbsences > 0 && (
+                    {(s.consecutiveAbsences ?? 0) > 0 && (
                       <p className="text-xs text-[#8B2F2F] mt-0.5">
                         ⚠️ {s.consecutiveAbsences} consecutive absences
                       </p>

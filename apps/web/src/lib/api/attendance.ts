@@ -78,7 +78,7 @@ export function useClassAttendanceSummary(classId: string) {
 
 /** Students below 75% threshold — Teacher / Admin portal */
 export function useAtRiskStudents(classId: string) {
-  return useQuery<{ usn: string; name: string; pct: number; parentPhone: string; lastCallDate?: string }[]>({
+  return useQuery<{ usn: string; name: string; pct: number; parentPhone: string; lastCallDate?: string | undefined; consecutiveAbsences?: number | undefined }[]>({
     queryKey: attKeys.atRisk(classId),
     queryFn: () => apiGet(`/api/attendance/class/${classId}/at-risk`),
     enabled: !!classId,

@@ -107,9 +107,9 @@ export function useUpdateDepartment() {
 // ─── Class Hooks ──────────────────────────────────────────────────────────────
 
 export interface ClassesFilter {
-  departmentCode?: string;
-  semester?: number;
-  academicYear?: string;
+  departmentCode?: string | undefined;
+  semester?: number | undefined;
+  academicYear?: string | undefined;
 }
 
 export function useClasses(filters: ClassesFilter = {}) {
@@ -165,10 +165,10 @@ export function useUpdateClass() {
 // ─── Course Hooks ─────────────────────────────────────────────────────────────
 
 export interface CoursesFilter {
-  departmentCode?: string;
-  semester?: number;
-  type?: CourseType;
-  search?: string;
+  departmentCode?: string | undefined;
+  semester?: number | undefined;
+  type?: CourseType | undefined;
+  search?: string | undefined;
 }
 
 export function useCourses(filters: CoursesFilter = {}) {

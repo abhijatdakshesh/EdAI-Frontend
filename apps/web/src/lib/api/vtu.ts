@@ -179,9 +179,9 @@ export function useSubmitVTURegistration() {
 // ─── IA Submission Hooks (Admin) ──────────────────────────────────────────────
 
 export interface IAFilter {
-  dept?: string;
-  status?: string;
-  semester?: number;
+  dept?: string | undefined;
+  status?: string | undefined;
+  semester?: number | undefined;
 }
 
 export function useIASubmissions(filters: IAFilter = {}) {

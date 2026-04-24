@@ -40,18 +40,19 @@ export function TeacherMarksEntry() {
   function setMark(usn: string, field: "ia1" | "ia2", value: string) {
     setLocalMarks((prev) => ({
       ...prev,
-      [usn]: { ...prev[usn], [field]: value },
+      [usn]: { ...(prev[usn] ?? { ia1: "", ia2: "" }), [field]: value },
     }));
     setSaved(false);
   }
 
   function handleSave() {
-    const entries: IAMarksRow[] = serverRows.map((r) => ({
-      studentUsn: r.studentUsn,
-      studentName: r.studentName,
-      ia1: localMarks[r.studentUsn]?.ia1 !== "" ? Number(localMarks[r.studentUsn]?.ia1) : undefined,
-      ia2: localMarks[r.studentUsn]?.ia2 !== "" ? Number(localMarks[r.studentUsn]?.ia2) : undefined,
-    }));
+    const entries: IAMarksRow[] = serverRows.map((r) => {
+      const m = localMarks[r.studentUsn] ?? { ia1: "", ia2: "" };
+      const row: IAMarksRow = { studentUsn: r.studentUsn, studentName: r.studentName };
+      if (m.ia1 !== "") row.ia1 = Number(m.ia1);
+      if (m.ia2 !== "") row.ia2 = Number(m.ia2);
+      return row;
+    });
 
     saveMarks.mutate(
       { subjectId, entries },

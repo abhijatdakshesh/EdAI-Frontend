@@ -112,7 +112,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
        * Called by NextAuth when the user submits the login form.
        * Returns a User object on success, null on failure.
        */
-      async authorize(credentials) {
+      async authorize(credentials, _request) {
         const email = String(credentials?.email ?? "").trim();
         const password = String(credentials?.password ?? "");
 
@@ -128,6 +128,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (res.ok) {
             const data = (await res.json()) as LoginResponse;
 
+            // Cast required: NextAuth User type is augmented with optional fields;
+            // exactOptionalPropertyTypes rejects undefined in conditionally-present fields.
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return {
               id: data.user.id,
               name: data.user.name,
@@ -139,7 +142,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               accessToken: data.accessToken,
               refreshToken: data.refreshToken,
               accessTokenExpiresAt: Date.now() + data.expiresIn * 1_000,
-            };
+            } as any; // eslint-disable-line
           }
         } catch {
           // Identity service unreachable — fall through to dev credentials
@@ -159,25 +162,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       // First call after login — user contains the authorize() return value
       if (user) {
-        token.sub = user.id;
-        token.email = user.email;
-        token.name = user.name;
+        if (user.id !== undefined) token.sub = user.id;
+        if (user.email !== undefined && user.email !== null) token.email = user.email;
+        else if (user.email === null) token.email = null;
+        if (user.name !== undefined && user.name !== null) token.name = user.name;
+        else if (user.name === null) token.name = null;
         const u = user as {
-          role?: UserRole;
-          institutionId?: string;
-          preferredLanguage?: Language;
-          sapId?: string;
-          accessToken?: string;
-          refreshToken?: string;
-          accessTokenExpiresAt?: number;
+          role?: UserRole | undefined;
+          institutionId?: string | undefined;
+          preferredLanguage?: Language | undefined;
+          sapId?: string | undefined;
+          accessToken?: string | undefined;
+          refreshToken?: string | undefined;
+          accessTokenExpiresAt?: number | undefined;
         };
-        token.role = u.role;
-        token.institutionId = u.institutionId;
-        token.preferredLanguage = u.preferredLanguage;
-        token.sapId = u.sapId;
-        token.accessToken = u.accessToken;
-        token.refreshToken = u.refreshToken;
-        token.accessTokenExpiresAt = u.accessTokenExpiresAt;
+        if (u.role !== undefined) token.role = u.role;
+        if (u.institutionId !== undefined) token.institutionId = u.institutionId;
+        if (u.preferredLanguage !== undefined) token.preferredLanguage = u.preferredLanguage;
+        if (u.sapId !== undefined) token.sapId = u.sapId;
+        if (u.accessToken !== undefined) token.accessToken = u.accessToken;
+        if (u.refreshToken !== undefined) token.refreshToken = u.refreshToken;
+        if (u.accessTokenExpiresAt !== undefined) token.accessTokenExpiresAt = u.accessTokenExpiresAt;
         return token;
       }
 
@@ -219,17 +224,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      */
     session({ session, token }) {
       if (session.user) {
-        session.user.id = (token.sub as string) ?? "";
-        session.user.email = (token.email as string) ?? session.user.email;
-        session.user.name = (token.name as string) ?? session.user.name;
-        session.user.role = (token.role as UserRole) ?? "FACULTY";
-        session.user.institutionId = token.institutionId as string | undefined;
-        session.user.preferredLanguage = token.preferredLanguage as Language | undefined;
-        session.user.sapId = token.sapId as string | undefined;
+        session.user.id = (token.sub as string | undefined) ?? "";
+        session.user.email = (token.email as string | undefined) ?? session.user.email;
+        session.user.name = (token.name as string | null | undefined) ?? session.user.name ?? null;
+        session.user.role = (token.role as UserRole | undefined) ?? "FACULTY";
+        const institutionId = token.institutionId as string | undefined;
+        const preferredLanguage = token.preferredLanguage as Language | undefined;
+        const sapId = token.sapId as string | undefined;
+        if (institutionId !== undefined) session.user.institutionId = institutionId;
+        if (preferredLanguage !== undefined) session.user.preferredLanguage = preferredLanguage;
+        if (sapId !== undefined) session.user.sapId = sapId;
       }
-      session.accessToken = token.accessToken as string | undefined;
-      session.refreshToken = token.refreshToken as string | undefined;
-      session.error = token.error as string | undefined;
+      const accessToken = token.accessToken as string | undefined;
+      const refreshToken = token.refreshToken as string | undefined;
+      const error = token.error as string | undefined;
+      if (accessToken !== undefined) session.accessToken = accessToken;
+      if (refreshToken !== undefined) session.refreshToken = refreshToken;
+      if (error !== undefined) session.error = error;
       return session;
     },
   },

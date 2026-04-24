@@ -229,7 +229,7 @@ const PARENT_ANNOUNCEMENTS = [
 ];
 
 export function ParentAnnouncements() {
-  const [selected, setSelected] = useState(PARENT_ANNOUNCEMENTS[0]);
+  const [selected, setSelected] = useState(() => PARENT_ANNOUNCEMENTS[0]!);
   return (
     <AppShell title="Announcements">
       <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
@@ -262,7 +262,7 @@ const MESSAGES = [
 ];
 
 export function ParentMessages() {
-  const [selected, setSelected] = useState(MESSAGES[0]);
+  const [selected, setSelected] = useState(() => MESSAGES[0]!);
   const [reply, setReply] = useState("");
   return (
     <AppShell title="Messages">
