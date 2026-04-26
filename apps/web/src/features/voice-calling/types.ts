@@ -33,8 +33,10 @@ export interface CallRecord {
 
 export interface TriggerCallRequest {
   studentId: string;
+  parentPhone: string;
   callType: CallType;
   language: Language;
+  institutionId?: string;
   studentContext: Record<string, unknown>;
 }
 

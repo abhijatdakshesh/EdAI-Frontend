@@ -44,34 +44,43 @@ const OUTCOME_TO_STATE: Record<string, CallState> = {
 };
 
 function mapLog(log: AICallLog): CallRecord {
-  return {
+  const rec: CallRecord = {
     id: log.id,
     studentId: log.studentUsn,
     studentName: log.studentName,
     language: (log.language as Language | undefined) ?? 'en',
     callType: 'ABSENT_CALL' as CallType,
     state: OUTCOME_TO_STATE[log.outcome] ?? 'FAILED',
-    durationSecs: log.duration > 0 ? log.duration : undefined,
     escalated: false,
-    summaryEn: log.summary,
     whatsappSent: false,
     createdAt: log.calledAt,
   };
+  if (log.duration > 0) rec.durationSecs = log.duration;
+  if (log.summary) rec.summaryEn = log.summary;
+  return rec;
 }
 
 export async function triggerCall(req: TriggerCallRequest): Promise<TriggerCallResult> {
   if (USE_MOCK) {
     return { callId: 'call-mock-' + Date.now().toString(), status: 'INITIATED', message: 'Call queued successfully' };
   }
-  try {
-    const res = await apiPost<BackendTriggerResponse>('/api/comms/calls/trigger', {
-      studentUsn: req.studentId,
-      type: req.callType,
-    });
-    return { callId: res.callId, status: res.status, message: 'Call queued successfully' };
-  } catch {
-    return { callId: 'call-mock-' + Date.now().toString(), status: 'INITIATED', message: 'Call queued (offline mode)' };
-  }
+  const res = await apiPost<BackendTriggerResponse>('/api/voice/trigger', {
+    studentId: req.studentId,
+    parentPhone: req.parentPhone,
+    language: req.language,
+    callType: req.callType,
+    institutionId: req.institutionId ?? 'RVCE',
+    studentContext: req.studentContext,
+  });
+  return { callId: res.callId, status: res.status, message: 'Call queued successfully' };
+}
+
+// GoVoiceCallStatus is the shape returned by the Go voice service
+interface GoVoiceCallStatus {
+  callId: string;
+  state: string;
+  language: string;
+  callType: string;
 }
 
 export async function getCallStatus(callId: string): Promise<CallRecord> {
@@ -80,13 +89,21 @@ export async function getCallStatus(callId: string): Promise<CallRecord> {
     return found ?? { id: callId, studentId: '', studentName: '', language: 'kn', callType: 'ABSENT_CALL', state: 'COMPLETED', escalated: false, whatsappSent: false, createdAt: new Date().toISOString() };
   }
   try {
-    const logs = await apiGet<AICallLog[]>('/api/comms/calls/recent');
-    const found = logs.find((l) => l.id === callId);
-    if (found) return mapLog(found);
+    const data = await apiGet<GoVoiceCallStatus>(`/api/voice/status?callId=${encodeURIComponent(callId)}`);
+    return {
+      id: data.callId,
+      studentId: '',
+      studentName: '',
+      language: (data.language as Language) ?? 'en',
+      callType: (data.callType as CallType) ?? 'ABSENT_CALL',
+      state: (data.state as CallState) ?? 'INITIATED',
+      escalated: false,
+      whatsappSent: false,
+      createdAt: new Date().toISOString(),
+    };
   } catch {
-    // fall through
+    return { id: callId, studentId: '', studentName: '', language: 'kn', callType: 'ABSENT_CALL', state: 'INITIATED', escalated: false, whatsappSent: false, createdAt: new Date().toISOString() };
   }
-  return { id: callId, studentId: '', studentName: '', language: 'kn', callType: 'ABSENT_CALL', state: 'COMPLETED', escalated: false, whatsappSent: false, createdAt: new Date().toISOString() };
 }
 
 export async function getCallLogs(filters: CallLogsFilters = {}): Promise<CallLogsResponse> {

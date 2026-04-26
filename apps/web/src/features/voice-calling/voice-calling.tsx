@@ -54,6 +54,7 @@ function CallTypeBadge({ type }: { type: string }) {
 
 function TriggerCallTab() {
   const [studentId, setStudentId] = useState('');
+  const [parentPhone, setParentPhone] = useState('');
   const [callType, setCallType] = useState<CallType>('ABSENT_CALL');
   const [language, setLanguage] = useState<Language>('kn');
   const [loading, setLoading] = useState(false);
@@ -87,12 +88,13 @@ function TriggerCallTab() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!studentId.trim()) { setError('Student USN is required'); return; }
+    if (!parentPhone.trim()) { setError('Parent phone number is required'); return; }
     setError(null);
     setResult(null);
     setPolledCall(null);
     setLoading(true);
     try {
-      const res = await triggerCall({ studentId: studentId.trim(), callType, language, studentContext: {} });
+      const res = await triggerCall({ studentId: studentId.trim(), parentPhone: parentPhone.trim(), callType, language, studentContext: { name: studentId.trim() } });
       setResult(res);
       void startPolling(res.callId);
     } catch (err) {
@@ -108,12 +110,23 @@ function TriggerCallTab() {
     <div className="max-w-md space-y-4">
       <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-4">
         <div className="space-y-1">
-          <label className="label-track text-xs">Student USN</label>
+          <label className="label-track text-xs">Student USN / Name</label>
           <input
             type="text"
             value={studentId}
             onChange={(e) => { setStudentId(e.target.value); }}
-            placeholder="e.g. 1RV21CS001"
+            placeholder="e.g. 1RV21CS001 or Priya Sharma"
+            className="w-full rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-text-primary"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="label-track text-xs">Parent Phone (E.164)</label>
+          <input
+            type="tel"
+            value={parentPhone}
+            onChange={(e) => { setParentPhone(e.target.value); }}
+            placeholder="+919113949714"
             className="w-full rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-text-primary"
           />
         </div>
