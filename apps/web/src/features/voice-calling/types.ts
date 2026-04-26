@@ -1,0 +1,50 @@
+export type CallType = 'ABSENT_CALL' | 'FEE_REMINDER' | 'WEEKLY_UPDATE' | 'ASSIGNMENT_MISS' | 'EXAM_REMINDER';
+
+export type CallState =
+  | 'INITIATED'
+  | 'RINGING'
+  | 'CONNECTED'
+  | 'ACTIVE'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'NO_ANSWER'
+  | 'BUSY'
+  | 'ALL_RETRIES_EXHAUSTED';
+
+export type Language = 'en' | 'hi' | 'kn' | 'ta' | 'te';
+
+export interface CallRecord {
+  id: string;
+  studentId: string;
+  studentName: string;
+  language: Language;
+  callType: CallType;
+  state: CallState;
+  durationSecs?: number;
+  collectedReason?: string;
+  escalated: boolean;
+  summaryEn?: string;
+  parentResponse?: string;
+  whatsappSent: boolean;
+  createdAt: string;
+  connectedAt?: string;
+  endedAt?: string;
+}
+
+export interface TriggerCallRequest {
+  studentId: string;
+  callType: CallType;
+  language: Language;
+  studentContext: Record<string, unknown>;
+}
+
+export interface TriggerCallResult {
+  callId: string;
+  status: string;
+  message: string;
+}
+
+export interface CallLogsResponse {
+  calls: CallRecord[];
+  total: number;
+}

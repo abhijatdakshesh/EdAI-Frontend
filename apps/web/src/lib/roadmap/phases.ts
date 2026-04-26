@@ -54,6 +54,7 @@ export const navItems: NavItem[] = [
   { key: "ia-marks",          title: "IA Marks Submission",     route: "/admin/ia-submission",    allowedRoles: ["ADMIN","HOD"],                                  group: "Admin" },
   { key: "vtu-admin",         title: "VTU Registration",        route: "/admin/vtu",              allowedRoles: ["ADMIN","HOD"],                                  group: "Admin" },
   { key: "ai-call-logs",      title: "AI Call Logs",            route: "/admin/ai-calls",         allowedRoles: ["ADMIN"],                                        group: "Admin" },
+  { key: "voice-calling",     title: "Voice Calling Centre",    route: "/admin/voice-calling",    allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "automation",        title: "Automation Rules",        route: "/admin/automation",       allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "lang-prefs",        title: "Language Preferences",    route: "/admin/language",         allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "integrations",      title: "Integrations",            route: "/integrations",           allowedRoles: ["ADMIN"],                                        group: "Admin" },
