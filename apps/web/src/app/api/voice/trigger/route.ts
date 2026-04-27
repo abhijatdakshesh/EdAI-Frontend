@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const VOICE_SERVICE_URL = process.env.VOICE_SERVICE_URL ?? 'http://localhost:8090';
-
 export async function POST(req: NextRequest) {
+  const VOICE_SERVICE_URL = process.env.VOICE_SERVICE_URL ?? 'http://localhost:8090';
   try {
     const body = await req.json() as {
       studentId: string;

@@ -1,9 +1,9 @@
-import { apiGet, apiPost } from '@/lib/api/client';
+import { apiGet } from '@/lib/api/client';
 
 import { mockCallLogsResponse } from './mock-data';
 import type { CallLogsResponse, CallRecord, CallState, CallType, Language, TriggerCallRequest, TriggerCallResult } from './types';
 
-const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true') === 'true';
+const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? 'false') === 'true';
 
 export interface CallLogsFilters {
   callType?: string;
@@ -64,14 +64,24 @@ export async function triggerCall(req: TriggerCallRequest): Promise<TriggerCallR
   if (USE_MOCK) {
     return { callId: 'call-mock-' + Date.now().toString(), status: 'INITIATED', message: 'Call queued successfully' };
   }
-  const res = await apiPost<BackendTriggerResponse>('/api/voice/trigger', {
-    studentId: req.studentId,
-    parentPhone: req.parentPhone,
-    language: req.language,
-    callType: req.callType,
-    institutionId: req.institutionId ?? 'RVCE',
-    studentContext: req.studentContext,
+  // Use relative URL so request hits the Next.js BFF route, not NEXT_PUBLIC_API_BASE_URL
+  const raw = await fetch('/api/voice/trigger', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      studentId: req.studentId,
+      parentPhone: req.parentPhone,
+      language: req.language,
+      callType: req.callType,
+      institutionId: req.institutionId ?? 'RVCE',
+      studentContext: req.studentContext,
+    }),
   });
+  if (!raw.ok) {
+    const err = (await raw.json().catch(() => ({}))) as { error?: string };
+    throw new Error(err.error ?? `Voice trigger failed: ${raw.status}`);
+  }
+  const res = (await raw.json()) as BackendTriggerResponse;
   return { callId: res.callId, status: res.status, message: 'Call queued successfully' };
 }
 
@@ -89,7 +99,10 @@ export async function getCallStatus(callId: string): Promise<CallRecord> {
     return found ?? { id: callId, studentId: '', studentName: '', language: 'kn', callType: 'ABSENT_CALL', state: 'COMPLETED', escalated: false, whatsappSent: false, createdAt: new Date().toISOString() };
   }
   try {
-    const data = await apiGet<GoVoiceCallStatus>(`/api/voice/status?callId=${encodeURIComponent(callId)}`);
+    // Use relative URL so request hits the Next.js BFF route, not NEXT_PUBLIC_API_BASE_URL
+    const raw = await fetch(`/api/voice/status?callId=${encodeURIComponent(callId)}`);
+    if (!raw.ok) throw new Error(`Status fetch failed: ${raw.status}`);
+    const data = (await raw.json()) as GoVoiceCallStatus;
     return {
       id: data.callId,
       studentId: '',

@@ -26,7 +26,13 @@ export async function apiFetch<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  const requestUrl = `${API_BASE}${path}`;
+  let res: Response;
+  try {
+    res = await fetch(requestUrl, { ...init, headers });
+  } catch (error) {
+    throw error;
+  }
 
   if (res.status === 401 && accessToken) {
     // The cached client-side session token is expired. Ask the NextAuth session

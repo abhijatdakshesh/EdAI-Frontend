@@ -14,6 +14,7 @@
 
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import { SignJWT } from "jose";
 
 import type { UserRole, Language } from "@/lib/auth/session";
 
@@ -62,38 +63,59 @@ const DEV_CREDENTIALS: Record<
   "principal@rvce.edu": { password: "Principal@123", role: "PRINCIPAL", name: "Principal" },
 };
 
-function tryDevLogin(
+const DEV_JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET ?? "edai-dev-secret-change-in-production",
+);
+
+async function makeDevJwt(payload: Record<string, unknown>): Promise<string> {
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("24h")
+    .sign(DEV_JWT_SECRET);
+}
+
+async function tryDevLogin(
   email: string,
   password: string,
-):
-  | {
-      id: string;
-      name: string;
-      email: string;
-      role: UserRole;
-      institutionId: string;
-      preferredLanguage: Language;
-      accessToken: string;
-      refreshToken: string;
-      accessTokenExpiresAt: number;
-    }
-  | null {
+): Promise<{
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  institutionId: string;
+  preferredLanguage: Language;
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: number;
+} | null> {
   const row = DEV_CREDENTIALS[email.toLowerCase()];
   if (!row || row.password !== password) return null;
+  const id = `dev-${row.role.toLowerCase()}`;
+  const accessToken = await makeDevJwt({
+    sub: id,
+    email,
+    role: row.role,
+    institutionId: "rvce",
+    name: row.name,
+  });
   return {
-    id: `dev-${email}`,
+    id,
     name: row.name,
     email,
     role: row.role,
-    institutionId: "rv-dev",
+    institutionId: "rvce",
     preferredLanguage: "en",
-    accessToken: "dev-access-token",
+    accessToken,
     refreshToken: "dev-refresh-token",
     accessTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000,
   };
 }
 
 // ── NextAuth config ───────────────────────────────────────────────────────────
+
+if (!process.env.AUTH_SECRET && process.env.NODE_ENV === "production") {
+  throw new Error("AUTH_SECRET env var is required in production");
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
@@ -145,10 +167,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             } as any; // eslint-disable-line
           }
         } catch {
-          // Identity service unreachable — fall through to dev credentials
+          // Identity service unreachable — fall through to dev credentials (dev only)
         }
 
-        const dev = tryDevLogin(email, password);
+        if (process.env.NODE_ENV === "production") return null;
+        const dev = await tryDevLogin(email, password);
         return dev;
       },
     }),
@@ -188,7 +211,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       // Subsequent calls — refresh the access token if it's expired or expiring soon
       const expiresAt = token.accessTokenExpiresAt as number | undefined;
-      const isExpired = expiresAt ? Date.now() >= expiresAt - 30_000 : false;
+      // Default true when expiresAt absent/zero — always attempt refresh for tokens without expiry metadata
+      const isExpired = expiresAt ? Date.now() >= expiresAt - 30_000 : true;
 
       if (
         isExpired &&
