@@ -3,7 +3,6 @@
 import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import { apiGet } from "@/lib/api/client";
 
 interface NAACCriterion {
   id: string;
@@ -30,7 +29,11 @@ const trendColor = { UP: "text-[#3D6B4F]", DOWN: "text-[#8B2F2F]", STABLE: "text
 export function NaacIntelligence() {
   const { data: metrics, isLoading, error } = useQuery<NAACMetrics>({
     queryKey: ["naac-metrics"],
-    queryFn: () => apiGet<NAACMetrics>("/api/admin/naac/metrics"),
+    queryFn: async () => {
+      const res = await fetch('/api/admin/naac/metrics');
+      if (!res.ok) throw new Error(`Failed to load NAAC metrics: ${res.status}`);
+      return res.json() as Promise<NAACMetrics>;
+    },
     staleTime: 300_000,
   });
 
@@ -78,7 +81,7 @@ export function NaacIntelligence() {
               <p className="label-track mb-3">Criteria Scores</p>
               <div className="grid gap-2">
                 {metrics.criteria.map((c) => {
-                  const pct = (c.score / c.maxScore) * 100;
+                  const pct = c.maxScore > 0 ? (c.score / c.maxScore) * 100 : 0;
                   return (
                     <div key={c.id} className="rounded border border-border bg-surface p-4">
                       <div className="flex items-start justify-between mb-2">
