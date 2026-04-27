@@ -10,27 +10,27 @@ export interface RequestDocumentPayload {
 }
 
 export function getMyDocuments() {
-  return apiGet<DocumentRequest[]>('/documents/mine');
+  return apiGet<DocumentRequest[]>('/api/documents/mine');
 }
 
 export function requestDocument(payload: RequestDocumentPayload) {
-  return apiPost<DocumentRequest>('/documents', payload);
+  return apiPost<DocumentRequest>('/api/documents', payload);
 }
 
 export function getPendingDocuments() {
-  return apiGet<DocumentRequest[]>('/documents/admin/pending');
+  return apiGet<DocumentRequest[]>('/api/documents/admin/pending');
 }
 
 export function approveDocument(id: string) {
-  return apiPost<DocumentRequest>(`/documents/admin/approve/${id}`, {});
+  return apiPost<DocumentRequest>(`/api/documents/admin/approve/${id}`, {});
 }
 
 export function rejectDocument(id: string, reason: string) {
-  return apiPost<DocumentRequest>(`/documents/admin/reject/${id}`, { reason });
+  return apiPost<DocumentRequest>(`/api/documents/admin/reject/${id}`, { reason });
 }
 
 export function revokeDocument(id: string) {
-  return apiPost<DocumentRequest>(`/documents/admin/revoke/${id}`, {});
+  return apiPost<DocumentRequest>(`/api/documents/admin/revoke/${id}`, {});
 }
 
 export function verifyDocument(uuid: string) {
@@ -41,10 +41,10 @@ export function verifyDocument(uuid: string) {
     issuedAt: string;
     expiresAt: string | null;
     status: string;
-  }>(`/documents/verify/${uuid}`);
+  }>(`/api/documents/verify/${uuid}`);
 }
 
 export function buildDownloadUrl(docId: string, token: string): string {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
-  return `${base}/documents/download/${docId}?token=${encodeURIComponent(token)}`;
+  return `${base}/api/documents/download/${docId}?token=${encodeURIComponent(token)}`;
 }
