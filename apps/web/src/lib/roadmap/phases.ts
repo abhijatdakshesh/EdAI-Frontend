@@ -57,6 +57,7 @@ export const navItems: NavItem[] = [
   { key: "ai-call-logs",      title: "AI Call Logs",            route: "/admin/ai-calls",         allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "voice-calling",     title: "Voice Calling Centre",    route: "/admin/voice-calling",    allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "ask-your-data",    title: "Ask Your Data",           route: "/admin/ask",              allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },
+  { key: "document-centre",  title: "Document Centre",         route: "/admin/documents",        allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },
   { key: "automation",        title: "Automation Rules",        route: "/admin/automation",       allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "lang-prefs",        title: "Language Preferences",    route: "/admin/language",         allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "integrations",      title: "Integrations",            route: "/integrations",           allowedRoles: ["ADMIN"],                                        group: "Admin" },
@@ -102,6 +103,7 @@ export const navItems: NavItem[] = [
   { key: "stu-study-plan",    title: "My Study Plan",           route: "/student/study-plan",     allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-exam-prep",     title: "Exam Prep & Wellness",    route: "/student/exam-prep",      allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-counselor",     title: "Book Counselor",          route: "/student/counselor",      allowedRoles: ["STUDENT"],                                      group: "Student" },
+  { key: "stu-documents",     title: "My Documents",            route: "/student/documents",      allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-vtu",           title: "VTU Status",              route: "/student/vtu",            allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-profile",       title: "Profile",                 route: "/student/profile",        allowedRoles: ["STUDENT"],                                      group: "Student" },
 
