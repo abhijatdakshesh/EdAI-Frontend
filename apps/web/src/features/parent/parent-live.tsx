@@ -215,7 +215,7 @@ export function ParentCallsLive() {
             <div key={c.id} className="rounded border border-border bg-surface p-4">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{c.triggeredBy.replace(/_/g, " ")}</p>
+                  <p className="font-medium text-sm">{(c.triggeredBy ?? "GENERAL").replace(/_/g, " ")}</p>
                   <p className="text-xs text-text-muted mt-0.5">
                     {new Date(c.calledAt).toLocaleString("en-IN", {
                       dateStyle: "medium",
@@ -384,10 +384,10 @@ export function ParentMessagesLive() {
               </p>
               <p className="text-sm text-text-secondary leading-relaxed">{selected.body}</p>
 
-              {selected.replies.length > 0 && (
+              {(selected.replies ?? []).length > 0 && (
                 <div className="mt-4 grid gap-2 border-t border-border pt-4">
                   <p className="text-xs label-track">Replies</p>
-                  {selected.replies.map((r) => (
+                  {(selected.replies ?? []).map((r) => (
                     <div key={r.id} className="rounded bg-cream-100 p-3">
                       <p className="text-xs font-medium">{r.fromName}</p>
                       <p className="text-sm mt-1 text-text-secondary">{r.body}</p>
