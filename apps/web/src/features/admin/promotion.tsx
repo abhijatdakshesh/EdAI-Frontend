@@ -153,10 +153,10 @@ export function PromotionManagement() {
                     )}
                   </div>
                   <div className="mt-2 flex gap-3 text-xs text-text-muted">
-                    <span className="text-[#3D6B4F]">✓ {b.stats.eligible} eligible</span>
-                    <span className="text-[#8B2F2F]">✗ {b.stats.detained} detained</span>
-                    {b.stats.conditional > 0 && (
-                      <span className="text-[#8B6914]">~ {b.stats.conditional} conditional</span>
+                    <span className="text-[#3D6B4F]">✓ {b.stats?.eligible ?? 0} eligible</span>
+                    <span className="text-[#8B2F2F]">✗ {b.stats?.detained ?? 0} detained</span>
+                    {(b.stats?.conditional ?? 0) > 0 && (
+                      <span className="text-[#8B6914]">~ {b.stats?.conditional} conditional</span>
                     )}
                   </div>
                 </button>
@@ -169,10 +169,10 @@ export function PromotionManagement() {
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { label: "Total", value: selectedBatch.stats.total },
-                    { label: "Eligible", value: selectedBatch.stats.eligible, color: "text-[#3D6B4F]" },
-                    { label: "Detained", value: selectedBatch.stats.detained, color: "text-[#8B2F2F]" },
-                    { label: "Conditional", value: selectedBatch.stats.conditional, color: "text-[#8B6914]" },
+                    { label: "Total", value: selectedBatch.stats?.total ?? 0 },
+                    { label: "Eligible", value: selectedBatch.stats?.eligible ?? 0, color: "text-[#3D6B4F]" },
+                    { label: "Detained", value: selectedBatch.stats?.detained ?? 0, color: "text-[#8B2F2F]" },
+                    { label: "Conditional", value: selectedBatch.stats?.conditional ?? 0, color: "text-[#8B6914]" },
                   ].map((s) => (
                     <div key={s.label} className="rounded border border-border bg-surface p-3 text-center">
                       <p className="label-track text-xs">{s.label}</p>
@@ -398,7 +398,7 @@ export function PromotionManagement() {
                     type="number"
                     min={0} max={100}
                     value={generateForm.minAttendancePct}
-                    onChange={(e) => setGenerateForm({ ...generateForm, minAttendancePct: parseInt(e.target.value) })}
+                    onChange={(e) => setGenerateForm({ ...generateForm, minAttendancePct: parseInt(e.target.value, 10) || 0 })}
                     className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
                   />
                 </label>
@@ -408,7 +408,7 @@ export function PromotionManagement() {
                     type="number"
                     min={0}
                     value={generateForm.minIaScore}
-                    onChange={(e) => setGenerateForm({ ...generateForm, minIaScore: parseInt(e.target.value) })}
+                    onChange={(e) => setGenerateForm({ ...generateForm, minIaScore: parseInt(e.target.value, 10) || 0 })}
                     className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
                   />
                 </label>
