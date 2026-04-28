@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
-import { useMyChildren, useChildFees, useInitiateChildPayment } from "@/lib/api/parent";
+import { useMyChildren, useChildFees, useInitiateChildPayment, useVerifyChildPayment } from "@/lib/api/parent";
 
 const statusColor: Record<string, string> = {
   PAID: "bg-[#EBF3EE] text-[#3D6B4F]",
@@ -33,6 +33,7 @@ export function ParentFees() {
   const activeUsn = selectedUsn || (children[0]?.usn ?? "");
   const { data: fees, isLoading: loadingFees } = useChildFees(activeUsn);
   const initiatePayment = useInitiateChildPayment();
+  const verifyPayment = useVerifyChildPayment();
 
   const pendingItems = fees?.items.filter((i) => i.status !== "PAID") ?? [];
   const paidItems = fees?.items.filter((i) => i.status === "PAID") ?? [];
@@ -67,9 +68,23 @@ export function ParentFees() {
           name: "RV Trust ERP",
           description: `Fee Payment — ${children.find((c) => c.usn === activeUsn)?.name ?? activeUsn}`,
           prefill: { email: session?.user?.email ?? "" },
-          handler: () => {
-            setSelectedFeeIds([]);
-            alert("Payment successful!");
+          handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+            try {
+              const verifyResult = await verifyPayment.mutateAsync({
+                childUsn: activeUsn,
+                orderId: response.razorpay_order_id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+              });
+              if (verifyResult.success) {
+                setSelectedFeeIds([]);
+                alert(`Payment successful! Receipt: ${verifyResult.receiptId}`);
+              } else {
+                alert("Payment verification failed. Please contact accounts@rvitm.edu.in");
+              }
+            } catch {
+              alert("Payment verification error. Please contact support.");
+            }
           },
         });
         rzp.open();
