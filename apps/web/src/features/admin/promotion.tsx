@@ -225,7 +225,7 @@ export function PromotionManagement() {
                             </span>
                           </td>
                           <td className="px-3 py-2 text-xs text-text-muted">
-                            {s.failedCriteria.map((fc) => failureLabels[fc] ?? fc).join(", ") || "—"}
+                            {(s.failedCriteria ?? []).map((fc) => failureLabels[fc] ?? fc).join(", ") || "—"}
                             {s.overrideNote && (
                               <span className="ml-1 text-[#8B6914]">({s.overrideNote})</span>
                             )}
@@ -335,7 +335,7 @@ export function PromotionManagement() {
                         {s.feeCleared ? "✓" : <span className="text-[#8B2F2F]">Pending</span>}
                       </td>
                       <td className="px-4 py-2 text-xs text-[#8B2F2F]">
-                        {s.failedCriteria.map((fc) => failureLabels[fc] ?? fc).join(", ")}
+                        {(s.failedCriteria ?? []).map((fc) => failureLabels[fc] ?? fc).join(", ")}
                       </td>
                     </tr>
                   ))}
