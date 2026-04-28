@@ -26,8 +26,9 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false);
 
   // Already authenticated → redirect to role-appropriate home
+  // Do NOT redirect when session has a refresh error — that's the loop trigger
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
+    if (status === "authenticated" && session?.user && !session.error) {
       router.replace(homeRouteForRole(session.user.role));
     }
   }, [status, session, router]);

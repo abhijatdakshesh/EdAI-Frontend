@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useSession, signOut } from "next-auth/react";
+import { useRef } from "react";
 import { useAuth } from "@/lib/auth/use-auth";
 import { homeRouteForRole } from "@/lib/auth/use-auth";
 import { navForRole, portalLabel } from "@/lib/roadmap/phases";
@@ -15,10 +17,21 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   const pathname = usePathname();
   const router = useRouter();
   const { session, ready, logout } = useAuth();
+  const { data: rawSession } = useSession();
+  const signingOut = useRef(false);
 
+  // If token refresh failed, sign out cleanly — ref guard prevents calling signOut in a loop
   useEffect(() => {
-    if (ready && !session) router.replace("/login");
-  }, [ready, router, session]);
+    if (rawSession?.error === "RefreshAccessTokenError" && !signingOut.current) {
+      signingOut.current = true;
+      signOut({ callbackUrl: "/login" }).catch(() => {
+        signingOut.current = false; // reset so fallback redirect is not suppressed
+        window.location.href = "/login";
+      });
+      return;
+    }
+    if (ready && !session && !signingOut.current) router.replace("/login");
+  }, [ready, router, session, rawSession?.error]);
 
   if (!ready || !session) {
     return (

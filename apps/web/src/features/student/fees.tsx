@@ -36,7 +36,7 @@ export function StudentFees() {
   const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
   const [paying, setPaying] = useState(false);
 
-  const pendingItems = summary?.items.filter((i) => i.status !== "PAID") ?? [];
+  const pendingItems = summary?.items?.filter((i) => i.status !== "PAID") ?? [];
   const paidItems = history;
 
   function toggleFee(id: string) {
@@ -102,10 +102,10 @@ export function StudentFees() {
         ) : summary ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { label: "Total Due", value: `₹${summary.totalDue.toLocaleString()}`, warn: false },
-              { label: "Total Paid", value: `₹${summary.totalPaid.toLocaleString()}`, warn: false },
-              { label: "Outstanding", value: `₹${summary.totalOutstanding.toLocaleString()}`, warn: summary.totalOutstanding > 0 },
-              { label: "Status", value: summary.status, warn: summary.status !== "PAID" },
+              { label: "Total Due", value: `₹${(summary.totalDue ?? 0).toLocaleString()}`, warn: false },
+              { label: "Total Paid", value: `₹${(summary.totalPaid ?? 0).toLocaleString()}`, warn: false },
+              { label: "Outstanding", value: `₹${(summary.totalOutstanding ?? 0).toLocaleString()}`, warn: (summary.totalOutstanding ?? 0) > 0 },
+              { label: "Status", value: summary.status ?? "—", warn: summary.status !== "PAID" },
             ].map((s) => (
               <div key={s.label} className={cn("rounded border-l-4 bg-surface p-4",
                 s.warn ? "border-l-[#8B6914]" : "border-l-[#3D6B4F]")}>

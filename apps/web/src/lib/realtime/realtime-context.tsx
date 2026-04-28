@@ -117,6 +117,13 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
       socket!.on("connect", () => setConnected(true));
       socket!.on("disconnect", () => setConnected(false));
+      // Stop reconnecting on auth rejection — prevents infinite retry loop when token is expired
+      socket!.on("connect_error", (err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("unauthorized") || msg.includes("invalid") || msg.includes("jwt")) {
+          socket?.disconnect();
+        }
+      });
 
       socket!.on("attendance:update", (data: unknown) => {
         setLastAttendanceUpdate(data as AttendanceUpdateEvent);
@@ -160,6 +167,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         socket.off("ai-call:completed");
         socket.off("vtu:window-opened");
         socket.off("ia:submission-updated");
+        socket.off("connect_error");
         socket.disconnect();
       }
       socketRef.current = null;
