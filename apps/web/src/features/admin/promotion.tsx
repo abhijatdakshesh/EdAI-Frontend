@@ -183,9 +183,9 @@ export function PromotionManagement() {
 
                 {/* Criteria */}
                 <div className="rounded border border-border bg-surface p-3 text-xs text-text-muted flex gap-4">
-                  <span>Min attendance: {selectedBatch.criteria.minAttendancePct}%</span>
-                  <span>Min IA score: {selectedBatch.criteria.minIaScore}</span>
-                  <span>Fee clearance: {selectedBatch.criteria.feeClearanceRequired ? "Required" : "Not required"}</span>
+                  <span>Min attendance: {selectedBatch.criteria?.minAttendancePct ?? '—'}%</span>
+                  <span>Min IA score: {selectedBatch.criteria?.minIaScore ?? '—'}</span>
+                  <span>Fee clearance: {selectedBatch.criteria?.feeClearanceRequired ? "Required" : "Not required"}</span>
                 </div>
 
                 {/* Student table */}
