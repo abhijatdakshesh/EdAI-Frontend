@@ -287,9 +287,9 @@ export default function NaacDashboardPage() {
                     </div>
                   </div>
                   <p className="text-sm text-[#2a2a2a] leading-relaxed">{ssr.paragraph}</p>
-                  {ssr.dataPointsUsed.length > 0 && (
+                  {(ssr.dataPointsUsed ?? []).length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {ssr.dataPointsUsed.map(d => (
+                      {(ssr.dataPointsUsed ?? []).map(d => (
                         <span key={d} className="text-xs px-2 py-0.5 bg-[#F9F7F4] border border-[#E5E0D8] rounded-full text-[#6B6358]">
                           ✦ {d}
                         </span>
@@ -307,7 +307,7 @@ export default function NaacDashboardPage() {
       {generatingId && (
         <div className="fixed bottom-6 right-6 bg-[#1a1a1a] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 z-50">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm">Claude is writing the SSR paragraph for {generatingId}...</span>
+          <span className="text-sm">Gemini is writing the SSR paragraph for {generatingId}...</span>
         </div>
       )}
     </AppShell>

@@ -39,8 +39,8 @@ export interface SsrParagraph {
   criterionId: string;
   criterionName: string;
   paragraph: string;
-  dataPointsUsed: string[];
-  wordCount: number;
+  dataPointsUsed?: string[];
+  wordCount?: number;
   generatedAt: string;
 }
 
