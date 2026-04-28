@@ -56,7 +56,7 @@ export async function getOutstandingFees(filters: {
   if (filters.riskLevel)   p.set('riskLevel', filters.riskLevel);
   if (filters.department)  p.set('department', filters.department);
   if (filters.overdueOnly) p.set('overdueOnly', 'true');
-  try { return await apiGet<FeeRiskRow[]>(`/fee-reminders/outstanding?${p.toString()}`); }
+  try { return await apiGet<FeeRiskRow[]>(`/api/fee-reminders/outstanding?${p.toString()}`); }
   catch { return MOCK_ROWS; }
 }
 
