@@ -160,11 +160,11 @@ export function ManualCallPanel() {
                     </span>
                   </div>
                   <p className="text-xs text-text-muted">
-                    {new Date(c.calledAt).toLocaleTimeString("en-IN", {
+                    {c.calledAt ? new Date(c.calledAt).toLocaleTimeString("en-IN", {
                       hour: "2-digit",
                       minute: "2-digit",
-                    })}{" "}
-                    · {c.duration}s · {c.language.toUpperCase()}
+                    }) : '—'}{" "}
+                    · {c.duration ?? '—'}s · {(c.language ?? 'en').toUpperCase()}
                   </p>
                   {c.summary && (
                     <p className="text-xs text-text-secondary mt-1 line-clamp-2">
