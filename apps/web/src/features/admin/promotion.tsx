@@ -201,7 +201,7 @@ export function PromotionManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedBatch.students.map((s) => (
+                      {(selectedBatch?.students ?? []).map((s) => (
                         <tr key={s.studentUsn} className="border-t border-border even:bg-cream-50">
                           <td className="px-3 py-2 font-mono text-xs">{s.studentUsn}</td>
                           <td className="px-3 py-2 font-medium">{s.studentName}</td>
