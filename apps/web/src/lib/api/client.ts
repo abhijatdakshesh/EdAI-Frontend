@@ -47,13 +47,16 @@ export async function apiFetch<T>(
         };
         const freshToken = freshSession?.accessToken;
 
-        if (freshSession.error === "RefreshAccessTokenError" || !freshToken) {
-          // Refresh failed server-side — token is unrecoverable, redirect to login
+        if (freshSession.error === "RefreshAccessTokenError") {
+          // Refresh failed server-side — token is unrecoverable, redirect to login.
+          // Do NOT redirect on !freshToken alone: the token may be momentarily
+          // undefined while NextAuth's JWT callback is still hydrating, which
+          // would cause a spurious login redirect on an otherwise valid session.
           window.location.href = "/login";
           return undefined as unknown as T;
         }
 
-        if (freshToken !== accessToken) {
+        if (freshToken && freshToken !== accessToken) {
           // Got a new token — retry the original request with it
           const retryHeaders = {
             ...headers,
