@@ -58,6 +58,7 @@ export const navItems: NavItem[] = [
   { key: "voice-calling",     title: "Voice Calling Centre",    route: "/admin/voice-calling",    allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "ask-your-data",    title: "Ask Your Data",           route: "/admin/ask",              allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },
   { key: "document-centre",  title: "Document Centre",         route: "/admin/documents",        allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },
+  { key: "fee-intelligence", title: "Fee Intelligence",         route: "/admin/fees",             allowedRoles: ["ADMIN","PRINCIPAL","HOD"],                      group: "Admin" },
   { key: "automation",        title: "Automation Rules",        route: "/admin/automation",       allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "lang-prefs",        title: "Language Preferences",    route: "/admin/language",         allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "integrations",      title: "Integrations",            route: "/integrations",           allowedRoles: ["ADMIN"],                                        group: "Admin" },

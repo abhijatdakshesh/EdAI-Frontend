@@ -111,6 +111,21 @@ export function useInitiateChildPayment() {
   });
 }
 
+export function useVerifyChildPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ childUsn, orderId, paymentId, signature }: {
+      childUsn: string; orderId: string; paymentId: string; signature: string;
+    }) =>
+      apiPost<{ success: boolean; receiptId?: string; paidAt?: string; error?: string }>(
+        `/api/parent/children/${childUsn}/fees/verify`,
+        { orderId, paymentId, signature },
+      ),
+    onSuccess: (_d, v) =>
+      qc.invalidateQueries({ queryKey: parentKeys.childFees(v.childUsn) }),
+  });
+}
+
 export function useScholarshipEligibility(childUsn: string) {
   return useQuery<{
     eligible: boolean;
