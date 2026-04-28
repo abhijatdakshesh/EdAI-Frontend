@@ -116,6 +116,7 @@ function mapBackendDashboard(raw: any): NaacDashboard {
     cgpaGapToNextGrade: raw.cgpaGapToNextGrade ?? 0,
     autoPopulatedMetrics: raw.summary?.autoMetrics ?? 0,
     manualMetricsRequired: raw.summary?.manualMetrics ?? 0,
+    computedAt: raw.computedAt ?? new Date().toISOString(),
     criteria: (raw.criteria ?? []).map((c: any) => ({
       criterionId: c.id,
       criterionName: c.name,

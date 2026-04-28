@@ -49,6 +49,7 @@ export const navItems: NavItem[] = [
   { key: "bulk-import",       title: "Bulk Import",             route: "/admin/bulk-import",      allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "alert-feed",        title: "Alert Feed",              route: "/admin/alerts",           allowedRoles: ["ADMIN","PRINCIPAL","HOD"],                      group: "Admin" },
   { key: "naac",              title: "NAAC Intelligence",       route: "/admin/naac",             allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },
+  { key: "timetable",         title: "Timetable Generator",     route: "/admin/timetable",        allowedRoles: ["ADMIN","HOD","PRINCIPAL"],                      group: "Admin" },
   { key: "placement-pred",    title: "Placement Predictor",     route: "/admin/placement",        allowedRoles: ["ADMIN","PRINCIPAL","HOD"],                      group: "Admin" },
   { key: "risk-tracker",     title: "Risk Tracker",            route: "/admin/risk",             allowedRoles: ["ADMIN","PRINCIPAL","HOD","COUNSELLOR"],         group: "Admin" },
   { key: "comms-settings",    title: "Communication Settings",  route: "/admin/comms",            allowedRoles: ["ADMIN"],                                        group: "Admin" },
