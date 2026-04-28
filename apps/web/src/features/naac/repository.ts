@@ -106,13 +106,50 @@ const MOCK_DASHBOARD: NaacDashboard = {
   computedAt: new Date().toISOString(),
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapBackendDashboard(raw: any): NaacDashboard {
+  return {
+    institution: { name: raw.institution?.name ?? '', shortName: raw.institution?.shortName ?? '' },
+    predictedCgpa: raw.predictedCgpa ?? 0,
+    predictedGrade: raw.predictedGrade ?? 'D',
+    targetGrade: raw.targetGrade ?? '',
+    cgpaGapToNextGrade: raw.cgpaGapToNextGrade ?? 0,
+    autoPopulatedMetrics: raw.summary?.autoMetrics ?? 0,
+    manualMetricsRequired: raw.summary?.manualMetrics ?? 0,
+    criteria: (raw.criteria ?? []).map((c: any) => ({
+      criterionId: c.id,
+      criterionName: c.name,
+      weightage: c.weightage,
+      maxScore: c.maxScore,
+      earnedScore: c.earnedScore,
+      scorePercent: c.maxScore > 0 ? Math.round((c.earnedScore / c.maxScore) * 1000) / 10 : 0,
+      cgpaContribution: c.weightedScore ?? 0,
+      metrics: (c.metrics ?? []).map((m: any) => ({
+        metricId: m.id,
+        metricName: m.name,
+        description: m.description ?? '',
+        maxScore: m.maxScore,
+        earnedScore: m.earnedScore,
+        scorePercent: m.maxScore > 0 && m.earnedScore != null ? Math.round((m.earnedScore / m.maxScore) * 1000) / 10 : null,
+        status: m.status === 'OK' ? 'AUTO' : m.status === 'MANUAL' ? 'MANUAL_REQUIRED' : 'AUTO',
+        data: m.liveData ?? null,
+        evidenceColumns: [],
+        evidenceRows: [],
+        edaiNote: m.edaiNote,
+      })),
+    })),
+  };
+}
+
 export async function getNaacDashboard(): Promise<NaacDashboard> {
   if (USE_MOCK) {
     await new Promise(r => setTimeout(r, 800));
     return MOCK_DASHBOARD;
   }
   try {
-    return await apiClient.get<NaacDashboard>('/api/naac/dashboard');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = await apiClient.get<any>('/api/naac/dashboard');
+    return mapBackendDashboard(raw);
   } catch {
     return MOCK_DASHBOARD;
   }
