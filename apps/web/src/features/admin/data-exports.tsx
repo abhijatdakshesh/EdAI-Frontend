@@ -119,7 +119,7 @@ export function DataExports() {
 
       const session = await getSession();
       const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
-      const response = await fetch(`${baseUrl}/api/admin-portal/exports/download`, {
+      const response = await fetch(`${baseUrl}/api/exports/download`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
