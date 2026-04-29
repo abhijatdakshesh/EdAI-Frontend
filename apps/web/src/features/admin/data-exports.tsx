@@ -9,6 +9,7 @@
  */
 
 import { useState } from "react";
+import { getSession } from "next-auth/react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -116,9 +117,14 @@ export function DataExports() {
         requestedBy: "admin",
       };
 
-      const response = await fetch("/api/exports/download", {
+      const session = await getSession();
+      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+      const response = await fetch(`${baseUrl}/api/admin-portal/exports/download`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session && "accessToken" in session ? { Authorization: `Bearer ${(session as { accessToken: string }).accessToken}` } : {}),
+        },
         body: JSON.stringify(body),
       });
 
