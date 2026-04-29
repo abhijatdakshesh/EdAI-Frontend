@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import ChatbotWidget from "@/features/chatbot/chatbot-widget";
 
 export const metadata: Metadata = {
   title: "RV Trust AI ERP",
@@ -17,6 +18,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <SessionProvider session={session}>
           <Providers>{children}</Providers>
+          <ChatbotWidget />
         </SessionProvider>
       </body>
     </html>

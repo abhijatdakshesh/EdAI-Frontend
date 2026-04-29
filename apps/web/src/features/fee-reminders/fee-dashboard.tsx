@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Fragment } from 'react';
 import {
   getFeeDashboardSummary,
   getOutstandingFees,
@@ -209,9 +209,8 @@ export default function FeeDashboard() {
             </thead>
             <tbody>
               {fees.map(fee => (
-                <>
+                <Fragment key={fee.feePaymentId}>
                   <tr
-                    key={fee.feePaymentId}
                     className="border-b border-border hover:bg-cream-100 transition-colors"
                   >
                     <td className="px-4 py-3 cursor-pointer" onClick={() => void handleExpand(fee.feePaymentId)}>
@@ -316,7 +315,7 @@ export default function FeeDashboard() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

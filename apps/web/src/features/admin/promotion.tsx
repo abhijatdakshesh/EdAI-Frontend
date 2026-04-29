@@ -153,10 +153,10 @@ export function PromotionManagement() {
                     )}
                   </div>
                   <div className="mt-2 flex gap-3 text-xs text-text-muted">
-                    <span className="text-[#3D6B4F]">✓ {b.stats.eligible} eligible</span>
-                    <span className="text-[#8B2F2F]">✗ {b.stats.detained} detained</span>
-                    {b.stats.conditional > 0 && (
-                      <span className="text-[#8B6914]">~ {b.stats.conditional} conditional</span>
+                    <span className="text-[#3D6B4F]">✓ {b.stats?.eligible ?? 0} eligible</span>
+                    <span className="text-[#8B2F2F]">✗ {b.stats?.detained ?? 0} detained</span>
+                    {(b.stats?.conditional ?? 0) > 0 && (
+                      <span className="text-[#8B6914]">~ {b.stats?.conditional} conditional</span>
                     )}
                   </div>
                 </button>
@@ -169,10 +169,10 @@ export function PromotionManagement() {
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { label: "Total", value: selectedBatch.stats.total },
-                    { label: "Eligible", value: selectedBatch.stats.eligible, color: "text-[#3D6B4F]" },
-                    { label: "Detained", value: selectedBatch.stats.detained, color: "text-[#8B2F2F]" },
-                    { label: "Conditional", value: selectedBatch.stats.conditional, color: "text-[#8B6914]" },
+                    { label: "Total", value: selectedBatch.stats?.total ?? 0 },
+                    { label: "Eligible", value: selectedBatch.stats?.eligible ?? 0, color: "text-[#3D6B4F]" },
+                    { label: "Detained", value: selectedBatch.stats?.detained ?? 0, color: "text-[#8B2F2F]" },
+                    { label: "Conditional", value: selectedBatch.stats?.conditional ?? 0, color: "text-[#8B6914]" },
                   ].map((s) => (
                     <div key={s.label} className="rounded border border-border bg-surface p-3 text-center">
                       <p className="label-track text-xs">{s.label}</p>
@@ -183,9 +183,9 @@ export function PromotionManagement() {
 
                 {/* Criteria */}
                 <div className="rounded border border-border bg-surface p-3 text-xs text-text-muted flex gap-4">
-                  <span>Min attendance: {selectedBatch.criteria.minAttendancePct}%</span>
-                  <span>Min IA score: {selectedBatch.criteria.minIaScore}</span>
-                  <span>Fee clearance: {selectedBatch.criteria.feeClearanceRequired ? "Required" : "Not required"}</span>
+                  <span>Min attendance: {selectedBatch.criteria?.minAttendancePct ?? '—'}%</span>
+                  <span>Min IA score: {selectedBatch.criteria?.minIaScore ?? '—'}</span>
+                  <span>Fee clearance: {selectedBatch.criteria?.feeClearanceRequired ? "Required" : "Not required"}</span>
                 </div>
 
                 {/* Student table */}
@@ -201,7 +201,7 @@ export function PromotionManagement() {
                       </tr>
                     </thead>
                     <tbody>
-                      {selectedBatch.students.map((s) => (
+                      {(selectedBatch?.students ?? []).map((s) => (
                         <tr key={s.studentUsn} className="border-t border-border even:bg-cream-50">
                           <td className="px-3 py-2 font-mono text-xs">{s.studentUsn}</td>
                           <td className="px-3 py-2 font-medium">{s.studentName}</td>
@@ -225,7 +225,7 @@ export function PromotionManagement() {
                             </span>
                           </td>
                           <td className="px-3 py-2 text-xs text-text-muted">
-                            {s.failedCriteria.map((fc) => failureLabels[fc] ?? fc).join(", ") || "—"}
+                            {(s.failedCriteria ?? []).map((fc) => failureLabels[fc] ?? fc).join(", ") || "—"}
                             {s.overrideNote && (
                               <span className="ml-1 text-[#8B6914]">({s.overrideNote})</span>
                             )}
@@ -335,7 +335,7 @@ export function PromotionManagement() {
                         {s.feeCleared ? "✓" : <span className="text-[#8B2F2F]">Pending</span>}
                       </td>
                       <td className="px-4 py-2 text-xs text-[#8B2F2F]">
-                        {s.failedCriteria.map((fc) => failureLabels[fc] ?? fc).join(", ")}
+                        {(s.failedCriteria ?? []).map((fc) => failureLabels[fc] ?? fc).join(", ")}
                       </td>
                     </tr>
                   ))}
@@ -398,7 +398,7 @@ export function PromotionManagement() {
                     type="number"
                     min={0} max={100}
                     value={generateForm.minAttendancePct}
-                    onChange={(e) => setGenerateForm({ ...generateForm, minAttendancePct: parseInt(e.target.value) })}
+                    onChange={(e) => setGenerateForm({ ...generateForm, minAttendancePct: parseInt(e.target.value, 10) || 0 })}
                     className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
                   />
                 </label>
@@ -408,7 +408,7 @@ export function PromotionManagement() {
                     type="number"
                     min={0}
                     value={generateForm.minIaScore}
-                    onChange={(e) => setGenerateForm({ ...generateForm, minIaScore: parseInt(e.target.value) })}
+                    onChange={(e) => setGenerateForm({ ...generateForm, minIaScore: parseInt(e.target.value, 10) || 0 })}
                     className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
                   />
                 </label>

@@ -3,12 +3,12 @@ import { apiClient } from "@/lib/api/client";
 import { mockIntegrationsDashboard } from "./mock-data";
 import type { IntegrationsDashboardResponse } from "./types";
 
-const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? "true") === "true";
+const USE_MOCK = true; // integrations backend not yet implemented
 
 export async function getIntegrationsDashboard(): Promise<IntegrationsDashboardResponse> {
   if (USE_MOCK) return mockIntegrationsDashboard;
   try {
-    return await apiClient.get<IntegrationsDashboardResponse>("/integrations/dashboard");
+    return await apiClient.get<IntegrationsDashboardResponse>("/api/integrations/dashboard");
   } catch {
     return mockIntegrationsDashboard;
   }
