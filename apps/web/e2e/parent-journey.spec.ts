@@ -1,0 +1,152 @@
+/**
+ * E2E Parent Journey tests — covers all major parent portal pages.
+ * Uses dev-credential parent@rvce.edu / Parent@123 (PARENT role).
+ * NEXT_PUBLIC_USE_MOCKS=true — all API calls return mock data.
+ */
+
+import { test, expect, Page } from '@playwright/test';
+import { loginAs } from './helpers/auth';
+
+async function loginAsParent(page: Page) {
+  await loginAs(page, 'parent');
+}
+
+// ─── Dashboard (/parent/dashboard) ───────────────────────────────────────────
+
+test('@P0 parent: dashboard renders child info card and KPI cards', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/dashboard');
+  await expect(page).toHaveURL(/parent\/dashboard/);
+
+  await expect(page.getByText(/dashboard/i).first()).toBeVisible({ timeout: 10_000 });
+  // Child info — name or USN or department
+  const childInfo = page
+    .getByText(/usn|student id|department|semester/i)
+    .or(page.getByText(/your child|ward/i));
+  await expect(childInfo.first()).toBeVisible({ timeout: 10_000 });
+  // KPI cards — attendance, CGPA or similar
+  const kpiCard = page.getByText(/attendance|cgpa|gpa|fee/i).first();
+  await expect(kpiCard).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P0 parent: dashboard shows recent AI calls section', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/dashboard');
+
+  // AI calls section or empty state
+  const callsSection = page
+    .getByText(/ai calls|voice call|recent call/i)
+    .or(page.getByText(/no calls/i));
+  await expect(callsSection.first()).toBeVisible({ timeout: 10_000 });
+});
+
+// ─── Fees (/parent/fees) ─────────────────────────────────────────────────────
+
+test('@P0 parent: fees page renders breakdown table and status indicators', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/fees');
+  await expect(page).toHaveURL(/parent\/fees/);
+
+  await expect(page.getByText(/fee|payment/i).first()).toBeVisible({ timeout: 10_000 });
+  // Fee amounts and status indicators
+  const feeContent = page
+    .getByText(/₹|paid|pending|due/i)
+    .or(page.getByText(/no fee data/i));
+  await expect(feeContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Results (/parent/results) ───────────────────────────────────────────────
+
+test('@P0 parent: results page renders semester selector and grade info', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/results');
+  await expect(page).toHaveURL(/parent\/results/);
+
+  await expect(page.getByText(/result|grade|cgpa/i).first()).toBeVisible({ timeout: 10_000 });
+  // Result content — table or cards
+  const resultsContent = page
+    .getByText(/cgpa|semester|subject|marks/i)
+    .or(page.getByText(/no results/i));
+  await expect(resultsContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Attendance (/parent/attendance) ─────────────────────────────────────────
+
+test('@P1 parent: attendance page renders percentage and per-subject breakdown', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/attendance');
+  await expect(page).toHaveURL(/parent\/attendance/);
+
+  await expect(page.getByText(/attendance/i).first()).toBeVisible({ timeout: 10_000 });
+  const attendanceContent = page
+    .getByText(/\d+%|overall/i)
+    .or(page.getByText(/no attendance data/i));
+  await expect(attendanceContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Calls (/parent/calls) ───────────────────────────────────────────────────
+
+test('@P1 parent: calls page renders call log table with date, reason, language columns', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/calls');
+  await expect(page).toHaveURL(/parent\/calls/);
+
+  await expect(page.getByText(/call history|call log|voice call/i).first()).toBeVisible({ timeout: 10_000 });
+  // Call log table or empty state
+  const callContent = page
+    .getByRole('table')
+    .or(page.getByText(/date|reason|language|duration/i))
+    .or(page.getByText(/no call history|no calls/i));
+  await expect(callContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Announcements (/parent/announcements) ────────────────────────────────────
+
+test('@P1 parent: announcements feed renders with category filter', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/announcements');
+  await expect(page).toHaveURL(/parent\/announcements/);
+
+  await expect(page.getByText(/announcement/i).first()).toBeVisible({ timeout: 10_000 });
+  const announcementContent = page
+    .getByText(/general|academic|event|filter/i)
+    .or(page.getByText(/no announcements/i));
+  await expect(announcementContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Notifications (/parent/notifications) ───────────────────────────────────
+
+test('@P1 parent: notifications page renders feed with action controls', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/notifications');
+  await expect(page).toHaveURL(/parent\/notifications/);
+
+  await expect(page.getByText(/notification/i).first()).toBeVisible({ timeout: 10_000 });
+  const notifContent = page
+    .getByRole('checkbox')
+    .or(page.getByRole('button', { name: /mark.*read|delete/i }))
+    .or(page.getByText(/no notifications/i));
+  await expect(notifContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Children (/parent/children) ─────────────────────────────────────────────
+
+test('@P1 parent: children page renders child selector', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/children');
+  await expect(page).toHaveURL(/parent\/children/);
+
+  await expect(page.getByText(/children|child|ward/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+});
+
+// ─── Messages (/parent/messages) ─────────────────────────────────────────────
+
+test('@P1 parent: messages page renders compose button', async ({ page }) => {
+  await loginAsParent(page);
+  await page.goto('/parent/messages');
+  await expect(page).toHaveURL(/parent\/messages/);
+
+  await expect(page.getByText(/message/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+});

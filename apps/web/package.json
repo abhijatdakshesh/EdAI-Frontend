@@ -10,8 +10,12 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --project=chromium --headed",
+    "test:e2e:p0": "playwright test --project=chromium --grep @P0",
+    "test:e2e:p1": "playwright test --project=chromium --grep @P1",
+    "test:e2e:all": "playwright test"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",

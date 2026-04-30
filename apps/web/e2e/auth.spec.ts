@@ -123,3 +123,68 @@ test('login page redirects already-authenticated student away to student dashboa
   await page.goto('/login');
   await expect(page).toHaveURL(/student\/dashboard/, { timeout: 10_000 });
 });
+
+// ─── P0 additions ─────────────────────────────────────────────────────────────
+
+test('@P0 logout clears session and redirects to /login', async ({ page }) => {
+  await loginAs(page, 'student@rvce.edu', 'Student@123');
+  await expect(page).toHaveURL(/student\/dashboard/);
+
+  // Find logout — either a button, link, or dropdown item
+  const logoutTrigger = page
+    .getByRole('button', { name: /logout|sign out/i })
+    .or(page.getByRole('link', { name: /logout|sign out/i }));
+
+  // If logout is behind a user menu, open it first
+  const userMenu = page.getByRole('button', { name: /user menu|account|profile/i });
+  if (await userMenu.isVisible()) await userMenu.click();
+
+  await expect(logoutTrigger.first()).toBeVisible({ timeout: 5_000 });
+  await logoutTrigger.first().click();
+
+  // After logout, must be on /login and not able to revisit protected page
+  await expect(page).toHaveURL(/login/, { timeout: 10_000 });
+  await page.goto('/student/dashboard');
+  await expect(page).toHaveURL(/login/, { timeout: 8_000 });
+});
+
+test('@P0 student cannot access teacher routes — redirected appropriately', async ({ page }) => {
+  await loginAs(page, 'student@rvce.edu', 'Student@123');
+  await page.goto('/teacher/mark-attendance');
+  await expect(page).toHaveURL(/student\/dashboard/, { timeout: 10_000 });
+});
+
+test('@P0 parent cannot access admin routes — redirected to parent dashboard', async ({ page }) => {
+  await loginAs(page, 'parent@rvce.edu', 'Parent@123');
+  await page.goto('/admin/users');
+  await expect(page).toHaveURL(/parent\/dashboard/, { timeout: 10_000 });
+});
+
+// ─── P1 additions ─────────────────────────────────────────────────────────────
+
+test('@P1 /verify/[uuid] page renders without crash', async ({ page }) => {
+  await page.goto('/verify/test-uuid-12345');
+  // Should render some page — not blank, not 500
+  await expect(page.locator('body')).not.toBeEmpty();
+  await expect(page.getByText(/internal server error|500/i)).not.toBeVisible();
+});
+
+test('@P1 session persists across page reload', async ({ page }) => {
+  await loginAs(page, 'admin@rvce.edu', 'Admin@123');
+  await expect(page).toHaveURL(/dashboard/);
+  await page.reload();
+  // After reload, should still be on dashboard (not redirected to login)
+  await expect(page).toHaveURL(/dashboard/, { timeout: 10_000 });
+  await expect(page).not.toHaveURL(/login/);
+});
+
+// ─── P2 additions ─────────────────────────────────────────────────────────────
+
+test('@P2 login form submits on Enter key press', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel(/email/i).fill('student@rvce.edu');
+  await page.getByLabel(/password/i).fill('Student@123');
+  await page.getByLabel(/password/i).press('Enter');
+  await page.waitForURL(/student\/dashboard/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/student\/dashboard/);
+});

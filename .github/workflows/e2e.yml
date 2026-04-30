@@ -1,0 +1,132 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, feat/**, fix/**]
+  pull_request:
+    branches: [main]
+
+jobs:
+  playwright-p0:
+    name: P0 Tests (Release Gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Run P0 tests (blocks release on failure)
+        run: pnpm --filter @rv/web test:e2e:p0 --reporter=junit,list
+        env:
+          NEXT_PUBLIC_USE_MOCKS: "true"
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+          NEXTAUTH_URL: http://localhost:3000
+          CI: true
+
+      - name: Upload P0 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-p0-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/playwright-results.xml
+          retention-days: 14
+
+  playwright-p1:
+    name: P1 Tests (Staging Gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: playwright-p0
+    if: success()
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Run P1 tests
+        run: pnpm --filter @rv/web test:e2e:p1 --reporter=list
+        env:
+          NEXT_PUBLIC_USE_MOCKS: "true"
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+          NEXTAUTH_URL: http://localhost:3000
+          CI: true
+
+      - name: Upload P1 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-p1-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
+  playwright-p2:
+    name: P2 Tests (Advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: playwright-p1
+    if: always()
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers (multi-browser for P2)
+        run: npx playwright install --with-deps chromium firefox
+        working-directory: apps/web
+
+      - name: Run P2 tests (advisory — non-blocking)
+        run: pnpm --filter @rv/web test:e2e --grep "@P2" --reporter=list
+        env:
+          NEXT_PUBLIC_USE_MOCKS: "true"
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+          NEXTAUTH_URL: http://localhost:3000
+          CI: true
+
+      - name: Upload P2 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-p2-report
+          path: apps/web/playwright-report/
+          retention-days: 7
