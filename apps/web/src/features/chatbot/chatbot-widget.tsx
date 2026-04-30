@@ -36,6 +36,9 @@ export default function ChatbotWidget() {
     hasConsented: false,
   });
   const [input, setInput] = useState('');
+  const [language, setLanguage] = useState<string>(
+    typeof window !== 'undefined' ? (localStorage.getItem('edai-chat-lang') ?? 'en') : 'en'
+  );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const socketRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -159,7 +162,7 @@ export default function ChatbotWidget() {
 
     const socket = socketRef.current;
     if (socket?.connected) {
-      socket.emit('chat:message', { message: text, conversationId: state.conversationId });
+      socket.emit('chat:message', { message: text, conversationId: state.conversationId, language });
     } else {
       // REST fallback
       try {
@@ -189,7 +192,7 @@ export default function ChatbotWidget() {
         setState(s => ({ ...s, isTyping: false }));
       }
     }
-  }, [session, state.conversationId]);
+  }, [session, state.conversationId, language]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -276,15 +279,29 @@ export default function ChatbotWidget() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setState(s => ({ ...s, isOpen: false }))}
-              className="text-white/70 hover:text-white transition-colors"
-              aria-label="Close chat"
-            >
+            <div className="flex items-center gap-2">
+              <select
+                value={language}
+                onChange={e => { setLanguage(e.target.value); localStorage.setItem('edai-chat-lang', e.target.value); }}
+                className="text-xs bg-white/20 text-white rounded px-1 py-0.5 border border-white/30 outline-none cursor-pointer"
+                title="Response language"
+              >
+                <option value="en">EN</option>
+                <option value="kn">ಕನ್ನಡ</option>
+                <option value="hi">हिन्दी</option>
+                <option value="ta">தமிழ்</option>
+                <option value="te">తెలుగు</option>
+              </select>
+              <button
+                onClick={() => setState(s => ({ ...s, isOpen: false }))}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Close chat"
+              >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
