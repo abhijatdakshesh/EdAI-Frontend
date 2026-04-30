@@ -99,6 +99,7 @@ export const navItems: NavItem[] = [
   { key: "stu-assignments",   title: "My Assignments",          route: "/student/assignments",    allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-announce",      title: "Announcements",           route: "/student/announcements",  allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-jobs",          title: "Job Portal",              route: "/student/jobs",           allowedRoles: ["STUDENT"],                                      group: "Student" },
+  { key: "stu-placement",     title: "My Placement",            route: "/student/placement",      allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-fees",          title: "Fees & Scholarships",     route: "/student/fees",           allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-hostel",        title: "Hostel & Transport",      route: "/student/hostel",         allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-chatbot",       title: "Ask EdAI",                route: "/student/chatbot",        allowedRoles: ["STUDENT"],                                      group: "Student" },
