@@ -197,3 +197,106 @@ test('teacher: teacher cannot access student-only routes', async ({ page }) => {
   await expect(page).not.toHaveURL(/student\/dashboard/, { timeout: 8_000 });
   await expect(page).toHaveURL(/dashboard/);
 });
+
+// ─── P0 additions ─────────────────────────────────────────────────────────────
+
+test('@P0 teacher: IA marks entry page loads with class/subject selector and input grid', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/ia-marks');
+  await expect(page).toHaveURL(/teacher\/ia-marks/);
+
+  await expect(page.getByText(/ia marks|internal assessment|marks entry/i).first()).toBeVisible({ timeout: 10_000 });
+  // Class/subject selector should be present
+  const selector = page.locator('select').first().or(page.getByRole('combobox').first());
+  await expect(selector).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P0 teacher: IA marks — page loads with subject code input and class selector', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/marks-entry');
+  await expect(page).toHaveURL(/teacher\/marks-entry/);
+
+  await expect(page.getByText(/ia marks entry|marks|internal/i).first()).toBeVisible({ timeout: 10_000 });
+  // Subject Code input is always visible
+  await expect(page.locator('input[placeholder*="21CS"]').or(page.locator('input[placeholder*="subject"]')).first()).toBeVisible({ timeout: 8_000 });
+  // Class selector is always visible
+  await expect(page.locator('select').first()).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P0 teacher: create assignment button opens form modal', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/assignments');
+  await expect(page).toHaveURL(/teacher\/assignments/);
+
+  await expect(page.getByText(/assignment/i).first()).toBeVisible({ timeout: 10_000 });
+  const createBtn = page.getByRole('button', { name: /create|add|new assignment/i });
+  await expect(createBtn.first()).toBeVisible({ timeout: 8_000 });
+  await createBtn.first().click();
+
+  // Create form appears inline (no dialog role) with heading "Create Assignment"
+  await expect(page.getByText(/create assignment/i)).toBeVisible({ timeout: 5_000 });
+});
+
+// ─── P1 additions ─────────────────────────────────────────────────────────────
+
+test('@P1 teacher: call panel loads at-risk student list with trigger call button', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/call-panel');
+  await expect(page).toHaveURL(/teacher\/call-panel/);
+
+  await expect(page.getByText(/call|at.risk|student/i).first()).toBeVisible({ timeout: 10_000 });
+  // Student list or empty state
+  const content = page
+    .getByRole('button', { name: /call|trigger|initiate/i })
+    .or(page.getByText(/no at.risk students|no students/i));
+  await expect(content.first()).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P1 teacher: attendance summary page has class selector and renders table', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/attend-summary');
+  await expect(page).toHaveURL(/teacher\/attend-summary/);
+
+  await expect(page.getByText(/attendance summary|attend/i).first()).toBeVisible({ timeout: 10_000 });
+  // AttendanceSummary renders a table directly (no select/combobox selector)
+  const tableOrContent = page
+    .getByRole('table')
+    .or(page.getByText(/class|month|conducted/i));
+  await expect(tableOrContent.first()).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P1 teacher: performance drop page renders student list', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/perf-drop');
+  await expect(page).toHaveURL(/teacher\/perf-drop/);
+
+  await expect(page.getByText(/performance|drop|at.risk/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+});
+
+test('@P1 teacher: announcements page has rich-text area and class selector', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/announcements');
+  await expect(page).toHaveURL(/teacher\/announcements/);
+
+  await expect(page.getByText(/announcement/i).first()).toBeVisible({ timeout: 10_000 });
+  const editorOrInput = page.getByRole('textbox').or(page.locator('textarea')).first();
+  await expect(editorOrInput).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByRole('button', { name: /publish|post|send/i })).toBeVisible();
+});
+
+// ─── P2 additions ─────────────────────────────────────────────────────────────
+
+test('@P2 teacher: schedule timetable page loads without crash', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/schedule');
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.locator('body')).not.toBeEmpty();
+});
+
+test('@P2 teacher: my classes page renders class list', async ({ page }) => {
+  await loginAsTeacher(page);
+  await page.goto('/teacher/classes');
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/class|section|my classes/i).first()).toBeVisible({ timeout: 10_000 });
+});

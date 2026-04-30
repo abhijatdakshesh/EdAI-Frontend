@@ -34,9 +34,7 @@ test('student can login and reach student dashboard', async ({ page }) => {
   await loginAs(page, 'student@rvce.edu', 'Student@123');
   await expect(page).toHaveURL(/student\/dashboard/);
   // The page heading or shell title should identify this as the student dashboard
-  await expect(
-    page.getByRole('heading', { name: /dashboard/i }).or(page.getByText(/dashboard/i).first()),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard/i }).first()).toBeVisible();
 });
 
 // ─── teacher / faculty ───────────────────────────────────────────────────────
@@ -65,9 +63,7 @@ test('admin can login and reach dashboard', async ({ page }) => {
 test('parent can login and reach parent dashboard', async ({ page }) => {
   await loginAs(page, 'parent@rvce.edu', 'Parent@123');
   await expect(page).toHaveURL(/parent\/dashboard/);
-  await expect(
-    page.getByRole('heading', { name: /dashboard/i }).or(page.getByText(/dashboard/i).first()),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: /dashboard/i }).first()).toBeVisible();
 });
 
 // ─── wrong password ───────────────────────────────────────────────────────────
@@ -122,4 +118,64 @@ test('login page redirects already-authenticated student away to student dashboa
   // Now navigate back to /login — should auto-redirect
   await page.goto('/login');
   await expect(page).toHaveURL(/student\/dashboard/, { timeout: 10_000 });
+});
+
+// ─── P0 additions ─────────────────────────────────────────────────────────────
+
+test('@P0 logout clears session and redirects to /login', async ({ page }) => {
+  await loginAs(page, 'student@rvce.edu', 'Student@123');
+  await expect(page).toHaveURL(/student\/dashboard/);
+
+  // Shell renders a "Logout" button in the header
+  const logoutBtn = page.getByRole('button', { name: /logout/i });
+  await expect(logoutBtn).toBeVisible({ timeout: 10_000 });
+  await logoutBtn.click();
+
+  // After logout, NextAuth clears the session cookie and redirects away from the dashboard
+  // The URL will be /login or a brief intermediate state — just confirm we left the dashboard
+  await page.waitForURL((url) => !url.pathname.startsWith('/student/dashboard'), { timeout: 15_000 });
+  // Either the login form is visible, or we're on /login URL
+  const leftDashboard = !page.url().includes('/student/dashboard');
+  expect(leftDashboard).toBeTruthy();
+});
+
+test('@P0 student cannot access teacher routes — redirected appropriately', async ({ page }) => {
+  await loginAs(page, 'student@rvce.edu', 'Student@123');
+  await page.goto('/teacher/mark-attendance');
+  await expect(page).toHaveURL(/student\/dashboard/, { timeout: 10_000 });
+});
+
+test('@P0 parent cannot access admin routes — redirected to parent dashboard', async ({ page }) => {
+  await loginAs(page, 'parent@rvce.edu', 'Parent@123');
+  await page.goto('/admin/users');
+  await expect(page).toHaveURL(/parent\/dashboard/, { timeout: 10_000 });
+});
+
+// ─── P1 additions ─────────────────────────────────────────────────────────────
+
+test('@P1 /verify/[uuid] page renders without crash', async ({ page }) => {
+  await page.goto('/verify/test-uuid-12345');
+  // Should render some page — not blank, not 500
+  await expect(page.locator('body')).not.toBeEmpty();
+  await expect(page.getByText(/internal server error|500/i)).not.toBeVisible();
+});
+
+test('@P1 session persists across page reload', async ({ page }) => {
+  await loginAs(page, 'admin@rvce.edu', 'Admin@123');
+  await expect(page).toHaveURL(/dashboard/);
+  await page.reload();
+  // After reload, should still be on dashboard (not redirected to login)
+  await expect(page).toHaveURL(/dashboard/, { timeout: 10_000 });
+  await expect(page).not.toHaveURL(/login/);
+});
+
+// ─── P2 additions ─────────────────────────────────────────────────────────────
+
+test('@P2 login form submits on Enter key press', async ({ page }) => {
+  await page.goto('/login');
+  await page.getByLabel(/email/i).fill('student@rvce.edu');
+  await page.getByLabel(/password/i).fill('Student@123');
+  await page.getByLabel(/password/i).press('Enter');
+  await page.waitForURL(/student\/dashboard/, { timeout: 15_000 });
+  await expect(page).toHaveURL(/student\/dashboard/);
 });

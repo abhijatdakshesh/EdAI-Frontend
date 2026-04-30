@@ -1,0 +1,66 @@
+name: E2E Nightly — Full Suite
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 01:00 UTC = 06:30 IST every night
+  workflow_dispatch:        # allow manual trigger from GitHub UI
+
+env:
+  NEXT_PUBLIC_USE_MOCKS: "true"
+  NEXTAUTH_URL: http://localhost:3000
+  CI: "true"
+
+jobs:
+  nightly-all:
+    name: "All 122 tests — P0 + P1 + P2 (headless)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Run full test suite (all priorities)
+        run: pnpm --filter @rv/web test:e2e:all --project=chromium
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+        continue-on-error: true   # collect full results even on failures
+
+      - name: Upload nightly HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report-${{ github.run_id }}
+          path: |
+            apps/web/playwright-report/
+            apps/web/playwright-results.xml
+          retention-days: 30
+
+      - name: Post summary to job log
+        if: always()
+        run: |
+          echo "## Nightly E2E Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Run: $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f apps/web/playwright-results.xml ]; then
+            TOTAL=$(grep -o 'tests="[0-9]*"' apps/web/playwright-results.xml | head -1 | grep -o '[0-9]*')
+            FAIL=$(grep -o 'failures="[0-9]*"' apps/web/playwright-results.xml | head -1 | grep -o '[0-9]*')
+            SKIP=$(grep -o 'skipped="[0-9]*"' apps/web/playwright-results.xml | head -1 | grep -o '[0-9]*')
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Total  | ${TOTAL:-?} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Failed | ${FAIL:-0} |" >> $GITHUB_STEP_SUMMARY
+            echo "| Skipped| ${SKIP:-0} |" >> $GITHUB_STEP_SUMMARY
+          fi

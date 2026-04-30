@@ -1,0 +1,78 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, feat/**, fix/**]
+  pull_request:
+    branches: [main]
+
+# ─── Reusable setup steps ────────────────────────────────────────────────────
+# Shared env for all CI jobs — headless always true in CI
+env:
+  NEXT_PUBLIC_USE_MOCKS: "true"
+  NEXTAUTH_URL: http://localhost:3000
+  CI: "true"
+
+jobs:
+  # ── P0: HARD BLOCK — release cannot proceed if any P0 fails ──────────────
+  playwright-p0:
+    name: "P0 — Release Gate (BLOCKS)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Run P0 tests
+        run: pnpm --filter @rv/web test:e2e:p0
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+      - name: Upload P0 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-p0-report
+          path: |
+            apps/web/playwright-report/
+            apps/web/playwright-results.xml
+          retention-days: 14
+
+  # ── P1+P2: REPORT ONLY — failures annotate the PR but never block merge ──
+  playwright-p1-p2-report:
+    name: "P1+P2 — Report Only (non-blocking)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: playwright-p0
+    if: always()           # run even when P0 passes, just for visibility
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v3
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Run P1 tests (report only)
+        run: pnpm --filter @rv/web test:e2e:p1
+        continue-on-error: true
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+      - name: Run P2 tests (report only)
+        run: pnpm --filter @rv/web test:e2e --project=chromium --grep "@P2"
+        continue-on-error: true
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
+      - name: Upload P1+P2 report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-p1-p2-report
+          path: apps/web/playwright-report/
+          retention-days: 7
