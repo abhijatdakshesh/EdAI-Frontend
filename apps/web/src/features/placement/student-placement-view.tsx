@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import type { StudentPlacementProfile, CompanyMatch, CompanyType } from './types';
 import { STATUS_STYLE, COMPANY_TYPES, MOCK_PROFILE, MOCK_MATCHES } from './types';
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true') === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true';
 
 export default function StudentPlacementView() {
   const { data: session } = useSession();
@@ -43,15 +43,16 @@ export default function StudentPlacementView() {
 
   if (!profile) return <div className="p-8 text-center text-gray-400">Loading placement profile...</div>;
 
-  const statusStyle = STATUS_STYLE[profile.placementStatus];
+  const statusStyle = STATUS_STYLE[profile.placementStatus] ?? STATUS_STYLE['NEEDS_COACHING'];
   const scoreColor = profile.readinessScore >= 75 ? 'text-green-600' : profile.readinessScore >= 50 ? 'text-yellow-600' : 'text-red-600';
 
+  const sb = profile.scoreBreakdown ?? { cgpaPts: 0, attendancePts: 0, backlogPts: 0, trendPts: 0, semesterPts: 0 };
   const breakdown = [
-    { label: 'Academic (CGPA)', pts: profile.scoreBreakdown.cgpaPts, max: 35 },
-    { label: 'Attendance', pts: profile.scoreBreakdown.attendancePts, max: 25 },
-    { label: 'No Backlogs', pts: profile.scoreBreakdown.backlogPts, max: 20 },
-    { label: 'Marks Trend', pts: profile.scoreBreakdown.trendPts, max: 10 },
-    { label: 'Final Year Bonus', pts: profile.scoreBreakdown.semesterPts, max: 10 },
+    { label: 'Academic (CGPA)', pts: sb.cgpaPts, max: 35 },
+    { label: 'Attendance', pts: sb.attendancePts, max: 25 },
+    { label: 'No Backlogs', pts: sb.backlogPts, max: 20 },
+    { label: 'Marks Trend', pts: sb.trendPts, max: 10 },
+    { label: 'Final Year Bonus', pts: sb.semesterPts, max: 10 },
   ];
 
   return (

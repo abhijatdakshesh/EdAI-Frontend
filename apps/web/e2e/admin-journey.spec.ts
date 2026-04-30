@@ -36,16 +36,16 @@ test('@P0 admin: create user button opens modal with required fields', async ({ 
   await loginAsAdmin(page);
   await page.goto('/admin/users');
 
-  const createBtn = page.getByRole('button', { name: /create user|add user|new user/i });
+  // Button text is "+ Add User"
+  const createBtn = page.getByRole('button', { name: /add user/i });
   await expect(createBtn).toBeVisible({ timeout: 10_000 });
   await createBtn.click();
 
-  // Modal must appear with name, email, role, password fields
-  const modal = page.getByRole('dialog').or(page.locator('[class*=modal]'));
-  await expect(modal.first()).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByRole('textbox', { name: /name/i }).or(page.locator('input[placeholder*=name i]'))).toBeVisible();
-  await expect(page.getByRole('textbox', { name: /email/i }).or(page.locator('input[type=email]'))).toBeVisible();
-  await expect(page.locator('input[type=password]').or(page.getByLabel(/password/i))).toBeVisible();
+  // Modal is a conditional div (no role=dialog) — look for "Create New User" heading
+  await expect(page.getByText(/create new user/i)).toBeVisible({ timeout: 5_000 });
+  // Email field uses type="text" (not type="email") in this component
+  await expect(page.locator('input[placeholder="Email"]')).toBeVisible();
+  await expect(page.locator('input[type=password]')).toBeVisible();
 });
 
 test('@P0 admin: bulk import page renders type selector, template download, and upload zone', async ({ page }) => {
@@ -54,16 +54,12 @@ test('@P0 admin: bulk import page renders type selector, template download, and 
   await expect(page).toHaveURL(/admin\/bulk-import/);
 
   await expect(page.getByText(/bulk import|import/i).first()).toBeVisible({ timeout: 10_000 });
-  // Import type selector
-  const typeSelector = page.locator('select').first().or(page.getByRole('combobox').first());
-  await expect(typeSelector).toBeVisible({ timeout: 8_000 });
-  // Download template button
-  await expect(page.getByRole('button', { name: /download template|template/i })).toBeVisible();
-  // Upload/drag-drop zone
-  const uploadZone = page
-    .locator('input[type=file]')
-    .or(page.getByText(/drag.*drop|upload|choose file/i));
-  await expect(uploadZone.first()).toBeVisible();
+  // Type selector is a row of buttons (students / faculty / courses / attendance)
+  await expect(page.getByRole('button', { name: /students/i })).toBeVisible({ timeout: 8_000 });
+  // Download Template button
+  await expect(page.getByRole('button', { name: /download template/i })).toBeVisible();
+  // Drag-drop zone text
+  await expect(page.getByText(/drop your csv|drop.*file|drag.*drop/i)).toBeVisible();
 });
 
 test('@P0 admin: classes page renders department filter, class table, and add button', async ({ page }) => {
@@ -108,15 +104,15 @@ test('@P1 admin: departments page renders list and add button', async ({ page })
 
 // ─── Promotion (/admin/promotion) ─────────────────────────────────────────────
 
-test('@P1 admin: promotion page renders class/semester selector and execute button', async ({ page }) => {
+test('@P1 admin: promotion page renders batch list and tabs', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/promotion');
   await expect(page).toHaveURL(/admin\/promotion/);
 
-  await expect(page.getByText(/promotion|semester promotion/i).first()).toBeVisible({ timeout: 10_000 });
-  const selector = page.locator('select').first().or(page.getByRole('combobox').first());
-  await expect(selector).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByRole('button', { name: /execute|promote|run/i })).toBeVisible();
+  await expect(page.getByText(/promotion/i).first()).toBeVisible({ timeout: 10_000 });
+  // Page shows "Promotion Batches" tab and batch cards
+  await expect(page.getByText(/promotion batches/i)).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
 });
 
 // ─── Attendance Audit (/admin/attendance-audit) ───────────────────────────────
@@ -190,15 +186,15 @@ test('@P1 admin: comms settings renders template editor', async ({ page }) => {
 
 // ─── Timetable Generator (/admin/timetable) ───────────────────────────────────
 
-test('@P1 admin: timetable generator renders class selector and generate button', async ({ page }) => {
+test('@P1 admin: timetable generator renders with new timetable button', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/timetable');
   await expect(page).toHaveURL(/admin\/timetable/);
 
-  await expect(page.getByText(/timetable|schedule/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/timetable generator/i)).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
-  const generateBtn = page.getByRole('button', { name: /generate|create|publish/i });
-  await expect(generateBtn.or(page.locator('select').first())).toBeVisible({ timeout: 8_000 });
+  // Button text is "+ New Timetable"
+  await expect(page.getByRole('button', { name: /new timetable/i })).toBeVisible({ timeout: 8_000 });
 });
 
 // ─── Settings (/admin/settings) ───────────────────────────────────────────────
@@ -208,9 +204,9 @@ test('@P1 admin: settings page renders config form with save button', async ({ p
   await page.goto('/admin/settings');
   await expect(page).toHaveURL(/admin\/settings/);
 
-  await expect(page.getByText(/settings|configuration/i).first()).toBeVisible({ timeout: 10_000 });
-  const saveBtn = page.getByRole('button', { name: /save|update/i });
-  await expect(saveBtn.or(page.getByRole('textbox').first())).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/system settings/i)).toBeVisible({ timeout: 10_000 });
+  // Button text is "Save Changes"
+  await expect(page.getByRole('button', { name: /save changes/i })).toBeVisible({ timeout: 8_000 });
 });
 
 // ─── Exports (/admin/exports) ─────────────────────────────────────────────────

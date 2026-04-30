@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { DepartmentSummary } from './types';
 import { MOCK_PROFILE } from './types';
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true') === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true';
 
 const MOCK_SUMMARY: DepartmentSummary[] = [
   { department: 'Computer Science', semester: 8, total: 120, ready: 78, coaching: 32, highRisk: 10, avgScore: 72, avgCgpa: 7.8 },

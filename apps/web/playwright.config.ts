@@ -20,7 +20,7 @@ export default defineConfig({
     { name: 'mobile',   use: { ...devices['iPhone 13'] } },
   ],
   webServer: {
-    command: 'NEXT_PUBLIC_USE_MOCKS=true pnpm dev',
+    command: 'NEXT_PUBLIC_USE_MOCKS=true NEXT_PUBLIC_USE_MOCK=true pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
