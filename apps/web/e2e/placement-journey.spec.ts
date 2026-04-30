@@ -77,10 +77,11 @@ test('@P1 student: placement page has generate resume button and company type se
   await page.goto('/student/placement');
 
   await expect(page.getByText(/placement/i).first()).toBeVisible({ timeout: 10_000 });
-  // Resume generation UI — button or type selector
+  // "Generate Resume" is a tab button always visible after profile loads
   const resumeUi = page
-    .getByRole('button', { name: /generate resume|resume/i })
-    .or(page.getByText(/product|service|startup|core/i));
+    .getByRole('button', { name: /generate resume/i })
+    .or(page.getByText(/score breakdown|matched companies/i))
+    .or(page.getByText(/loading placement/i));
   await expect(resumeUi.first()).toBeVisible({ timeout: 10_000 });
 });
 

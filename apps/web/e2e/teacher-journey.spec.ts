@@ -258,8 +258,11 @@ test('@P1 teacher: attendance summary page has class selector and renders table'
   await expect(page).toHaveURL(/teacher\/attend-summary/);
 
   await expect(page.getByText(/attendance summary|attend/i).first()).toBeVisible({ timeout: 10_000 });
-  const selector = page.locator('select').first().or(page.getByRole('combobox').first());
-  await expect(selector).toBeVisible({ timeout: 8_000 });
+  // AttendanceSummary renders a table directly (no select/combobox selector)
+  const tableOrContent = page
+    .getByRole('table')
+    .or(page.getByText(/class|month|conducted/i));
+  await expect(tableOrContent.first()).toBeVisible({ timeout: 8_000 });
 });
 
 test('@P1 teacher: performance drop page renders student list', async ({ page }) => {

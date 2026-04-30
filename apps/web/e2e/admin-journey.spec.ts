@@ -191,7 +191,7 @@ test('@P1 admin: timetable generator renders with new timetable button', async (
   await page.goto('/admin/timetable');
   await expect(page).toHaveURL(/admin\/timetable/);
 
-  await expect(page.getByText(/timetable generator/i)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/timetable generator/i).first()).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
   // Button text is "+ New Timetable"
   await expect(page.getByRole('button', { name: /new timetable/i })).toBeVisible({ timeout: 8_000 });
@@ -204,7 +204,7 @@ test('@P1 admin: settings page renders config form with save button', async ({ p
   await page.goto('/admin/settings');
   await expect(page).toHaveURL(/admin\/settings/);
 
-  await expect(page.getByText(/system settings/i)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/system settings/i).first()).toBeVisible({ timeout: 10_000 });
   // Button text is "Save Changes"
   await expect(page.getByRole('button', { name: /save changes/i })).toBeVisible({ timeout: 8_000 });
 });

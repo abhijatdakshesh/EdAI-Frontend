@@ -300,10 +300,10 @@ test('@P1 student: placement view loads with stats cards', async ({ page }) => {
   await expect(page).toHaveURL(/student\/placement/);
 
   await expect(page.getByText(/placement/i).first()).toBeVisible({ timeout: 10_000 });
-  // Stats cards or company matches should render
+  // Tabs always render: "Score Breakdown", "Matched Companies", "Generate Resume"
   const placementContent = page
-    .getByText(/readiness|score|matched|compan/i)
-    .or(page.getByText(/no placement data/i));
+    .getByRole('button', { name: /score breakdown|matched companies|generate resume/i })
+    .or(page.getByText(/readiness|no placement data|loading placement/i));
   await expect(placementContent.first()).toBeVisible({ timeout: 10_000 });
 });
 

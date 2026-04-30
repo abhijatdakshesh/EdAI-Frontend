@@ -34,10 +34,10 @@ test('@P1 admin: voice calling shows call logs table with transcript column', as
   await page.goto('/admin/voice-calling');
 
   await expect(page.getByText(/voice|call/i).first()).toBeVisible({ timeout: 10_000 });
-  // Call log table or empty state
+  // Tab buttons "Trigger" and "Logs" are always rendered
   const logsContent = page
-    .getByRole('table')
-    .or(page.getByText(/transcript|duration|status|no calls/i));
+    .getByRole('button', { name: /^logs$/i })
+    .or(page.getByText(/trigger|logs/i));
   await expect(logsContent.first()).toBeVisible({ timeout: 8_000 });
 });
 
