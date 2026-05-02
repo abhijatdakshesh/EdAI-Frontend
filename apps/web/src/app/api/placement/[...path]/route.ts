@@ -4,18 +4,21 @@ import { auth } from '@/auth';
 const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
 const ALLOWED_PREFIX = `${IDENTITY_SERVICE_URL}/api/placement/`;
 
-type Ctx = { params?: { path?: string[] } };
-type AuthedReq = Parameters<Parameters<typeof auth>[0]>[0];
-
-async function proxyToBackend(req: AuthedReq, ctx: Ctx | undefined, method: string): Promise<NextResponse> {
+async function proxyToBackend(req: Parameters<Parameters<typeof auth>[0]>[0], method: string): Promise<NextResponse> {
   try {
     const accessToken = req.auth?.accessToken;
     if (!accessToken) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
 
-    const pathSegments = (ctx?.params?.path ?? []).join('/');
     const url = new URL(req.url);
+    // Extract path segments after /api/placement/ from the incoming URL
+    const match = url.pathname.match(/\/api\/placement\/(.*)/);
+    const pathSegments = match?.[1] ?? '';
 
-    // Build target URL and validate it stays within /api/placement/ — prevents path traversal/SSRF
+    // Reject path traversal attempts and any non-safe characters before constructing the URL
+    if (!/^[a-zA-Z0-9/_-]*$/.test(pathSegments)) {
+      return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
+    }
+
     const backendUrl = new URL(`${IDENTITY_SERVICE_URL}/api/placement/${pathSegments}${url.search}`);
     if (!backendUrl.toString().startsWith(ALLOWED_PREFIX)) {
       return NextResponse.json({ error: 'Invalid path' }, { status: 400 });
@@ -25,11 +28,9 @@ async function proxyToBackend(req: AuthedReq, ctx: Ctx | undefined, method: stri
     const isWriteMethod = method !== 'GET' && method !== 'HEAD';
     if (isWriteMethod) headers['Content-Type'] = 'application/json';
 
-    const body = isWriteMethod ? await req.text() : undefined;
-
+    const body = isWriteMethod ? await req.text() : null;
     const res = await fetch(backendUrl.toString(), { method, headers, body });
 
-    // PDF passthrough — preserve binary response
     if (res.headers.get('content-type')?.includes('application/pdf')) {
       const buf = await res.arrayBuffer();
       return new NextResponse(buf, {
@@ -46,13 +47,13 @@ async function proxyToBackend(req: AuthedReq, ctx: Ctx | undefined, method: stri
       status: res.status,
       headers: { 'Content-Type': res.headers.get('content-type') ?? 'application/json' },
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Upstream error' }, { status: 502 });
   }
 }
 
-export const GET    = auth((req, ctx: Ctx) => proxyToBackend(req, ctx, 'GET'));
-export const POST   = auth((req, ctx: Ctx) => proxyToBackend(req, ctx, 'POST'));
-export const PUT    = auth((req, ctx: Ctx) => proxyToBackend(req, ctx, 'PUT'));
-export const PATCH  = auth((req, ctx: Ctx) => proxyToBackend(req, ctx, 'PATCH'));
-export const DELETE = auth((req, ctx: Ctx) => proxyToBackend(req, ctx, 'DELETE'));
+export const GET    = auth(async (req) => proxyToBackend(req, 'GET'));
+export const POST   = auth(async (req) => proxyToBackend(req, 'POST'));
+export const PUT    = auth(async (req) => proxyToBackend(req, 'PUT'));
+export const PATCH  = auth(async (req) => proxyToBackend(req, 'PATCH'));
+export const DELETE = auth(async (req) => proxyToBackend(req, 'DELETE'));

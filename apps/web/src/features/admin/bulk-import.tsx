@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiPost } from "@/lib/api/client";
 
 type ImportType = "students" | "faculty" | "courses" | "attendance";
 
@@ -31,15 +33,39 @@ const statusColors = {
 };
 
 export function BulkImport() {
+  const qc = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedType, setSelectedType] = useState<ImportType>("students");
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const uploadFile = async (file: File) => {
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      await apiPost<void>(`/api/admin/import/${selectedType}`, form);
+      void qc.invalidateQueries({ queryKey: ["import-jobs"] });
+    } catch (e) {
+      setUploadError((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    setUploading(true);
-    setTimeout(() => setUploading(false), 2000);
+    const file = e.dataTransfer.files[0];
+    if (file) void uploadFile(file);
+  };
+
+  const handleBrowse = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void uploadFile(file);
+    e.target.value = "";
   };
 
   const TEMPLATES: Record<ImportType, string[]> = {
@@ -91,10 +117,14 @@ export function BulkImport() {
                 <p className="text-3xl mb-2">📂</p>
                 <p className="text-sm font-medium">Drop your CSV or Excel file here</p>
                 <p className="text-xs text-text-muted mt-1">or</p>
-                <Button size="sm" variant="outline" className="mt-2">Browse Files</Button>
+                <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleBrowse} />
+                <Button size="sm" variant="outline" className="mt-2" onClick={() => fileInputRef.current?.click()}>
+                  Browse Files
+                </Button>
               </>
             )}
           </div>
+          {uploadError && <p className="text-sm text-[#8B2F2F]">Upload failed: {uploadError}</p>}
         </div>
 
         {/* Recent jobs */}

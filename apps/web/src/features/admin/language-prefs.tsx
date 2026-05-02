@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
+import { apiPost } from "@/lib/api/client";
 
 type Lang = "en" | "kn" | "hi" | "ta" | "te" | "ml";
 
@@ -27,7 +29,10 @@ export function LanguagePreferences() {
   const [systemDefault, setSystemDefault] = useState<Lang>("en");
   const [roleDefaults, setRoleDefaults] = useState<Record<string, Lang>>(ROLE_LANG_DEFAULTS);
   const [aiCallLang, setAiCallLang] = useState<Lang[]>(["kn", "en"]);
-  const [saved, setSaved] = useState(false);
+
+  const saveMutation = useMutation({
+    mutationFn: () => apiPost<void>("/api/admin/language", { systemDefault, roleDefaults, aiCallLang }),
+  });
 
   const toggleAiLang = (code: Lang) => {
     setAiCallLang(prev =>
@@ -88,11 +93,16 @@ export function LanguagePreferences() {
           <p className="text-xs text-text-muted mt-2">{aiCallLang.length} language(s) enabled for AI calls</p>
         </div>
 
+        {saveMutation.isError && (
+          <p className="text-sm text-[#8B2F2F]">Save failed: {(saveMutation.error as Error).message}</p>
+        )}
         <div className="flex gap-3">
-          <Button onClick={()=>{setSaved(true);setTimeout(()=>setSaved(false),2000);}}>
-            {saved ? "✓ Saved" : "Save Preferences"}
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+            {saveMutation.isPending ? "Saving…" : saveMutation.isSuccess ? "✓ Saved" : "Save Preferences"}
           </Button>
-          <Button variant="outline">Reset to Defaults</Button>
+          <Button variant="outline" onClick={() => { setSystemDefault("en"); setRoleDefaults(ROLE_LANG_DEFAULTS); setAiCallLang(["kn", "en"]); }}>
+            Reset to Defaults
+          </Button>
         </div>
       </div>
     </AppShell>

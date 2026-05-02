@@ -163,7 +163,8 @@ export function AttendanceAudit() {
                               className="rounded border border-border bg-white px-2 py-1 text-xs w-24 focus:outline-none"
                             />
                             <button
-                              className="text-xs text-[#3D6B4F] hover:underline"
+                              className="text-xs text-[#3D6B4F] hover:underline disabled:opacity-40"
+                              disabled={!editNote.trim() || correctRecord.isPending}
                               onClick={() => correctRecord.mutate({ id: r.id, status: editStatus, note: editNote })}
                             >
                               Save

@@ -52,7 +52,9 @@ export async function apiFetch<T>(
           // Do NOT redirect on !freshToken alone: the token may be momentarily
           // undefined while NextAuth's JWT callback is still hydrating, which
           // would cause a spurious login redirect on an otherwise valid session.
-          window.location.href = "/login";
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
           return undefined as unknown as T;
         }
 
@@ -117,6 +119,25 @@ export const apiPatch = <T>(path: string, body: unknown) =>
 
 export const apiDelete = <T>(path: string) =>
   apiFetch<T>(path, { method: "DELETE" });
+
+/** Downloads a file from an authenticated endpoint and triggers browser save. */
+export async function apiDownload(path: string, filename: string): Promise<void> {
+  const session = await getSession();
+  const accessToken = session?.accessToken;
+  const headers: Record<string, string> = {};
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  const res = await fetch(`${API_BASE}${path}`, { headers });
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 /** @deprecated Use apiFetch / apiGet / apiPost directly. */
 export const apiClient = {

@@ -3,6 +3,7 @@
 import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { apiGet } from "@/lib/api/client";
 
 interface NAACCriterion {
   id: string;
@@ -29,11 +30,7 @@ const trendColor = { UP: "text-[#3D6B4F]", DOWN: "text-[#8B2F2F]", STABLE: "text
 export function NaacIntelligence() {
   const { data: metrics, isLoading, error } = useQuery<NAACMetrics>({
     queryKey: ["naac-metrics"],
-    queryFn: async () => {
-      const res = await fetch('/api/admin/naac/metrics');
-      if (!res.ok) throw new Error(`Failed to load NAAC metrics: ${res.status}`);
-      return res.json() as Promise<NAACMetrics>;
-    },
+    queryFn: () => apiGet<NAACMetrics>('/api/admin/naac/metrics'),
     staleTime: 300_000,
   });
 
