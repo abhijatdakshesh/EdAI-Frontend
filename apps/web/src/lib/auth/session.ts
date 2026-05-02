@@ -8,7 +8,8 @@ export type UserRole =
   | "TRUSTEE"
   | "COUNSELLOR"
   | "STUDENT"
-  | "PARENT";
+  | "PARENT"
+  | "RECRUITER";
 
 export type Language = "kn" | "en" | "hi" | "ta" | "te" | "ml";
 
@@ -51,6 +52,7 @@ export function roleLabel(role: UserRole): string {
     COUNSELLOR: "Counsellor",
     STUDENT: "Student",
     PARENT: "Parent",
+    RECRUITER: "Recruiter",
   };
   return labels[role] ?? role;
 }

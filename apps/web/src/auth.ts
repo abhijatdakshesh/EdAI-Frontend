@@ -61,6 +61,7 @@ const DEV_CREDENTIALS: Record<
   "parent@rvce.edu": { password: "Parent@123", role: "PARENT", name: "Parent" },
   "hod@rvce.edu": { password: "Hod@123", role: "HOD", name: "Head of Department" },
   "principal@rvce.edu": { password: "Principal@123", role: "PRINCIPAL", name: "Principal" },
+  "recruiter@demo.com": { password: "Recruiter@123", role: "RECRUITER", name: "Recruiter" },
 };
 
 const DEV_JWT_SECRET = new TextEncoder().encode(
@@ -70,6 +71,8 @@ const DEV_JWT_SECRET = new TextEncoder().encode(
 async function makeDevJwt(payload: Record<string, unknown>): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
+    .setIssuer("edai-identity")
+    .setAudience("edai-services")
     .setExpirationTime("24h")
     .sign(DEV_JWT_SECRET);
 }
@@ -113,13 +116,13 @@ async function tryDevLogin(
 
 // ── NextAuth config ───────────────────────────────────────────────────────────
 
-if (!process.env.AUTH_SECRET && process.env.NODE_ENV === "production") {
-  throw new Error("AUTH_SECRET env var is required in production");
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET env var is required — add it to .env.local for development");
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
-  secret: process.env.AUTH_SECRET ?? "development-only-do-not-use-in-production",
+  secret: process.env.AUTH_SECRET,
   pages: { signIn: "/login" },
 
   providers: [

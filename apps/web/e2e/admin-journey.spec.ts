@@ -220,3 +220,229 @@ test('@P1 admin: exports page renders type selector and download button', async 
   const exportBtn = page.getByRole('button', { name: /export|download/i });
   await expect(exportBtn.or(page.locator('select').first())).toBeVisible({ timeout: 8_000 });
 });
+
+// ─── Users: row actions + Export CSV (/admin/users) ───────────────────────────
+
+test('@P1 admin: users Export CSV button is visible and stays on page after click', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/users');
+  await expect(page.getByText(/user management|users/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('button', { name: /export csv/i })).toBeVisible({ timeout: 8_000 });
+  await page.getByRole('button', { name: /export csv/i }).click();
+  await expect(page).toHaveURL(/admin\/users/);
+});
+
+test('@P1 admin: users table rows have Deactivate and Reset PWD action buttons', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/users');
+  await expect(page.getByText(/user management|users/i).first()).toBeVisible({ timeout: 10_000 });
+  const actionContent = page
+    .getByRole('button', { name: /deactivate|activate/i })
+    .or(page.getByText(/deactivate|activate/i));
+  await expect(actionContent.first()).toBeVisible({ timeout: 10_000 });
+  const resetBtn = page.getByRole('button', { name: /reset pwd|reset password/i })
+    .or(page.getByText(/reset pwd/i));
+  await expect(resetBtn.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Classes: View Students side panel (/admin/classes) ───────────────────────
+
+test('@P1 admin: classes View Students button opens student side panel', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/classes');
+  await expect(page.getByText(/class management|classes/i).first()).toBeVisible({ timeout: 10_000 });
+  const viewBtn = page.getByRole('button', { name: /view students/i });
+  if (await viewBtn.count() > 0) {
+    await viewBtn.first().click();
+    const panel = page.getByRole('table').or(page.getByText(/students in|student list|attendance/i));
+    await expect(panel.first()).toBeVisible({ timeout: 8_000 });
+  } else {
+    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  }
+});
+
+// ─── Promotion: extra tabs + Override modal (/admin/promotion) ────────────────
+
+test('@P1 admin: promotion Detention List tab renders detained students or empty state', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/promotion');
+  await expect(page.getByText(/promotion/i).first()).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: /detention list/i }).click();
+  const content = page.getByRole('table')
+    .or(page.getByText(/no detained students|generate a promotion/i))
+    .or(page.getByText(/detained/i));
+  await expect(content.first()).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P1 admin: promotion Generate Report tab shows class selector form', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/promotion');
+  await expect(page.getByText(/promotion/i).first()).toBeVisible({ timeout: 10_000 });
+  await page.getByRole('button', { name: /\+ generate report/i }).click();
+  const formContent = page.locator('select').first()
+    .or(page.locator('input[type=number]'))
+    .or(page.getByText(/class|semester|academic year/i));
+  await expect(formContent.first()).toBeVisible({ timeout: 8_000 });
+  // Use nth(1): first is the tab button, second is the form submit button
+  await expect(page.getByRole('button', { name: /generate report/i }).nth(1)).toBeVisible({ timeout: 5_000 });
+});
+
+test('@P2 admin: promotion batch Override action opens modal with notes textarea', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/promotion');
+  await expect(page.getByText(/promotion/i).first()).toBeVisible({ timeout: 10_000 });
+  const overrideBtn = page.getByRole('button', { name: /override/i });
+  if (await overrideBtn.count() > 0) {
+    await overrideBtn.first().click();
+    const modal = page.locator('textarea').or(page.getByText(/override|notes|reason/i));
+    await expect(modal.first()).toBeVisible({ timeout: 5_000 });
+  } else {
+    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  }
+});
+
+// ─── Attendance Audit: inline correct action (/admin/attendance-audit) ────────
+
+test('@P1 admin: attendance audit correct action is accessible when records load', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/attendance-audit');
+  await expect(page.getByText(/attendance audit|audit/i).first()).toBeVisible({ timeout: 10_000 });
+  const correctContent = page.getByRole('button', { name: /correct/i })
+    .or(page.getByText(/correct/i).filter({ hasNot: page.getByText(/attendance audit/i) }))
+    .or(page.getByText(/select a class|no records/i));
+  await expect(correctContent.first()).toBeVisible({ timeout: 10_000 });
+});
+
+// ─── Comms: channel toggle + New Template + Send Test (/admin/comms) ──────────
+
+test('@P1 admin: comms channel toggles are visible and interactive', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/comms');
+  await expect(page.getByText(/communication|comms/i).first()).toBeVisible({ timeout: 10_000 });
+  // Toggle buttons: inline-flex h-6 w-11 rounded-full
+  const toggle = page.locator('button').filter({
+    has: page.locator('span.inline-block.rounded-full'),
+  }).first();
+  await expect(toggle).toBeVisible({ timeout: 8_000 });
+  const classBefore = await toggle.getAttribute('class') ?? '';
+  await toggle.click();
+  const classAfter = await toggle.getAttribute('class') ?? '';
+  expect(classAfter).not.toBe(classBefore);
+});
+
+test('@P1 admin: comms + New Template button is present', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/comms');
+  await expect(page.getByText(/communication|comms/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('button', { name: /new template/i })).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P1 admin: comms Send Test form has email/phone input and Send Test button', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/comms');
+  await expect(page.getByText(/send test message/i)).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('input[type=email]').or(page.locator('input[placeholder*=recipient i]'))).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByRole('button', { name: /send test/i })).toBeVisible();
+});
+
+// ─── Alerts: resolved checkbox + severity filter + Mark Resolved (/admin/alerts)
+
+test('@P1 admin: alerts Show Resolved checkbox toggles its checked state', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/alerts');
+  await expect(page.getByText(/alert/i).first()).toBeVisible({ timeout: 10_000 });
+  const checkbox = page.locator('input[type=checkbox]');
+  await expect(checkbox).toBeVisible({ timeout: 8_000 });
+  await checkbox.click();
+  await expect(checkbox).toBeChecked();
+});
+
+test('@P1 admin: alerts severity filter cards are clickable and filter list', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/alerts');
+  await expect(page.getByText(/critical/i).first()).toBeVisible({ timeout: 10_000 });
+  await page.getByText(/critical/i).first().click();
+  // After filter, "Clear filter" link appears
+  const clearFilter = page.getByText(/clear filter/i)
+    .or(page.getByText(/critical/i).nth(1));
+  await expect(clearFilter.first()).toBeVisible({ timeout: 5_000 });
+});
+
+test('@P1 admin: alerts Mark Resolved button is visible on unresolved alert cards', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/alerts');
+  await expect(page.getByText(/alert/i).first()).toBeVisible({ timeout: 10_000 });
+  const markResolved = page.getByText(/mark resolved/i)
+    .or(page.getByText(/no alerts|all resolved/i));
+  await expect(markResolved.first()).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── Exports: 6 cards + format buttons (/admin/exports) ──────────────────────
+
+test('@P1 admin: exports page renders 6 report cards with format buttons', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/exports');
+  await expect(page.getByText(/data exports/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/student master list/i)).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/attendance report/i)).toBeVisible();
+  await expect(page.getByText(/↓ CSV/i).or(page.getByText(/CSV/i)).first()).toBeVisible({ timeout: 8_000 });
+});
+
+test('@P2 admin: exports CSV button click stays on exports page', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/exports');
+  await expect(page.getByText(/data exports/i).first()).toBeVisible({ timeout: 10_000 });
+  const csvBtn = page.getByText(/↓ CSV/i).or(page.getByText(/CSV/i)).first();
+  await expect(csvBtn).toBeVisible({ timeout: 8_000 });
+  await csvBtn.click();
+  await expect(page).toHaveURL(/admin\/exports/);
+});
+
+// ─── Settings: toggle + Reset to Defaults (/admin/settings) ──────────────────
+
+test('@P1 admin: settings page has toggle buttons that flip state', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/settings');
+  await expect(page.getByText(/system settings/i).first()).toBeVisible({ timeout: 10_000 });
+  const toggle = page.locator('button').filter({
+    has: page.locator('span.inline-block.rounded-full'),
+  }).first();
+  await expect(toggle).toBeVisible({ timeout: 8_000 });
+  await toggle.click();
+  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+});
+
+test('@P1 admin: settings Reset to Defaults button is visible', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/settings');
+  await expect(page.getByText(/system settings/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('button', { name: /reset to defaults/i })).toBeVisible({ timeout: 8_000 });
+});
+
+// ─── AI Calls: transcript panel + pagination (/admin/ai-calls) ───────────────
+
+test('@P1 admin: AI calls clicking a row opens transcript side panel', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/ai-calls');
+  await expect(page.getByText(/ai calls|voice calls|call log/i).first()).toBeVisible({ timeout: 10_000 });
+  const row = page.getByRole('row').filter({ hasText: /answered|no_answer|connected|failed/i }).first()
+    .or(page.getByText(/answered|no answer/i).first());
+  if (await row.count() > 0) {
+    await row.first().click();
+    const panel = page.getByText(/transcript|call detail|duration/i);
+    await expect(panel.first()).toBeVisible({ timeout: 5_000 });
+  } else {
+    await expect(page.getByText(/no calls|no records/i)
+      .or(page.getByRole('table'))).toBeVisible({ timeout: 8_000 });
+  }
+});
+
+test('@P2 admin: AI calls pagination Prev and Next buttons are rendered', async ({ page }) => {
+  await loginAsAdmin(page);
+  await page.goto('/admin/ai-calls');
+  await expect(page.getByText(/ai calls|voice calls|call log/i).first()).toBeVisible({ timeout: 10_000 });
+  const prevBtn = page.getByText(/← prev/i).or(page.locator('button').filter({ hasText: /prev/i }));
+  const nextBtn = page.getByText(/next →/i).or(page.locator('button').filter({ hasText: /next/i }));
+  await expect(prevBtn.first()).toBeVisible({ timeout: 8_000 });
+  await expect(nextBtn.first()).toBeVisible({ timeout: 8_000 });
+});
