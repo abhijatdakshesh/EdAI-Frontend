@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,9 @@ export function PromotionManagement() {
     studentName: string;
   } | null>(null);
   const [overrideNote, setOverrideNote] = useState("");
+
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? session?.user?.email ?? "unknown";
 
   const { data: batches = [], isLoading: loadingBatches } = usePromotionBatches();
   const { data: classes = [] } = useClasses();
@@ -266,7 +270,7 @@ export function PromotionManagement() {
                         ) {
                           executePromotion.mutate({
                             batchId: selectedBatch.id,
-                            promotedBy: "current-user",
+                            promotedBy: currentUserId,
                           });
                         }
                       }}
@@ -469,7 +473,7 @@ export function PromotionManagement() {
                         studentUsn: overrideModal.studentUsn,
                         status: "CONDITIONAL",
                         note: overrideNote,
-                        overriddenBy: "current-user",
+                        overriddenBy: currentUserId,
                       },
                       {
                         onSuccess: () => {

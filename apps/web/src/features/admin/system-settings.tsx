@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { apiPatch } from "@/lib/api/client";
 
 interface SettingField { key: string; label: string; value: string; type: "text" | "select" | "toggle"; options?: string[] }
 
@@ -50,9 +52,10 @@ export function SystemSettings() {
     SETTINGS_GROUPS.forEach(g => g.fields.forEach(f => { flat[f.key] = f.value; }));
     return flat;
   });
-  const [saved, setSaved] = useState(false);
 
-  const handleSave = () => { setSaved(true); setTimeout(()=>setSaved(false), 2000); };
+  const saveMutation = useMutation({
+    mutationFn: () => apiPatch<void>("/api/admin/settings", settings),
+  });
 
   return (
     <AppShell title="System Settings">
@@ -86,9 +89,19 @@ export function SystemSettings() {
           </div>
         ))}
 
+        {saveMutation.isError && (
+          <p className="text-sm text-[#8B2F2F]">Save failed: {(saveMutation.error as Error).message}</p>
+        )}
+
         <div className="flex items-center gap-3">
-          <Button onClick={handleSave}>{saved ? "✓ Saved" : "Save Changes"}</Button>
-          <Button variant="outline">Reset to Defaults</Button>
+          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+            {saveMutation.isPending ? "Saving…" : saveMutation.isSuccess ? "✓ Saved" : "Save Changes"}
+          </Button>
+          <Button variant="outline" onClick={() => {
+            const flat: Record<string, string> = {};
+            SETTINGS_GROUPS.forEach(g => g.fields.forEach(f => { flat[f.key] = f.value; }));
+            setSettings(flat);
+          }}>Reset to Defaults</Button>
         </div>
       </div>
     </AppShell>

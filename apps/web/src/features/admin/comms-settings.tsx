@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { apiPatch } from "@/lib/api/client";
 
 interface Channel { key: string; label: string; enabled: boolean; description: string }
 interface Template { id: string; name: string; channel: string; trigger: string; language: string; lastEdited: string }
@@ -26,7 +28,22 @@ const TEMPLATES: Template[] = [
 export function CommsSettings() {
   const [channels, setChannels] = useState(CHANNELS);
 
-  const toggle = (key: string) => setChannels(ch => ch.map(c => c.key===key ? {...c, enabled: !c.enabled} : c));
+  const toggleMutation = useMutation({
+    mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
+      apiPatch<void>(`/api/admin/comms/channels/${key}`, { enabled }),
+    onError: (err, { key }) => {
+      // Rollback on failure
+      setChannels(ch => ch.map(c => c.key === key ? { ...c, enabled: !c.enabled } : c));
+      console.error("Channel toggle failed:", (err as Error).message);
+    },
+  });
+
+  const toggle = (key: string) => {
+    const ch = channels.find(c => c.key === key);
+    if (!ch) return;
+    setChannels(prev => prev.map(c => c.key === key ? { ...c, enabled: !c.enabled } : c));
+    toggleMutation.mutate({ key, enabled: !ch.enabled });
+  };
 
   return (
     <AppShell title="Communication Settings">

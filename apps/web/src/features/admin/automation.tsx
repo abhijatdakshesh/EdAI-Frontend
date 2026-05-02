@@ -4,8 +4,8 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useQuery } from "@tanstack/react-query";
-import { apiGet } from "@/lib/api/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiGet, apiPatch } from "@/lib/api/client";
 import type { AiCallLog } from "@/lib/api/comms";
 
 interface AutomationRule {
@@ -53,9 +53,25 @@ const MOCK_RULES: AutomationRule[] = [
 ];
 
 export function AutomationRules() {
+  const qc = useQueryClient();
   const [rules, setRules] = useState(MOCK_RULES);
 
-  const toggle = (id: string) => setRules(r => r.map(rule => rule.id===id ? {...rule, enabled: !rule.enabled} : rule));
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
+      apiPatch<void>(`/api/admin/automation/rules/${id}`, { enabled }),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: ["automation-rules"] }),
+    onError: (err, { id }) => {
+      // Rollback optimistic update on failure
+      setRules(r => r.map(rule => rule.id === id ? { ...rule, enabled: !rule.enabled } : rule));
+      console.error("Toggle failed:", (err as Error).message);
+    },
+  });
+
+  const toggle = (id: string) => {
+    setRules(r => r.map(rule => rule.id === id ? { ...rule, enabled: !rule.enabled } : rule));
+    const rule = rules.find(r => r.id === id);
+    if (rule) toggleMutation.mutate({ id, enabled: !rule.enabled });
+  };
 
   return (
     <AppShell title="Automation Rules">

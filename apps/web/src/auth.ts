@@ -173,7 +173,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Identity service unreachable — fall through to dev credentials (dev only)
         }
 
-        if (process.env.NODE_ENV === "production") return null;
+        // Dev credentials only when explicitly enabled via env var — never in production
+        // and never when NODE_ENV is merely not "production" (e.g. staging docker builds).
+        if (process.env.NEXT_PUBLIC_USE_MOCKS !== "true") return null;
         const dev = await tryDevLogin(email, password);
         return dev;
       },

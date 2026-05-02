@@ -10,7 +10,7 @@ const ADMIN_ROLES: Role[] = ["ADMIN", "PRINCIPAL", "DEAN", "TRUSTEE", "HOD"];
 const TEACHER_ROLES: Role[] = ["FACULTY", "HOD", "COUNSELLOR"];
 
 function rolePrefixAllowed(pathname: string, role: Role): boolean {
-  if (pathname.startsWith("/admin/")) return ADMIN_ROLES.includes(role);
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) return ADMIN_ROLES.includes(role);
   if (pathname.startsWith("/teacher/")) return TEACHER_ROLES.includes(role) || ADMIN_ROLES.includes(role);
   if (pathname.startsWith("/student/")) return role === "STUDENT";
   if (pathname.startsWith("/parent/")) return role === "PARENT";

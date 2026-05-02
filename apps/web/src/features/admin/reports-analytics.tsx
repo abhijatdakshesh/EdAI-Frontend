@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
+import { apiDownload } from "@/lib/api/client";
 import {
   Bar, BarChart, CartesianGrid, Legend, Line, LineChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -159,9 +160,8 @@ export function ReportsAnalytics() {
                     size="sm"
                     variant="outline"
                     onClick={() =>
-                      window.open(
-                        `/api/analytics/export?type=${encodeURIComponent(r)}&format=pdf`,
-                      )
+                      apiDownload(`/api/analytics/export?type=${encodeURIComponent(r)}&format=pdf`, `${r}.pdf`)
+                        .catch(e => alert(`Export failed: ${(e as Error).message}`))
                     }
                   >
                     PDF
@@ -170,9 +170,8 @@ export function ReportsAnalytics() {
                     size="sm"
                     variant="outline"
                     onClick={() =>
-                      window.open(
-                        `/api/analytics/export?type=${encodeURIComponent(r)}&format=xlsx`,
-                      )
+                      apiDownload(`/api/analytics/export?type=${encodeURIComponent(r)}&format=xlsx`, `${r}.xlsx`)
+                        .catch(e => alert(`Export failed: ${(e as Error).message}`))
                     }
                   >
                     Excel

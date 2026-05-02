@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { apiDownload } from "@/lib/api/client";
 import {
   useUsers,
   useCreateUser,
@@ -117,7 +118,7 @@ export function UserManagement() {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => window.open("/api/users/export?format=csv")}
+            onClick={() => apiDownload("/api/users/export?format=csv", "users.csv").catch(e => alert(`Export failed: ${(e as Error).message}`))}
           >
             Export CSV
           </Button>
