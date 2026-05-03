@@ -5,42 +5,52 @@ import { useSession } from 'next-auth/react';
 import type { StudentPlacementProfile, CompanyMatch, CompanyType } from './types';
 import { STATUS_STYLE, COMPANY_TYPES, MOCK_PROFILE, MOCK_MATCHES } from './types';
 
-const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true') === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
 export default function StudentPlacementView() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const usn = session?.user?.id;
 
   const [profile, setProfile] = useState<StudentPlacementProfile | null>(null);
   const [matches, setMatches] = useState<CompanyMatch[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
   const [companyType, setCompanyType] = useState<CompanyType>('SERVICE');
   const [tab, setTab] = useState<'score' | 'companies' | 'resume'>('score');
 
   useEffect(() => {
-    if (!usn && !USE_MOCK) return;
     if (USE_MOCK) { setProfile(MOCK_PROFILE); setMatches(MOCK_MATCHES); return; }
+    if (!usn) return;
     fetch(`/api/placement/student/${usn}`).then(r => r.json()).then((d: StudentPlacementProfile) => setProfile(d));
     fetch(`/api/placement/student/${usn}/matches`).then(r => r.json()).then((d: CompanyMatch[]) => setMatches(d));
   }, [usn]);
 
   const handleGenerateResume = async () => {
+    if (!usn) return;
     setGenerating(true);
+    setResumeError(null);
     try {
-      if (USE_MOCK) { await new Promise(r => setTimeout(r, 2000)); alert('Mock: PDF would download.'); return; }
+      if (USE_MOCK) { await new Promise(r => setTimeout(r, 2000)); setResumeError('Mock mode: PDF download skipped.'); return; }
       const res = await fetch(`/api/placement/student/${usn}/resume`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ companyType }),
       });
+      if (!res.ok) { setResumeError(`Failed to generate resume (${res.status})`); return; }
+      const contentType = res.headers.get('Content-Type') ?? '';
+      if (!contentType.includes('pdf')) { setResumeError('Server returned an unexpected response.'); return; }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = `${usn}_resume_${companyType}.pdf`; a.click();
       URL.revokeObjectURL(url);
+    } catch {
+      setResumeError('Failed to generate resume. Please try again.');
     } finally { setGenerating(false); }
   };
 
+  if (status === 'loading') return <div className="p-8 text-center text-gray-400">Loading…</div>;
+  if (!usn && !USE_MOCK) return <div className="p-8 text-center text-gray-400">Please sign in to view your placement profile.</div>;
   if (!profile) return <div className="p-8 text-center text-gray-400">Loading placement profile...</div>;
 
   const statusStyle = STATUS_STYLE[profile.placementStatus] ?? STATUS_STYLE['NEEDS_COACHING'];
@@ -165,6 +175,9 @@ export default function StudentPlacementView() {
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white py-3 rounded-xl font-medium transition-colors">
             {generating ? 'Claude is writing your resume...' : 'Generate & Download Resume PDF'}
           </button>
+          {resumeError && (
+            <p className="text-sm text-red-600 text-center mt-2">{resumeError}</p>
+          )}
         </div>
       )}
     </div>

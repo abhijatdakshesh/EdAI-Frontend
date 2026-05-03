@@ -29,6 +29,11 @@ export function StudentChatbot() {
   async function send() {
     const text = input.trim();
     if (!text || loading) return;
+    const userId = session?.user?.id;
+    if (!userId) {
+      setMessages((m) => [...m, { id: crypto.randomUUID(), role: "assistant", text: "Please sign in to use the AI assistant." }]);
+      return;
+    }
     setInput("");
 
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", text };
@@ -42,7 +47,7 @@ export function StudentChatbot() {
         method: "POST",
         body: JSON.stringify({
           question: text,
-          userId: session?.user?.id,
+          userId,
           language: session?.user?.preferredLanguage ?? "en",
         }),
       });

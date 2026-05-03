@@ -3,27 +3,8 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
-
-const SEMESTER_RESULTS = [
-  {
-    sem: 5, sgpa: 8.92, totalCredits: 22,
-    subjects: [
-      { code: "21CS51", name: "Software Engineering", credits: 3, iaMarks: 44, extMarks: 78, total: 122, maxTotal: 150, grade: "A+" },
-      { code: "21CS52", name: "Computer Networks", credits: 3, iaMarks: 40, extMarks: 72, total: 112, maxTotal: 150, grade: "A" },
-      { code: "21CS53", name: "Database Management", credits: 3, iaMarks: 48, extMarks: 80, total: 128, maxTotal: 150, grade: "O" },
-      { code: "21CS54", name: "Operating Systems", credits: 4, iaMarks: 38, extMarks: 70, total: 108, maxTotal: 150, grade: "A" },
-      { code: "21CSL55", name: "DBMS Lab", credits: 1, iaMarks: 38, extMarks: 38, total: 76, maxTotal: 100, grade: "A+" },
-    ],
-  },
-  {
-    sem: 4, sgpa: 8.45, totalCredits: 21,
-    subjects: [
-      { code: "21CS41", name: "Design & Analysis of Algorithms", credits: 4, iaMarks: 42, extMarks: 68, total: 110, maxTotal: 150, grade: "A" },
-      { code: "21CS42", name: "Microprocessors", credits: 3, iaMarks: 36, extMarks: 64, total: 100, maxTotal: 150, grade: "B+" },
-      { code: "21CS43", name: "Theory of Computation", credits: 3, iaMarks: 44, extMarks: 74, total: 118, maxTotal: 150, grade: "A+" },
-    ],
-  },
-];
+import { useAuth } from "@/lib/auth/use-auth";
+import { useStudentResults } from "@/lib/api/marks";
 
 const gradeColors: Record<string, string> = {
   O: "bg-[#EBF3EE] text-[#3D6B4F]",
@@ -34,82 +15,107 @@ const gradeColors: Record<string, string> = {
 };
 
 export function ResultsPortal() {
-  const [activeSem, setActiveSem] = useState(5);
-  const result = SEMESTER_RESULTS.find(r=>r.sem===activeSem);
+  const { session } = useAuth();
+  const usn = session?.user?.id ?? "";
+  const { data, isLoading, isError } = useStudentResults(usn);
 
-  const overallCGPA = 8.42;
+  const semesters = data?.semesters ?? [];
+  const [activeSem, setActiveSem] = useState<number | null>(null);
+  const currentSem = activeSem ?? semesters[0]?.semester ?? null;
+  const result = semesters.find((r) => r.semester === currentSem);
 
   return (
     <AppShell title="Results Portal">
       <div className="grid gap-5">
-        {/* CGPA summary */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <div className="col-span-2 rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4">
-            <p className="label-track">CGPA</p>
-            <p className="text-4xl font-light mt-1">{overallCGPA}<span className="text-base text-text-muted ml-1">/ 10.0</span></p>
-            <p className="text-xs text-text-muted mt-0.5">Up to Semester 5</p>
+        {isLoading ? (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-pulse">
+            {[1, 2, 3, 4].map((i) => <div key={i} className="rounded border border-border bg-surface p-4 h-20" />)}
           </div>
-          {SEMESTER_RESULTS.map(r=>(
-            <div key={r.sem} className="rounded border border-border bg-surface p-4">
-              <p className="label-track">Sem {r.sem} SGPA</p>
-              <p className="text-2xl font-light mt-1">{r.sgpa}</p>
+        ) : isError ? (
+          <div className="rounded border border-[#F5E6E6] bg-[#FDF5F5] p-4 text-sm text-[#8B2F2F]">
+            Failed to load semester results. Please try again.
+          </div>
+        ) : !data ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No semester results available yet.
+          </p>
+        ) : (
+          <>
+            {/* CGPA summary */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="col-span-2 rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4">
+                <p className="label-track">CGPA</p>
+                <p className="text-4xl font-light mt-1">
+                  {data.cgpa.toFixed(2)}
+                  <span className="text-base text-text-muted ml-1">/ 10.0</span>
+                </p>
+                <p className="text-xs text-text-muted mt-0.5">Up to Semester {semesters[0]?.semester ?? "—"}</p>
+              </div>
+              {semesters.slice(0, 2).map((r) => (
+                <div key={r.semester} className="rounded border border-border bg-surface p-4">
+                  <p className="label-track">Sem {r.semester} SGPA</p>
+                  <p className="text-2xl font-light mt-1">{r.sgpa}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Semester selector */}
-        <div className="flex gap-2">
-          {SEMESTER_RESULTS.map(r=>(
-            <button key={r.sem} onClick={()=>setActiveSem(r.sem)}
-              className={cn("rounded border px-4 py-2 text-sm transition-colors",
-                activeSem===r.sem ? "border-[#1C1810] bg-[#1C1810] text-[#F2EFE9]" : "border-border hover:border-[#1C1810]")}>
-              Sem {r.sem}
-            </button>
-          ))}
-        </div>
+            {/* Semester selector */}
+            <div className="flex gap-2">
+              {semesters.map((r) => (
+                <button key={r.semester} onClick={() => setActiveSem(r.semester)}
+                  className={cn("rounded border px-4 py-2 text-sm transition-colors",
+                    currentSem === r.semester ? "border-[#1C1810] bg-[#1C1810] text-[#F2EFE9]" : "border-border hover:border-[#1C1810]")}>
+                  Sem {r.semester}
+                </button>
+              ))}
+            </div>
 
-        {/* Results table */}
-        {result && (
-          <div className="overflow-x-auto rounded border border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-cream-200">
-                <tr>
-                  {["Code","Subject","Credits","IA Marks","External","Total","Grade"].map(h=>(
-                    <th key={h} className="px-4 py-2 text-left label-track">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {result.subjects.map(s=>(
-                  <tr key={s.code} className="border-t border-border even:bg-cream-50">
-                    <td className="px-4 py-2 font-mono text-xs">{s.code}</td>
-                    <td className="px-4 py-2 font-medium">{s.name}</td>
-                    <td className="px-4 py-2">{s.credits}</td>
-                    <td className="px-4 py-2">{s.iaMarks}/50</td>
-                    <td className="px-4 py-2">{s.extMarks}/100</td>
-                    <td className="px-4 py-2 font-medium">{s.total}/{s.maxTotal}</td>
-                    <td className="px-4 py-2">
-                      <span className={cn("rounded px-2 py-0.5 text-xs font-medium", gradeColors[s.grade] ?? "bg-cream-100")}>{s.grade}</span>
-                    </td>
-                  </tr>
-                ))}
-                <tr className="border-t-2 border-border bg-cream-100">
-                  <td colSpan={2} className="px-4 py-2 font-medium">Semester {result.sem}</td>
-                  <td className="px-4 py-2 font-medium">{result.totalCredits}</td>
-                  <td colSpan={3} />
-                  <td className="px-4 py-2 font-medium">SGPA: {result.sgpa}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            {/* Results table */}
+            {result && (
+              <div className="overflow-x-auto rounded border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-cream-200">
+                    <tr>
+                      {["Code", "Subject", "Credits", "IA Marks", "External", "Total", "Grade"].map((h) => (
+                        <th key={h} className="px-4 py-2 text-left label-track">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.subjects.map((s) => (
+                      <tr key={s.code} className="border-t border-border even:bg-cream-50">
+                        <td className="px-4 py-2 font-mono text-xs">{s.code}</td>
+                        <td className="px-4 py-2 font-medium">{s.name}</td>
+                        <td className="px-4 py-2">{s.credits}</td>
+                        <td className="px-4 py-2">{s.ia}/50</td>
+                        <td className="px-4 py-2">{s.exam}/100</td>
+                        <td className="px-4 py-2 font-medium">{s.total}/150</td>
+                        <td className="px-4 py-2">
+                          <span className={cn("rounded px-2 py-0.5 text-xs font-medium", gradeColors[s.grade] ?? "bg-cream-100")}>
+                            {s.grade}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="border-t-2 border-border bg-cream-100">
+                      <td colSpan={2} className="px-4 py-2 font-medium">Semester {result.semester}</td>
+                      <td className="px-4 py-2 font-medium">{result.subjects.reduce((sum, s) => sum + s.credits, 0)}</td>
+                      <td colSpan={3} />
+                      <td className="px-4 py-2 font-medium">SGPA: {result.sgpa}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Grade legend */}
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(gradeColors).map(([g, cls]) => (
+                <span key={g} className={cn("rounded px-3 py-1 text-xs font-medium", cls)}>Grade {g}</span>
+              ))}
+            </div>
+          </>
         )}
-
-        {/* Grade legend */}
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(gradeColors).map(([g,cls])=>(
-            <span key={g} className={cn("rounded px-3 py-1 text-xs font-medium", cls)}>Grade {g}</span>
-          ))}
-        </div>
       </div>
     </AppShell>
   );

@@ -29,6 +29,7 @@ export function ParentFees() {
   const [selectedUsn, setSelectedUsn] = useState("");
   const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
   const [paying, setPaying] = useState(false);
+  const [payMsg, setPayMsg] = useState<{ type: "success" | "error" | "warn"; text: string } | null>(null);
 
   const activeUsn = selectedUsn || (children[0]?.usn ?? "");
   const { data: fees, isLoading: loadingFees } = useChildFees(activeUsn);
@@ -78,18 +79,18 @@ export function ParentFees() {
               });
               if (verifyResult.success) {
                 setSelectedFeeIds([]);
-                alert(`Payment successful! Receipt: ${verifyResult.receiptId}`);
+                setPayMsg({ type: "success", text: `Payment successful! Receipt: ${verifyResult.receiptId}` });
               } else {
-                alert("Payment verification failed. Please contact accounts@rvitm.edu.in");
+                setPayMsg({ type: "error", text: "Payment verification failed. Please contact accounts@rvitm.edu.in" });
               }
             } catch {
-              alert("Payment verification error. Please contact support.");
+              setPayMsg({ type: "error", text: "Payment verification error. Please contact support." });
             }
           },
         });
         rzp.open();
       } else {
-        alert(`Razorpay not loaded. Order ID: ${result.orderId}`);
+        setPayMsg({ type: "warn", text: `Payment gateway not loaded. Please refresh and try again. (Order ID: ${result.orderId})` });
       }
     } finally {
       setPaying(false);
@@ -186,6 +187,12 @@ export function ParentFees() {
                   ))}
                 </div>
 
+                {payMsg && (
+                  <p className={cn("text-xs mt-2",
+                    payMsg.type === "success" ? "text-[#3D6B4F]" : payMsg.type === "warn" ? "text-[#8B6914]" : "text-[#8B2F2F]")}>
+                    {payMsg.text}
+                  </p>
+                )}
                 {selectedFeeIds.length > 0 && (
                   <div className="mt-3 rounded border border-[#1C1810] bg-cream-100 p-4 flex items-center justify-between">
                     <div>

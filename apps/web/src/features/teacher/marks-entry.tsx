@@ -19,6 +19,9 @@ export function TeacherMarksEntry() {
   const [localMarks, setLocalMarks] = useState<Record<string, { ia1: string; ia2: string }>>({});
   const [saved, setSaved] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data: serverRows = [], isLoading } = useTeacherIAMarks(subjectId);
   const saveMarks = useSaveIAMarks();
@@ -54,16 +57,21 @@ export function TeacherMarksEntry() {
       return row;
     });
 
+    setSaveError(null);
     saveMarks.mutate(
       { subjectId, entries },
-      { onSuccess: () => setSaved(true) },
+      {
+        onSuccess: () => setSaved(true),
+        onError: (e: Error) => setSaveError(e.message ?? "Save failed."),
+      },
     );
   }
 
   function handleSubmit() {
-    if (!confirm("Submit marks for admin review? You can still edit until admin confirms.")) return;
+    setSubmitError(null);
     submitMarks.mutate(subjectId, {
       onSuccess: () => setSubmitted(true),
+      onError: (e: Error) => setSubmitError(e.message ?? "Submission failed."),
     });
   }
 
@@ -140,18 +148,36 @@ export function TeacherMarksEntry() {
                 <div className="text-sm text-text-muted">
                   {serverRows.length} students · IA marks out of 25
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center flex-wrap">
                   {saved && <span className="text-xs text-[#3D6B4F]">✓ Draft saved</span>}
+                  {saveError && <span className="text-xs text-[#8B2F2F]">{saveError}</span>}
                   <Button size="sm" variant="outline" onClick={handleSave} disabled={saveMarks.isPending}>
                     {saveMarks.isPending ? "Saving…" : "Save Draft"}
                   </Button>
-                  <Button
-                    size="sm"
-                    disabled={!allEntered || submitMarks.isPending}
-                    onClick={handleSubmit}
-                  >
-                    {submitMarks.isPending ? "Submitting…" : "Submit for Review"}
-                  </Button>
+                  {!confirmSubmit ? (
+                    <Button
+                      size="sm"
+                      disabled={!allEntered}
+                      onClick={() => setConfirmSubmit(true)}
+                    >
+                      Submit for Review
+                    </Button>
+                  ) : (
+                    <>
+                      <span className="text-xs text-text-muted">Submit marks for admin review?</span>
+                      <Button
+                        size="sm"
+                        disabled={submitMarks.isPending}
+                        onClick={() => { setConfirmSubmit(false); handleSubmit(); }}
+                      >
+                        {submitMarks.isPending ? "Submitting…" : "Confirm"}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setConfirmSubmit(false)}>
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                  {submitError && <span className="text-xs text-[#8B2F2F]">{submitError}</span>}
                 </div>
               </div>
 

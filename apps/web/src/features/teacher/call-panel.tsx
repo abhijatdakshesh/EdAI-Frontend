@@ -1,21 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAtRiskStudents } from "@/lib/api/attendance";
 import { useRecentCallLogs, useTriggerCall, useSendSms } from "@/lib/api/comms";
 import { useClasses } from "@/lib/api/academics";
-
-// Teacher's class — Phase 2: from session (faculty's assigned classes)
-const DEFAULT_CLASS_ID = "cls-cse6a";
+import { useRouter } from "next/navigation";
 
 export function ManualCallPanel() {
-  const [classId, setClassId] = useState(DEFAULT_CLASS_ID);
+  const router = useRouter();
+  const [classId, setClassId] = useState("");
   const [triggering, setTriggering] = useState<string | null>(null);
 
   const { data: classes = [] } = useClasses();
+
+  // Auto-select first class once loaded
+  useEffect(() => {
+    if (!classId && classes.length > 0) setClassId(classes[0]!.id);
+  }, [classes, classId]);
+
   const { data: atRiskStudents = [], isLoading: loadingAtRisk } = useAtRiskStudents(classId);
   const { data: recentCalls = [], isLoading: loadingCalls } = useRecentCallLogs();
   const triggerCall = useTriggerCall();
@@ -175,7 +180,12 @@ export function ManualCallPanel() {
               ))}
             </div>
           )}
-          <Button size="sm" variant="outline" className="w-full mt-3">
+          <Button
+            size="sm"
+            variant="outline"
+            className="w-full mt-3"
+            onClick={() => router.push("/teacher/call-history")}
+          >
             View Full History
           </Button>
         </div>

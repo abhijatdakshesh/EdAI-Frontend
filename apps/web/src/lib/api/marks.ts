@@ -67,13 +67,34 @@ export const marksKeys = {
   subjectMarks: (subjectId: string) => ["marks", "subject", subjectId] as const,
 };
 
+// ─── Mock data (USE_MOCKS=true) ───────────────────────────────────────────────
+
+const MOCK_STUDENT_RESULTS: StudentResults = {
+  usn: "1RVCE01",
+  name: "Arjun Sharma",
+  cgpa: 8.42,
+  semesters: [
+    {
+      semester: 1,
+      sgpa: 8.5,
+      subjects: [
+        { code: "21MAT11", name: "Mathematics - I", credits: 4, ia: 40, exam: 80, total: 120, grade: "A" },
+        { code: "21PHY12", name: "Engineering Physics", credits: 3, ia: 35, exam: 75, total: 110, grade: "A" },
+      ],
+    },
+  ],
+};
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 /** Full results for a student — Student portal */
 export function useStudentResults(usn: string) {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<StudentResults>({
     queryKey: marksKeys.studentResults(usn),
-    queryFn: () => apiGet<StudentResults>(`/api/academics/results/student/${usn}`),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_STUDENT_RESULTS)
+      : () => apiGet<StudentResults>(`/api/academics/results/student/${usn}`),
     enabled: !!usn,
   });
 }

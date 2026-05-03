@@ -18,15 +18,10 @@ import {
   useParentCallHistory,
   useParentMessages,
   useSendParentMessage,
-  type ParentNotification,
-  type ParentMessage,
   type NotificationSeverity,
 } from "@/lib/api/parent-comms";
-
-// Parent ID would come from session in production
-const PARENT_ID = "u-parent-01";
-const PARENT_NAME = "Ramesh Sharma";
-const STUDENT_USN = "1RV21CS001";
+import { useMyChildren } from "@/lib/api/parent";
+import { useAuth } from "@/lib/auth/use-auth";
 
 // ─── Severity config ─────────────────────────────────────────────────────────
 
@@ -53,11 +48,16 @@ const severityConfig: Record<NotificationSeverity, {
 // ─── ParentNotificationFeed ──────────────────────────────────────────────────
 
 export function ParentNotificationFeed() {
+  const { session } = useAuth();
+  const parentId = session?.user?.id ?? "";
+  const { data: children = [] } = useMyChildren();
+  const childUsn = children[0]?.usn ?? "";
+
   const [filterSeverity, setFilterSeverity] = useState<NotificationSeverity | "ALL">("ALL");
 
-  const { data: notifications = [], isLoading } = useParentNotifications(PARENT_ID);
+  const { data: notifications = [], isLoading } = useParentNotifications(parentId);
   const markRead = useMarkNotificationRead();
-  const markAllRead = useMarkAllNotificationsRead(PARENT_ID);
+  const markAllRead = useMarkAllNotificationsRead(parentId);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
   const filtered =
@@ -75,7 +75,7 @@ export function ParentNotificationFeed() {
               {unreadCount > 0 ? `${unreadCount} unread notifications` : "All caught up"}
             </p>
             <p className="text-xs text-text-muted">
-              Alerts about {STUDENT_USN}'s attendance, fees, exams, and more
+              Alerts about {childUsn || "your child"}&apos;s attendance, fees, exams, and more
             </p>
           </div>
           {unreadCount > 0 && (
@@ -182,7 +182,9 @@ export function ParentNotificationFeed() {
 // ─── ParentCallsLive ─────────────────────────────────────────────────────────
 
 export function ParentCallsLive() {
-  const { data: calls = [], isLoading } = useParentCallHistory(PARENT_ID);
+  const { session } = useAuth();
+  const parentId = session?.user?.id ?? "";
+  const { data: calls = [], isLoading } = useParentCallHistory(parentId);
 
   const answered = calls.filter((c) => c.outcome === "ANSWERED").length;
   const missed = calls.filter((c) => c.outcome !== "ANSWERED").length;
@@ -251,13 +253,19 @@ export function ParentCallsLive() {
 // ─── ParentMessagesLive ──────────────────────────────────────────────────────
 
 export function ParentMessagesLive() {
-  const { data: messages = [], isLoading } = useParentMessages(PARENT_ID);
+  const { session } = useAuth();
+  const parentId = session?.user?.id ?? "";
+  const parentName = session?.user?.name ?? "";
+  const { data: children = [] } = useMyChildren();
+  const childUsn = children[0]?.usn ?? "";
+
+  const { data: messages = [], isLoading } = useParentMessages(parentId);
   const sendMessage = useSendParentMessage();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [compose, setCompose] = useState({
-    recipientId: "u-faculty-01",
-    recipientName: "Rajesh Kumar",
+    recipientId: "",
+    recipientName: "",
     subject: "",
     body: "",
   });
@@ -267,15 +275,15 @@ export function ParentMessagesLive() {
   function handleSend() {
     sendMessage.mutate(
       {
-        parentId: PARENT_ID,
-        parentName: PARENT_NAME,
-        studentUsn: STUDENT_USN,
+        parentId,
+        parentName,
+        studentUsn: childUsn,
         ...compose,
       },
       {
         onSuccess: (msg) => {
           setShowCompose(false);
-          setCompose({ recipientId: "u-faculty-01", recipientName: "Rajesh Kumar", subject: "", body: "" });
+          setCompose({ recipientId: "", recipientName: "", subject: "", body: "" });
           setSelectedId(msg.id);
         },
       },
@@ -296,6 +304,13 @@ export function ParentMessagesLive() {
             <p className="font-medium">New Message</p>
             <input
               type="text"
+              placeholder="Recipient name (e.g. Dr. Priya Sharma)"
+              value={compose.recipientName}
+              onChange={(e) => setCompose({ ...compose, recipientName: e.target.value })}
+              className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
+            />
+            <input
+              type="text"
               placeholder="Subject"
               value={compose.subject}
               onChange={(e) => setCompose({ ...compose, subject: e.target.value })}
@@ -311,7 +326,7 @@ export function ParentMessagesLive() {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                disabled={!compose.subject || !compose.body || sendMessage.isPending}
+                disabled={!compose.recipientName || !compose.subject || !compose.body || sendMessage.isPending}
                 onClick={handleSend}
               >
                 {sendMessage.isPending ? "Sending…" : "Send"}
