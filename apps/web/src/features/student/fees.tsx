@@ -35,6 +35,7 @@ export function StudentFees() {
   const [tab, setTab] = useState<"dues" | "history">("dues");
   const [selectedFeeIds, setSelectedFeeIds] = useState<string[]>([]);
   const [paying, setPaying] = useState(false);
+  const [payMsg, setPayMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const pendingItems = summary?.items?.filter((i) => i.status !== "PAID") ?? [];
   const paidItems = history;
@@ -52,6 +53,7 @@ export function StudentFees() {
   async function handlePay() {
     if (!usn || selectedFeeIds.length === 0) return;
     setPaying(true);
+    setPayMsg(null);
     try {
       const result = await initiatePayment.mutateAsync({
         studentUsn: usn,
@@ -60,9 +62,12 @@ export function StudentFees() {
         gateway: "RAZORPAY",
       });
 
-      if (typeof window !== "undefined" && (window as unknown as { Razorpay?: unknown }).Razorpay) {
-        const Razorpay = (window as unknown as { Razorpay: new (opts: unknown) => { open(): void } }).Razorpay;
-        const rzp = new Razorpay({
+      const RazorpayConstructor = typeof window !== "undefined"
+        ? (window as unknown as { Razorpay?: new (opts: unknown) => { open(): void } }).Razorpay
+        : undefined;
+
+      if (RazorpayConstructor) {
+        const rzp = new RazorpayConstructor({
           key: result.key ?? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
           amount: result.amount * 100,
           currency: result.currency,
@@ -77,13 +82,15 @@ export function StudentFees() {
               studentUsn: usn,
             });
             setSelectedFeeIds([]);
-            alert("Payment successful!");
+            setPayMsg({ type: "success", text: "Payment successful! Receipt will be emailed to you." });
           },
         });
         rzp.open();
       } else {
-        alert(`Razorpay not loaded. Order ID: ${result.orderId}`);
+        setPayMsg({ type: "error", text: `Payment gateway not loaded. Please refresh and try again. (Order: ${result.orderId})` });
       }
+    } catch {
+      setPayMsg({ type: "error", text: "Payment initiation failed. Please try again." });
     } finally {
       setPaying(false);
     }
@@ -180,6 +187,11 @@ export function StudentFees() {
                   ))}
                 </div>
 
+                {payMsg && (
+                  <div className={cn("rounded border p-3 text-sm", payMsg.type === "success" ? "border-[#3D6B4F] bg-[#F8FCF9] text-[#3D6B4F]" : "border-[#8B2F2F] bg-[#FDF5F5] text-[#8B2F2F]")}>
+                    {payMsg.text}
+                  </div>
+                )}
                 {selectedFeeIds.length > 0 && (
                   <div className="rounded border border-[#1C1810] bg-cream-100 p-4 flex items-center justify-between">
                     <div>
@@ -188,7 +200,7 @@ export function StudentFees() {
                       </p>
                       <p className="text-2xl font-light">₹{selectedAmount.toLocaleString()}</p>
                     </div>
-                    <Button onClick={handlePay} disabled={paying || initiatePayment.isPending}>
+                    <Button onClick={() => void handlePay()} disabled={paying || initiatePayment.isPending}>
                       {paying ? "Processing…" : "Pay Now"}
                     </Button>
                   </div>

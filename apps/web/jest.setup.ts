@@ -7,3 +7,10 @@ if (typeof global.fetch === 'undefined') {
     text: async () => '',
   } as unknown as Response);
 }
+
+// Extend jest matchers with @testing-library/jest-dom when running in jsdom
+// (component tests opt-in via @jest-environment jsdom docblock)
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('@testing-library/jest-dom');
+}

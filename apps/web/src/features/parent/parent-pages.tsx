@@ -1,59 +1,91 @@
 "use client";
 
-/**
- * Parent portal feature pages:
- *  - MyChildren, ParentAttendance, ParentResults, ParentVTU,
- *    ParentCalls, ParentAnnouncements, ParentMessages, ScholarshipEligibility
- */
-
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const CHILD = { name: "Arjun Nair", usn: "1RVCE22CS089", dept: "CSE", sem: 6, section: "CSE 6A", cgpa: 8.42 };
+import { useRouter } from "next/navigation";
+import {
+  useMyChildren,
+  useChildAttendance,
+  useChildResults,
+  useScholarshipEligibility,
+} from "@/lib/api/parent";
+import { useParentCallHistory, useParentMessages, useSendParentMessage } from "@/lib/api/parent-comms";
+import { useAnnouncements } from "@/lib/api/comms";
+import { useAuth } from "@/lib/auth/use-auth";
+import { apiPost } from "@/lib/api/client";
 
 // ─── My Children ─────────────────────────────────────────────────────────────
 
 export function MyChildren() {
+  const router = useRouter();
+  const { data: children = [], isLoading } = useMyChildren();
+
   return (
     <AppShell title="My Children">
       <div className="max-w-xl grid gap-5">
-        <div className="rounded border border-border bg-surface p-5">
-          <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-full bg-[#1C1810] flex items-center justify-center text-lg text-[#F2EFE9] shrink-0">
-              {CHILD.name.charAt(0)}
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-lg">{CHILD.name}</p>
-              <p className="text-sm text-text-muted">{CHILD.usn} · {CHILD.dept}</p>
-              <div className="flex flex-wrap gap-1 mt-1">
-                <span className="text-xs rounded bg-cream-100 px-2 py-0.5">Sem {CHILD.sem}</span>
-                <span className="text-xs rounded bg-cream-100 px-2 py-0.5">{CHILD.section}</span>
-                <span className="text-xs rounded bg-cream-100 px-2 py-0.5">CGPA {CHILD.cgpa}</span>
+        {isLoading ? (
+          <div className="h-40 rounded border border-border bg-surface animate-pulse" />
+        ) : children.length === 0 ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No children linked to your account. Contact the college admin office.
+          </p>
+        ) : (
+          children.map((child) => (
+            <div key={child.usn} className="rounded border border-border bg-surface p-5">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-full bg-[#1C1810] flex items-center justify-center text-lg text-[#F2EFE9] shrink-0">
+                  {child.name.charAt(0)}
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-lg">{child.name}</p>
+                  <p className="text-sm text-text-muted">{child.usn} · {child.dept}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className="text-xs rounded bg-cream-100 px-2 py-0.5">Sem {child.semester}</span>
+                    <span className="text-xs rounded bg-cream-100 px-2 py-0.5">{child.section}</span>
+                    <span className="text-xs rounded bg-cream-100 px-2 py-0.5">CGPA {child.cgpa}</span>
+                  </div>
+                </div>
+              </div>
+              <span className="ray-rule ml-0" />
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Attendance", value: `${child.attendancePct ?? "—"}%` },
+                  { label: "Current Sem", value: String(child.semester) },
+                  { label: "Department", value: child.dept },
+                  { label: "Fee Status", value: child.feeStatus ?? "—" },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <p className="text-xs text-text-muted">{s.label}</p>
+                    <p className="font-medium">{s.value}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-2 mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => router.push("/parent/attendance")}
+                >
+                  View Attendance
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => router.push("/parent/results")}
+                >
+                  View Results
+                </Button>
               </div>
             </div>
-          </div>
-          <span className="ray-rule ml-0" />
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Attendance", value: "84.5%" },
-              { label: "Current Sem", value: `${CHILD.sem}` },
-              { label: "Department", value: CHILD.dept },
-              { label: "Fee Status", value: "Paid" },
-            ].map(s=>(
-              <div key={s.label}>
-                <p className="text-xs text-text-muted">{s.label}</p>
-                <p className="font-medium">{s.value}</p>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-2 mt-4">
-            <Button size="sm" variant="outline" className="flex-1">View Attendance</Button>
-            <Button size="sm" variant="outline" className="flex-1">View Results</Button>
-          </div>
-        </div>
-        <p className="text-xs text-text-muted">To add another child&apos;s profile, contact the college admin office.</p>
+          ))
+        )}
+        <p className="text-xs text-text-muted">
+          To add another child&apos;s profile, contact the college admin office.
+        </p>
       </div>
     </AppShell>
   );
@@ -61,42 +93,89 @@ export function MyChildren() {
 
 // ─── Parent Attendance ────────────────────────────────────────────────────────
 
-const ATT_COURSES = [
-  { name: "Machine Learning", attended: 37, conducted: 45 },
-  { name: "Big Data Analytics", attended: 36, conducted: 40 },
-  { name: "ML Lab", attended: 19, conducted: 20 },
-  { name: "Cryptography", attended: 28, conducted: 38 },
-  { name: "Distributed Systems", attended: 38, conducted: 42 },
-];
-
 export function ParentAttendance() {
-  const overall = Math.round(ATT_COURSES.reduce((a,c)=>a+c.attended,0)/ATT_COURSES.reduce((a,c)=>a+c.conducted,0)*100);
+  const { data: children = [], isLoading: loadingChildren } = useMyChildren();
+  const activeUsn = children[0]?.usn ?? "";
+  const childName = children[0]?.name ?? "";
+
+  const { data: courses = [], isLoading: loadingCourses } = useChildAttendance(activeUsn);
+
+  const overall =
+    courses.length > 0
+      ? Math.round(
+          courses.reduce((a, c) => a + c.attended, 0) /
+            courses.reduce((a, c) => a + c.totalClasses, 0) *
+            100,
+        )
+      : null;
+
   return (
     <AppShell title="Attendance">
       <div className="grid gap-5 max-w-2xl">
-        <div className={cn("rounded border-l-4 p-4 bg-surface",overall>=75?"border-l-[#3D6B4F]":"border-l-[#8B2F2F]")}>
-          <p className="label-track">{CHILD.name} — Overall Attendance</p>
-          <p className="text-4xl font-light mt-1">{overall}%</p>
-          {overall<75&&<p className="text-sm text-[#8B2F2F] mt-1">⚠️ Below minimum. Detention risk.</p>}
-        </div>
-        {ATT_COURSES.map(c=>{
-          const pct=Math.round(c.attended/c.conducted*100);
-          return(
-            <div key={c.name} className="rounded border border-border bg-surface p-4">
-              <div className="flex justify-between mb-1">
-                <p className="font-medium text-sm">{c.name}</p>
-                <span className={cn("rounded px-2 py-0.5 text-xs font-medium",
-                  pct>=85?"bg-[#EBF3EE] text-[#3D6B4F]":pct>=75?"bg-[#F5EDDB] text-[#8B6914]":"bg-[#F5E6E6] text-[#8B2F2F]")}>
-                  {pct}%
-                </span>
+        {loadingChildren || loadingCourses ? (
+          <div className="grid gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded border border-border bg-surface animate-pulse" />
+            ))}
+          </div>
+        ) : courses.length === 0 ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No attendance data available.
+          </p>
+        ) : (
+          <>
+            {overall !== null && (
+              <div
+                className={cn(
+                  "rounded border-l-4 p-4 bg-surface",
+                  overall >= 75 ? "border-l-[#3D6B4F]" : "border-l-[#8B2F2F]",
+                )}
+              >
+                <p className="label-track">{childName} — Overall Attendance</p>
+                <p className="text-4xl font-light mt-1">{overall}%</p>
+                {overall < 75 && (
+                  <p className="text-sm text-[#8B2F2F] mt-1">⚠️ Below minimum. Detention risk.</p>
+                )}
               </div>
-              <div className="h-2 rounded-full bg-cream-200">
-                <div className={cn("h-2 rounded-full",pct>=75?"bg-[#3D6B4F]":"bg-[#8B2F2F]")} style={{width:`${pct}%`}}/>
+            )}
+            {courses.map((c) => (
+              <div key={c.courseId} className="rounded border border-border bg-surface p-4">
+                <div className="flex justify-between mb-1">
+                  <div>
+                    <p className="font-medium text-sm">{c.courseName}</p>
+                    <p className="text-xs text-text-muted">{c.courseCode}</p>
+                  </div>
+                  <span
+                    className={cn(
+                      "rounded px-2 py-0.5 text-xs font-medium",
+                      c.pct >= 85
+                        ? "bg-[#EBF3EE] text-[#3D6B4F]"
+                        : c.pct >= 75
+                          ? "bg-[#F5EDDB] text-[#8B6914]"
+                          : "bg-[#F5E6E6] text-[#8B2F2F]",
+                    )}
+                  >
+                    {c.pct}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-cream-200">
+                  <div
+                    className={cn("h-2 rounded-full", c.pct >= 75 ? "bg-[#3D6B4F]" : "bg-[#8B2F2F]")}
+                    style={{ width: `${c.pct}%` }}
+                  />
+                </div>
+                <p className="text-xs text-text-muted mt-1">
+                  {c.attended}/{c.totalClasses} classes attended
+                  {c.mustAttend > 0 && (
+                    <span className="text-[#8B2F2F] ml-2">
+                      · Must attend {c.mustAttend} more to reach 75%
+                    </span>
+                  )}
+                </p>
               </div>
-              <p className="text-xs text-text-muted mt-1">{c.attended}/{c.conducted} classes attended</p>
-            </div>
-          );
-        })}
+            ))}
+          </>
+        )}
       </div>
     </AppShell>
   );
@@ -104,46 +183,81 @@ export function ParentAttendance() {
 
 // ─── Parent Results ───────────────────────────────────────────────────────────
 
-const RESULTS = [
-  { code:"21CS51", name:"Software Engineering", grade:"A+", marks:"122/150" },
-  { code:"21CS52", name:"Computer Networks", grade:"A", marks:"112/150" },
-  { code:"21CS53", name:"Database Management", grade:"O", marks:"128/150" },
-  { code:"21CS54", name:"Operating Systems", grade:"A", marks:"108/150" },
-];
-
-const gradeStyle: Record<string,string>={O:"bg-[#EBF3EE] text-[#3D6B4F]","A+":"bg-[#E6EEF5] text-[#2F567A]",A:"bg-[#F0EBF5] text-[#6B2F8B]"};
+const gradeStyle: Record<string, string> = {
+  O: "bg-[#EBF3EE] text-[#3D6B4F]",
+  "A+": "bg-[#E6EEF5] text-[#2F567A]",
+  A: "bg-[#F0EBF5] text-[#6B2F8B]",
+};
 
 export function ParentResults() {
+  const { data: children = [], isLoading: loadingChildren } = useMyChildren();
+  const activeUsn = children[0]?.usn ?? "";
+  const { data: results, isLoading } = useChildResults(activeUsn);
+
+  const latestSem = results?.semesters[results.semesters.length - 1];
+
   return (
     <AppShell title="Results">
       <div className="grid gap-5 max-w-2xl">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4 col-span-2 sm:col-span-1">
-            <p className="label-track">CGPA</p>
-            <p className="text-4xl font-light mt-1">{CHILD.cgpa}<span className="text-base text-text-muted ml-1">/ 10</span></p>
-          </div>
-          <div className="rounded border border-border bg-surface p-4">
-            <p className="label-track">Sem 5 SGPA</p>
-            <p className="text-2xl font-light mt-1">8.92</p>
-          </div>
-        </div>
-        <div className="overflow-x-auto rounded border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-cream-200">
-              <tr>{["Code","Subject","Marks","Grade"].map(h=><th key={h} className="px-4 py-2 text-left label-track">{h}</th>)}</tr>
-            </thead>
-            <tbody>
-              {RESULTS.map(r=>(
-                <tr key={r.code} className="border-t border-border even:bg-cream-50">
-                  <td className="px-4 py-2 font-mono text-xs">{r.code}</td>
-                  <td className="px-4 py-2">{r.name}</td>
-                  <td className="px-4 py-2">{r.marks}</td>
-                  <td className="px-4 py-2"><span className={cn("rounded px-2 py-0.5 text-xs font-medium",gradeStyle[r.grade]??"")}>{r.grade}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {loadingChildren || isLoading ? (
+          <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+        ) : !results ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No results available.
+          </p>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4 col-span-2 sm:col-span-1">
+                <p className="label-track">CGPA</p>
+                <p className="text-4xl font-light mt-1">
+                  {results.cgpa}
+                  <span className="text-base text-text-muted ml-1">/ 10</span>
+                </p>
+              </div>
+              {latestSem && (
+                <div className="rounded border border-border bg-surface p-4">
+                  <p className="label-track">Sem {latestSem.semester} SGPA</p>
+                  <p className="text-2xl font-light mt-1">{latestSem.sgpa}</p>
+                </div>
+              )}
+            </div>
+            {latestSem && (
+              <div className="overflow-x-auto rounded border border-border">
+                <table className="w-full text-sm">
+                  <thead className="bg-cream-200">
+                    <tr>
+                      {["Code", "Subject", "IA", "Exam", "Total", "Grade"].map((h) => (
+                        <th key={h} className="px-4 py-2 text-left label-track">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {latestSem.subjects.map((s) => (
+                      <tr key={s.code} className="border-t border-border even:bg-cream-50">
+                        <td className="px-4 py-2 font-mono text-xs">{s.code}</td>
+                        <td className="px-4 py-2">{s.name}</td>
+                        <td className="px-4 py-2">{s.ia}</td>
+                        <td className="px-4 py-2">{s.exam}</td>
+                        <td className="px-4 py-2">{s.total}</td>
+                        <td className="px-4 py-2">
+                          <span
+                            className={cn(
+                              "rounded px-2 py-0.5 text-xs font-medium",
+                              gradeStyle[s.grade] ?? "bg-cream-100",
+                            )}
+                          >
+                            {s.grade}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </AppShell>
   );
@@ -152,20 +266,46 @@ export function ParentResults() {
 // ─── Parent VTU ───────────────────────────────────────────────────────────────
 
 export function ParentVTU() {
+  const { data: children = [], isLoading } = useMyChildren();
+  const child = children[0];
+
   return (
     <AppShell title="VTU Registration">
       <div className="grid gap-5 max-w-2xl">
-        <div className="rounded border border-[#3D6B4F] bg-[#F8FCF9] p-5">
-          <p className="font-medium text-[#3D6B4F]">Registration Status: In Progress</p>
-          <p className="text-sm mt-1">VTU Semester 6 registration has been initiated and is pending final submission to the VTU portal.</p>
-        </div>
-        <dl className="rounded border border-border bg-surface p-5 grid gap-3 text-sm">
-          {[["Student","Arjun Nair"],["USN","1RVCE22CS089"],["Semester","VI (Sem 6)"],["Type","Regular"],["Subjects Registered","5"],["Fee Paid","Yes — ₹1,200"],["Submission Status","Pending VTU Portal"]].map(([k,v])=>(
-            <div key={k} className="flex justify-between border-b border-border pb-2 last:border-0">
-              <dt className="text-text-muted">{k}</dt><dd className="font-medium">{v}</dd>
+        {isLoading ? (
+          <div className="h-32 rounded border border-border bg-surface animate-pulse" />
+        ) : !child ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No child profile found.
+          </p>
+        ) : (
+          <>
+            <div className="rounded border border-[#3D6B4F] bg-[#F8FCF9] p-5">
+              <p className="font-medium text-[#3D6B4F]">Registration Status: In Progress</p>
+              <p className="text-sm mt-1">
+                VTU Semester {child.semester} registration has been initiated and is pending final
+                submission to the VTU portal.
+              </p>
             </div>
-          ))}
-        </dl>
+            <dl className="rounded border border-border bg-surface p-5 grid gap-3 text-sm">
+              {[
+                ["Student", child.name],
+                ["USN", child.usn],
+                ["Semester", `Sem ${child.semester}`],
+                ["Department", child.dept],
+                ["Section", child.section],
+              ].map(([k, v]) => (
+                <div
+                  key={k}
+                  className="flex justify-between border-b border-border pb-2 last:border-0"
+                >
+                  <dt className="text-text-muted">{k}</dt>
+                  <dd className="font-medium">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </>
+        )}
       </div>
     </AppShell>
   );
@@ -173,48 +313,74 @@ export function ParentVTU() {
 
 // ─── AI Call History ─────────────────────────────────────────────────────────
 
-const AI_CALLS = [
-  { date: "Jan 12, 2025", time: "07:05 AM", reason: "Attendance below 75% — Cryptography", lang: "Kannada", duration: "1m 42s", answered: true },
-  { date: "Jan 10, 2025", time: "07:03 AM", reason: "Fee reminder — ₹5,000 outstanding", lang: "English", duration: "0m 58s", answered: false },
-  { date: "Jan 5, 2025", time: "07:08 AM", reason: "IA-2 exam schedule notification", lang: "Kannada", duration: "1m 15s", answered: true },
-  { date: "Dec 20, 2024", time: "07:02 AM", reason: "Monthly attendance report", lang: "Kannada", duration: "2m 03s", answered: true },
-];
-
 export function ParentCalls() {
+  const { session } = useAuth();
+  const parentId = session?.user?.id ?? "";
+  const { data: calls = [], isLoading } = useParentCallHistory(parentId);
+
+  const answered = calls.filter((c) => c.outcome === "ANSWERED").length;
+  const missed = calls.filter((c) => c.outcome !== "ANSWERED").length;
+
   return (
     <AppShell title="AI Call History">
       <div className="grid gap-5 max-w-2xl">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Total Calls", value: AI_CALLS.length },
-            { label: "Answered", value: AI_CALLS.filter(c=>c.answered).length },
-            { label: "Missed", value: AI_CALLS.filter(c=>!c.answered).length },
-          ].map(s=>(
+            { label: "Total Calls", value: isLoading ? "—" : calls.length },
+            { label: "Answered", value: isLoading ? "—" : answered },
+            { label: "Missed", value: isLoading ? "—" : missed },
+          ].map((s) => (
             <div key={s.label} className="rounded border border-border bg-surface p-4">
               <p className="label-track">{s.label}</p>
               <p className="text-2xl font-light mt-1">{s.value}</p>
             </div>
           ))}
         </div>
-        <div className="grid gap-2">
-          {AI_CALLS.map((c,i)=>(
-            <div key={i} className="rounded border border-border bg-surface p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-sm">{c.reason}</p>
-                  <p className="text-xs text-text-muted mt-0.5">{c.date} at {c.time} · {c.lang} · {c.duration}</p>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={cn("rounded px-2 py-0.5 text-xs font-medium",
-                    c.answered?"bg-[#EBF3EE] text-[#3D6B4F]":"bg-[#F5E6E6] text-[#8B2F2F]")}>
-                    {c.answered ? "Answered" : "Missed"}
+        {isLoading ? (
+          <div className="grid gap-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded border border-border bg-surface animate-pulse" />
+            ))}
+          </div>
+        ) : calls.length === 0 ? (
+          <p className="rounded border border-dashed border-border p-6 text-center text-sm text-text-muted">
+            No AI calls on record.
+          </p>
+        ) : (
+          <div className="grid gap-2">
+            {calls.map((c) => (
+              <div key={c.id} className="rounded border border-border bg-surface p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-medium text-sm">{c.triggeredBy.replace(/_/g, " ")}</p>
+                    <p className="text-xs text-text-muted mt-0.5">
+                      {new Date(c.calledAt).toLocaleString("en-IN", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}{" "}
+                      · {c.language.toUpperCase()} · {c.duration}s
+                    </p>
+                    {c.summary && (
+                      <p className="text-xs text-text-secondary mt-1 p-2 rounded bg-cream-100">
+                        {c.summary}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={cn(
+                      "rounded px-2 py-0.5 text-xs font-medium shrink-0 ml-3",
+                      c.outcome === "ANSWERED"
+                        ? "bg-[#EBF3EE] text-[#3D6B4F]"
+                        : "bg-[#F5E6E6] text-[#8B2F2F]",
+                    )}
+                  >
+                    {c.outcome}
                   </span>
-                  <button className="text-xs text-[#2F567A] hover:underline">Listen</button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </AppShell>
   );
@@ -222,32 +388,58 @@ export function ParentCalls() {
 
 // ─── Parent Announcements ─────────────────────────────────────────────────────
 
-const PARENT_ANNOUNCEMENTS = [
-  { title: "Parent-Teacher Meeting — Jan 20", date: "Jan 10, 2025", body: "A Parent-Teacher Meeting is scheduled for January 20, 2025 from 10:00 AM – 1:00 PM in the Main Auditorium. Your presence is requested." },
-  { title: "IA-2 Exam Schedule Released", date: "Jan 8, 2025", body: "IA-2 examinations will be held from January 14–17, 2025. Please ensure your ward is well prepared and attends all exams." },
-  { title: "Annual Day Celebration — Feb 14", date: "Jan 5, 2025", body: "Annual Day will be celebrated on February 14, 2025. Parents are invited for the evening program starting at 5:00 PM." },
-];
-
 export function ParentAnnouncements() {
-  const [selected, setSelected] = useState(() => PARENT_ANNOUNCEMENTS[0]!);
+  const { data: announcements = [], isLoading } = useAnnouncements("PARENT");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selected = announcements.find((a) => a.id === selectedId) ?? announcements[0];
+
   return (
     <AppShell title="Announcements">
       <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
         <div className="grid gap-2">
-          {PARENT_ANNOUNCEMENTS.map(a=>(
-            <button key={a.title} onClick={()=>setSelected(a)}
-              className={cn("rounded border p-4 text-left transition-colors",
-                selected.title===a.title?"border-[#1C1810] bg-cream-100":"border-border bg-surface hover:border-[#1C1810]")}>
-              <p className="font-medium text-sm">{a.title}</p>
-              <p className="text-xs text-text-muted mt-0.5">{a.date}</p>
-            </button>
-          ))}
+          {isLoading ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="h-16 rounded border border-border bg-surface animate-pulse" />
+            ))
+          ) : announcements.length === 0 ? (
+            <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+              No announcements at this time.
+            </p>
+          ) : (
+            announcements.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => setSelectedId(a.id)}
+                className={cn(
+                  "rounded border p-4 text-left transition-colors",
+                  selected?.id === a.id
+                    ? "border-[#1C1810] bg-cream-100"
+                    : "border-border bg-surface hover:border-[#1C1810]",
+                )}
+              >
+                <p className="font-medium text-sm">{a.title}</p>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {a.postedAt
+                    ? new Date(a.postedAt).toLocaleDateString("en-IN", { dateStyle: "medium" })
+                    : "—"}{" "}
+                  · {a.category}
+                </p>
+              </button>
+            ))
+          )}
         </div>
-        <div className="rounded border border-border bg-surface p-5 self-start sticky top-4">
-          <h3 className="text-lg font-medium leading-snug">{selected.title}</h3>
-          <p className="text-xs text-text-muted mb-3">{selected.date}</p>
-          <p className="text-sm text-text-secondary leading-relaxed">{selected.body}</p>
-        </div>
+        {selected && (
+          <div className="rounded border border-border bg-surface p-5 self-start sticky top-4">
+            <h3 className="text-lg font-medium leading-snug">{selected.title}</h3>
+            <p className="text-xs text-text-muted mb-3">
+              {selected.postedAt
+                ? new Date(selected.postedAt).toLocaleDateString("en-IN", { dateStyle: "long" })
+                : "—"}
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed">{selected.body}</p>
+          </div>
+        )}
       </div>
     </AppShell>
   );
@@ -255,46 +447,127 @@ export function ParentAnnouncements() {
 
 // ─── Parent Messages ──────────────────────────────────────────────────────────
 
-const MESSAGES = [
-  { from: "Dr. Priya Sharma", role: "HOD, CSE", date: "Jan 11", preview: "Arjun's ML project submission was excellent. However, attendance in the last 2 weeks has dropped. Please encourage regular attendance.", unread: true },
-  { from: "Ms. Meena Subramanian", role: "Counsellor", date: "Jan 9", preview: "We had a brief counselling session with Arjun regarding exam stress. He is doing well. No further action needed at this time.", unread: false },
-  { from: "Placement Cell", role: "Admin", date: "Jan 8", preview: "Arjun has registered for the Infosys placement drive. Please ensure he has formal attire ready for January 18.", unread: false },
-];
-
 export function ParentMessages() {
-  const [selected, setSelected] = useState(() => MESSAGES[0]!);
+  const { session } = useAuth();
+  const parentId = session?.user?.id ?? "";
+  const parentName = session?.user?.name ?? "";
+  const { data: children = [] } = useMyChildren();
+  const childUsn = children[0]?.usn ?? "";
+
+  const { data: messages = [], isLoading } = useParentMessages(parentId);
+  const sendMessage = useSendParentMessage();
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+  const [sendMsg, setSendMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const selected = messages.find((m) => m.id === selectedId) ?? messages[0];
+
+  function handleReply() {
+    if (!selected || !reply.trim()) return;
+    setSendMsg(null);
+    sendMessage.mutate(
+      {
+        parentId,
+        parentName,
+        studentUsn: childUsn,
+        recipientId: selected.recipientId,
+        recipientName: selected.recipientName,
+        subject: `Re: ${selected.subject}`,
+        body: reply.trim(),
+      },
+      {
+        onSuccess: () => {
+          setSendMsg({ type: "success", text: "Reply sent." });
+          setReply("");
+        },
+        onError: () => setSendMsg({ type: "error", text: "Failed to send reply." }),
+      },
+    );
+  }
+
   return (
     <AppShell title="Messages">
       <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
         <div className="grid gap-2">
-          {MESSAGES.map((m,i)=>(
-            <button key={i} onClick={()=>setSelected(m)}
-              className={cn("rounded border p-4 text-left transition-colors",
-                selected.from===m.from&&selected.date===m.date?"border-[#1C1810] bg-cream-100":"border-border bg-surface hover:border-[#1C1810]")}>
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    {m.unread && <span className="h-2 w-2 rounded-full bg-[#2F567A] shrink-0" />}
-                    <p className="font-medium text-sm">{m.from}</p>
+          {isLoading ? (
+            [1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded border border-border bg-surface animate-pulse" />
+            ))
+          ) : messages.length === 0 ? (
+            <p className="text-sm text-text-muted py-4">No messages yet.</p>
+          ) : (
+            messages.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setSelectedId(m.id)}
+                className={cn(
+                  "rounded border p-4 text-left transition-colors hover:border-[#1C1810]",
+                  selected?.id === m.id
+                    ? "border-[#1C1810] bg-cream-100"
+                    : "border-border bg-surface",
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {m.status === "SENT" && (
+                        <span className="h-2 w-2 rounded-full bg-[#2F567A] shrink-0" />
+                      )}
+                      <p className="font-medium text-sm">{m.subject}</p>
+                    </div>
+                    <p className="text-xs text-text-muted">To: {m.recipientName}</p>
                   </div>
-                  <p className="text-xs text-text-muted">{m.role}</p>
+                  <p className="text-xs text-text-muted">
+                    {new Date(m.createdAt).toLocaleDateString("en-IN")}
+                  </p>
                 </div>
-                <p className="text-xs text-text-muted">{m.date}</p>
+                <p className="text-xs text-text-secondary mt-1 line-clamp-1">{m.body}</p>
+              </button>
+            ))
+          )}
+        </div>
+        {selected && (
+          <div className="rounded border border-border bg-surface p-5 self-start sticky top-4">
+            <p className="font-medium">{selected.subject}</p>
+            <p className="text-xs text-text-muted mb-3">
+              To {selected.recipientName} ·{" "}
+              {new Date(selected.createdAt).toLocaleDateString("en-IN")}
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed mb-4">{selected.body}</p>
+            {selected.replies.length > 0 && (
+              <div className="mb-4 grid gap-2 border-t border-border pt-4">
+                <p className="text-xs label-track">Replies</p>
+                {selected.replies.map((r) => (
+                  <div key={r.id} className="rounded bg-cream-100 p-3">
+                    <p className="text-xs font-medium">{r.fromName}</p>
+                    <p className="text-sm mt-1 text-text-secondary">{r.body}</p>
+                  </div>
+                ))}
               </div>
-              <p className="text-xs text-text-secondary mt-1 line-clamp-1">{m.preview}</p>
-            </button>
-          ))}
-        </div>
-        <div className="rounded border border-border bg-surface p-5 self-start sticky top-4">
-          <p className="font-medium">{selected.from}</p>
-          <p className="text-xs text-text-muted mb-3">{selected.role} · {selected.date}</p>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">{selected.preview}</p>
-          <textarea value={reply} onChange={e=>setReply(e.target.value)} rows={3}
-            placeholder="Reply to this message…"
-            className="w-full rounded border border-border bg-background px-3 py-2 text-sm focus:outline-none mb-2" />
-          <Button size="sm" className="w-full">Send Reply</Button>
-        </div>
+            )}
+            <textarea
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              rows={3}
+              placeholder="Reply to this message…"
+              className="w-full rounded border border-border bg-background px-3 py-2 text-sm focus:outline-none mb-2"
+            />
+            {sendMsg && (
+              <p className={`text-xs mb-2 ${sendMsg.type === "success" ? "text-[#3D6B4F]" : "text-[#8B2F2F]"}`}>
+                {sendMsg.text}
+              </p>
+            )}
+            <Button
+              size="sm"
+              className="w-full"
+              disabled={!reply.trim() || sendMessage.isPending}
+              onClick={handleReply}
+            >
+              {sendMessage.isPending ? "Sending…" : "Send Reply"}
+            </Button>
+          </div>
+        )}
       </div>
     </AppShell>
   );
@@ -303,39 +576,68 @@ export function ParentMessages() {
 // ─── Scholarship Eligibility ──────────────────────────────────────────────────
 
 export function ScholarshipEligibility() {
+  const { data: children = [], isLoading: loadingChildren } = useMyChildren();
+  const activeUsn = children[0]?.usn ?? "";
+  const { data: eligibility, isLoading } = useScholarshipEligibility(activeUsn);
+  const [applyMsg, setApplyMsg] = useState<Record<string, string>>({});
+
+  async function handleApply(schemeName: string) {
+    setApplyMsg((m) => ({ ...m, [schemeName]: "Submitting…" }));
+    try {
+      await apiPost("/api/parent/scholarship/apply", { childUsn: activeUsn, schemeName });
+      setApplyMsg((m) => ({ ...m, [schemeName]: "Application submitted." }));
+    } catch {
+      setApplyMsg((m) => ({ ...m, [schemeName]: "Failed. Please try again." }));
+    }
+  }
+
   return (
     <AppShell title="Scholarship Eligibility">
       <div className="grid gap-5 max-w-2xl">
-        <div className="grid gap-3">
-          {[
-            { name: "Government of Karnataka — Post-Matric Scholarship", eligible: true, amount: "₹25,000/year", criteria: "Family income < ₹2.5L, SC/ST/OBC", status: "Applied" },
-            { name: "RV Trust Merit Scholarship", eligible: true, amount: "50% fee waiver", criteria: "CGPA ≥ 8.0, no backlogs", status: "Under Review" },
-            { name: "Pragathi Scholarship — Karnataka", eligible: false, amount: "₹15,000/year", criteria: "Girl student only", status: "Not Eligible" },
-            { name: "AICTE Pragati Scholarship", eligible: false, amount: "₹50,000/year", criteria: "Family income < ₹8L, one girl child per family", status: "Not Eligible" },
-            { name: "National Scholarship Portal — Central Sector", eligible: true, amount: "₹10,000/year", criteria: "Top 20% in board exams, family income < ₹8L", status: "Not Applied" },
-          ].map(s=>(
-            <div key={s.name} className={cn("rounded border p-4 bg-surface",!s.eligible&&"opacity-70")}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium text-sm">{s.name}</p>
-                  <p className="text-xs text-text-muted mt-0.5">{s.criteria}</p>
-                  <p className="text-xs font-medium text-[#3D6B4F] mt-1">{s.amount}</p>
+        {loadingChildren || isLoading ? (
+          <div className="grid gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded border border-border bg-surface animate-pulse" />
+            ))}
+          </div>
+        ) : !eligibility || eligibility.schemes.length === 0 ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No scholarship data available.
+          </p>
+        ) : (
+          <div className="grid gap-3">
+            {eligibility.schemes.map((s) => (
+              <div key={s.name} className="rounded border p-4 bg-surface">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-sm">{s.name}</p>
+                    <p className="text-xs text-text-muted mt-0.5">{s.criteria}</p>
+                    <p className="text-xs font-medium text-[#3D6B4F] mt-1">
+                      ₹{s.amount.toLocaleString()}/year
+                    </p>
+                  </div>
                 </div>
-                <span className={cn("rounded px-2 py-0.5 text-xs font-medium shrink-0",
-                  s.status==="Applied"?"bg-[#E6EEF5] text-[#2F567A]"
-                  :s.status==="Under Review"?"bg-[#F5EDDB] text-[#8B6914]"
-                  :s.status==="Not Applied"?"bg-cream-100 text-text-muted"
-                  :"bg-[#F5E6E6] text-[#8B2F2F]")}>
-                  {s.status}
-                </span>
+                {applyMsg[s.name] && (
+                  <p className={`text-xs mt-1 ${applyMsg[s.name]?.includes("submitted") ? "text-[#3D6B4F]" : applyMsg[s.name]?.includes("Submitting") ? "text-text-muted" : "text-[#8B2F2F]"}`}>
+                    {applyMsg[s.name]}
+                  </p>
+                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2"
+                  disabled={!!applyMsg[s.name]?.includes("submitted")}
+                  onClick={() => void handleApply(s.name)}
+                >
+                  Apply Now
+                </Button>
               </div>
-              {s.eligible && s.status==="Not Applied" && (
-                <Button size="sm" variant="outline" className="mt-2">Apply Now</Button>
-              )}
-            </div>
-          ))}
-        </div>
-        <p className="text-xs text-text-muted">Eligibility is auto-checked based on student data. Contact admin for document submission.</p>
+            ))}
+          </div>
+        )}
+        <p className="text-xs text-text-muted">
+          Eligibility is auto-checked based on student data. Contact admin for document submission.
+        </p>
       </div>
     </AppShell>
   );

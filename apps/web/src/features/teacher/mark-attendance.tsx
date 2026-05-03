@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useClasses, useClassStudents } from "@/lib/api/academics";
 import { useMarkAttendance } from "@/lib/api/attendance";
+import { useAuth } from "@/lib/auth/use-auth";
 
 type AttStatus = "PRESENT" | "ABSENT" | "LATE";
 
@@ -25,6 +26,8 @@ const statusConfig: Record<AttStatus, { label: string; color: string; bg: string
 
 export function MarkAttendance() {
   const today = new Date().toISOString().slice(0, 10);
+  const { session } = useAuth();
+  const facultyId = session?.user?.id ?? "";
 
   const [classId, setClassId] = useState("");
   const [subjectId, setSubjectId] = useState("21CS61"); // default — in production: load from course assignment
@@ -76,7 +79,7 @@ export function MarkAttendance() {
         classId,
         date,
         entries,
-        markedBy: "current-faculty", // Phase 2: from session
+        markedBy: facultyId,
       },
       {
         onSuccess: () => {

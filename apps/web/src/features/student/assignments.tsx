@@ -3,38 +3,45 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
-
-interface Assignment {
-  id: string;
-  title: string;
-  course: string;
-  dueDate: string;
-  status: "pending" | "submitted" | "graded" | "late";
-  marks?: number;
-  maxMarks?: number;
-  description: string;
-}
-
-const ASSIGNMENTS: Assignment[] = [
-  { id: "a1", title: "ML Model Comparison Report", course: "Machine Learning", dueDate: "2025-01-15", status: "pending", maxMarks: 20, description: "Compare SVM, Random Forest, and Neural Network on MNIST dataset. Report accuracy, precision, recall, F1." },
-  { id: "a2", title: "Hadoop MapReduce Implementation", course: "Big Data Analytics", dueDate: "2025-01-18", status: "pending", maxMarks: 25, description: "Implement word count and log analysis using Hadoop MapReduce. Submit code + 2-page report." },
-  { id: "a3", title: "RSA Algorithm Implementation", course: "Cryptography", dueDate: "2025-01-10", status: "submitted", maxMarks: 20, description: "Implement RSA encryption/decryption with key generation in Python." },
-  { id: "a4", title: "Distributed Hash Table", course: "Distributed Systems", dueDate: "2025-01-05", status: "graded", marks: 19, maxMarks: 20, description: "Chord DHT implementation with node join/leave operations." },
-  { id: "a5", title: "ER Diagram — Library System", course: "Big Data Analytics", dueDate: "2024-12-20", status: "late", maxMarks: 15, description: "Design ER diagram for a library management system with all entities and relationships." },
-];
+import { useAuth } from "@/lib/auth/use-auth";
+import { useStudentAssignments, useSubmitAssignment, type AssignmentStatus } from "@/lib/api/assignments";
 
 const statusStyle: Record<string, string> = {
-  pending: "bg-[#F5EDDB] text-[#8B6914]",
-  submitted: "bg-[#E6EEF5] text-[#2F567A]",
-  graded: "bg-[#EBF3EE] text-[#3D6B4F]",
-  late: "bg-[#F5E6E6] text-[#8B2F2F]",
+  PENDING: "bg-[#F5EDDB] text-[#8B6914]",
+  SUBMITTED: "bg-[#E6EEF5] text-[#2F567A]",
+  GRADED: "bg-[#EBF3EE] text-[#3D6B4F]",
+  LATE: "bg-[#F5E6E6] text-[#8B2F2F]",
 };
 
-export function MyAssignments() {
-  const [selected, setSelected] = useState<Assignment | null>(null);
-  const [filter, setFilter] = useState<"all"|"pending"|"submitted"|"graded">("all");
+type FilterOption = "all" | AssignmentStatus;
 
-  const filtered = ASSIGNMENTS.filter(a => filter==="all" || a.status===filter);
+export function MyAssignments() {
+  const { session } = useAuth();
+  const usn = session?.user?.id ?? "";
+  const [filter, setFilter] = useState<FilterOption>("all");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [submitUrl, setSubmitUrl] = useState("");
+  const [submitMsg, setSubmitMsg] = useState<string | null>(null);
+
+  const { data: assignments = [], isLoading } = useStudentAssignments(
+    usn,
+    filter !== "all" ? filter : undefined,
+  );
+  const submitMutation = useSubmitAssignment();
+
+  const selected = assignments.find((a) => a.id === selectedId) ?? null;
+
+  async function handleSubmit() {
+    if (!selected || !usn || !submitUrl.trim()) return;
+    setSubmitMsg(null);
+    try {
+      await submitMutation.mutateAsync({ assignmentId: selected.id, fileUrl: submitUrl.trim(), studentUsn: usn });
+      setSubmitMsg("Submitted successfully!");
+      setSubmitUrl("");
+    } catch {
+      setSubmitMsg("Submission failed. Please try again.");
+    }
+  }
 
   return (
     <AppShell title="My Assignments">
@@ -42,33 +49,46 @@ export function MyAssignments() {
         <div className="grid gap-4">
           {/* Filter tabs */}
           <div className="flex gap-1 border-b border-border">
-            {(["all","pending","submitted","graded"] as const).map(f=>(
-              <button key={f} onClick={()=>setFilter(f)}
+            {(["all", "PENDING", "SUBMITTED", "GRADED"] as const).map((f) => (
+              <button key={f} onClick={() => setFilter(f)}
                 className={cn("px-4 py-2 text-sm capitalize transition-colors",
-                  filter===f ? "border-b-2 border-[#1C1810] font-medium" : "text-text-muted hover:text-text-primary")}>
-                {f}
+                  filter === f ? "border-b-2 border-[#1C1810] font-medium" : "text-text-muted hover:text-text-primary")}>
+                {f.toLowerCase()}
               </button>
             ))}
           </div>
 
-          {/* List */}
-          {filtered.map(a=>(
-            <button key={a.id} onClick={()=>setSelected(a)}
-              className={cn("rounded border p-4 text-left transition-colors",
-                selected?.id===a.id ? "border-[#1C1810] bg-cream-100" : "border-border bg-surface hover:border-[#1C1810]")}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-medium">{a.title}</p>
-                  <p className="text-xs text-text-muted mt-0.5">{a.course}</p>
+          {isLoading ? (
+            <div className="grid gap-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded border border-border bg-surface p-4 h-20 animate-pulse" />
+              ))}
+            </div>
+          ) : assignments.length === 0 ? (
+            <div className="rounded border border-dashed border-border p-10 text-center text-sm text-text-muted">
+              No {filter !== "all" ? filter.toLowerCase() : ""} assignments found.
+            </div>
+          ) : (
+            assignments.map((a) => (
+              <button key={a.id} onClick={() => setSelectedId(a.id)}
+                className={cn("rounded border p-4 text-left transition-colors",
+                  selectedId === a.id ? "border-[#1C1810] bg-cream-100" : "border-border bg-surface hover:border-[#1C1810]")}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{a.title}</p>
+                    <p className="text-xs text-text-muted mt-0.5">{a.courseName}</p>
+                  </div>
+                  <span className={cn("rounded px-2 py-0.5 text-xs font-medium shrink-0", statusStyle[a.status])}>
+                    {a.status.toLowerCase()}
+                  </span>
                 </div>
-                <span className={cn("rounded px-2 py-0.5 text-xs font-medium shrink-0", statusStyle[a.status])}>{a.status}</span>
-              </div>
-              <div className="flex gap-4 mt-2 text-xs text-text-muted">
-                <span>📅 Due: {a.dueDate}</span>
-                {a.marks !== undefined && <span>✓ {a.marks}/{a.maxMarks}</span>}
-              </div>
-            </button>
-          ))}
+                <div className="flex gap-4 mt-2 text-xs text-text-muted">
+                  <span>📅 Due: {a.dueDate}</span>
+                  {a.grade !== undefined && <span>✓ {a.grade}/{a.maxMarks}</span>}
+                </div>
+              </button>
+            ))
+          )}
         </div>
 
         {/* Detail */}
@@ -76,7 +96,7 @@ export function MyAssignments() {
           <div className="rounded border border-border bg-surface p-5 self-start sticky top-4">
             <p className="label-track">Assignment Details</p>
             <h3 className="mt-2 text-lg font-medium leading-snug">{selected.title}</h3>
-            <p className="text-xs text-text-muted">{selected.course}</p>
+            <p className="text-xs text-text-muted">{selected.courseName} · {selected.courseCode}</p>
             <span className="ray-rule ml-0" />
             <p className="text-sm text-text-secondary mb-4">{selected.description}</p>
             <dl className="grid gap-2 text-sm mb-4">
@@ -86,21 +106,44 @@ export function MyAssignments() {
               <div className="flex justify-between border-b border-border pb-1">
                 <dt className="text-text-muted">Max Marks</dt><dd>{selected.maxMarks}</dd>
               </div>
-              {selected.marks !== undefined && (
+              {selected.grade !== undefined && (
                 <div className="flex justify-between border-b border-border pb-1">
                   <dt className="text-text-muted">Marks Obtained</dt>
-                  <dd className="font-medium text-[#3D6B4F]">{selected.marks}/{selected.maxMarks}</dd>
+                  <dd className="font-medium text-[#3D6B4F]">{selected.grade}/{selected.maxMarks}</dd>
+                </div>
+              )}
+              {selected.feedback && (
+                <div className="flex justify-between border-b border-border pb-1">
+                  <dt className="text-text-muted">Feedback</dt>
+                  <dd className="text-xs">{selected.feedback}</dd>
                 </div>
               )}
               <div className="flex justify-between">
                 <dt className="text-text-muted">Status</dt>
-                <dd><span className={cn("rounded px-2 py-0.5 text-xs font-medium", statusStyle[selected.status])}>{selected.status}</span></dd>
+                <dd><span className={cn("rounded px-2 py-0.5 text-xs font-medium", statusStyle[selected.status])}>{selected.status.toLowerCase()}</span></dd>
               </div>
             </dl>
-            {selected.status === "pending" && (
-              <button className="w-full rounded bg-[#1C1810] py-2 text-sm text-[#F2EFE9] transition-colors hover:bg-[#2C2418]">
-                Submit Assignment
-              </button>
+            {selected.status === "PENDING" && (
+              <div className="grid gap-2">
+                <input
+                  value={submitUrl}
+                  onChange={(e) => setSubmitUrl(e.target.value)}
+                  placeholder="Paste submission URL or file link"
+                  className="w-full rounded border border-border bg-background px-3 py-2 text-sm focus:outline-none"
+                />
+                <button
+                  onClick={() => void handleSubmit()}
+                  disabled={!submitUrl.trim() || submitMutation.isPending}
+                  className="w-full rounded bg-[#1C1810] py-2 text-sm text-[#F2EFE9] transition-colors hover:bg-[#2C2418] disabled:opacity-50"
+                >
+                  {submitMutation.isPending ? "Submitting…" : "Submit Assignment"}
+                </button>
+                {submitMsg && (
+                  <p className={cn("text-xs text-center", submitMsg.includes("success") ? "text-[#3D6B4F]" : "text-[#8B2F2F]")}>
+                    {submitMsg}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         ) : (

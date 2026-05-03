@@ -1,0 +1,9 @@
+node_modules
+apps/web/.next
+apps/web/coverage
+apps/mobile
+.env*
+.git
+e2e
+playwright-report
+test-results

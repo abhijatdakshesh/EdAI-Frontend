@@ -154,6 +154,11 @@ export function TeacherAssignments() {
                 className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
               />
             </div>
+            {createAssignment.isError && (
+              <p className="text-xs text-[#8B2F2F]">
+                Failed to create: {(createAssignment.error as Error).message}
+              </p>
+            )}
             <div className="flex gap-2">
               <Button size="sm" onClick={() => createAssignment.mutate(form)} disabled={createAssignment.isPending}>
                 {createAssignment.isPending ? "Saving…" : "Create"}
@@ -196,6 +201,9 @@ export function TeacherAssignments() {
                       >
                         Submissions
                       </Button>
+                      {publishAssignment.isError && (
+                        <p className="text-xs text-[#8B2F2F]">Publish failed</p>
+                      )}
                       {a.status === "DRAFT" && (
                         <Button
                           size="sm"
@@ -277,6 +285,11 @@ export function TeacherAssignments() {
                           className="flex-1 rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
                         />
                       </div>
+                      {gradeSubmission.isError && (
+                        <p className="text-xs text-[#8B2F2F]">
+                          Grade save failed. Please retry.
+                        </p>
+                      )}
                       <div className="flex gap-2">
                         <Button
                           size="sm"
