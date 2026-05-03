@@ -73,6 +73,24 @@ export const parentCommsKeys = {
   calls: (parentId: string) => ["parent-comms", "calls", parentId] as const,
 };
 
+// ─── Mock data (USE_MOCKS=true) ───────────────────────────────────────────────
+
+const MOCK_CALLS: AiCallRecord[] = [
+  {
+    id: "mock-call-1",
+    studentUsn: "1RVCE01",
+    studentName: "Arjun Sharma",
+    parentPhone: "+919876543210",
+    parentId: "dev-parent",
+    triggeredBy: "ATTENDANCE_ALERT",
+    language: "en",
+    calledAt: new Date(Date.now() - 86_400_000).toISOString(),
+    duration: 45,
+    outcome: "ANSWERED",
+    summary: "Discussed attendance concern with parent.",
+  },
+];
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useParentNotifications(parentId: string) {
@@ -137,10 +155,12 @@ export function useSendParentMessage() {
 }
 
 export function useParentCallHistory(parentId: string) {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<AiCallRecord[]>({
     queryKey: parentCommsKeys.calls(parentId),
-    queryFn: () =>
-      apiGet<AiCallRecord[]>(`/api/parent-comms/calls?parentId=${parentId}`),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CALLS)
+      : () => apiGet<AiCallRecord[]>(`/api/parent-comms/calls?parentId=${parentId}`),
     enabled: !!parentId,
   });
 }
