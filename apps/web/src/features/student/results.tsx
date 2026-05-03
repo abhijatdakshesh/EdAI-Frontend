@@ -35,7 +35,11 @@ export function ResultsPortal() {
           <div className="rounded border border-[#F5E6E6] bg-[#FDF5F5] p-4 text-sm text-[#8B2F2F]">
             Failed to load results. Please try again.
           </div>
-        ) : !data ? null : (
+        ) : !data ? (
+          <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+            No semester results available yet.
+          </p>
+        ) : (
           <>
             {/* CGPA summary */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

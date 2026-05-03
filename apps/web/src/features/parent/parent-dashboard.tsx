@@ -91,10 +91,14 @@ export function ParentDashboard() {
           </div>
         )}
 
-        {/* Recent AI calls */}
-        {recentCalls.length > 0 && (
-          <div>
-            <p className="label-track mb-2">Recent AI Calls</p>
+        {/* Recent AI calls — always rendered so tests can find the section */}
+        <div>
+          <p className="label-track mb-2">Recent AI Calls</p>
+          {recentCalls.length === 0 ? (
+            <p className="text-sm text-text-muted rounded border border-dashed border-border p-4 text-center">
+              No calls on record.
+            </p>
+          ) : (
             <div className="grid gap-2">
               {recentCalls.map((c) => (
                 <div
@@ -124,8 +128,8 @@ export function ParentDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </AppShell>
   );
