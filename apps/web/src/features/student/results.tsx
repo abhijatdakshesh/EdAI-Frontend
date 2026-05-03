@@ -33,7 +33,7 @@ export function ResultsPortal() {
           </div>
         ) : isError ? (
           <div className="rounded border border-[#F5E6E6] bg-[#FDF5F5] p-4 text-sm text-[#8B2F2F]">
-            Failed to load results. Please try again.
+            Failed to load semester results. Please try again.
           </div>
         ) : !data ? (
           <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
