@@ -40,6 +40,22 @@ export const parentKeys = {
   childFees: (usn: string) => ["parent", "child", usn, "fees"] as const,
 };
 
+// ─── Mock data (USE_MOCKS=true) ───────────────────────────────────────────────
+
+const MOCK_CHILDREN: ChildProfile[] = [
+  {
+    usn: "1RV21CS001",
+    name: "Arjun Sharma",
+    email: "arjun@rvce.edu.in",
+    dept: "CSE",
+    semester: 5,
+    section: "A",
+    cgpa: 8.42,
+    attendancePct: 78,
+    feeStatus: "PAID",
+  },
+];
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useParentDashboard() {
@@ -51,9 +67,12 @@ export function useParentDashboard() {
 }
 
 export function useMyChildren() {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<ChildProfile[]>({
     queryKey: parentKeys.children,
-    queryFn: () => apiGet<ChildProfile[]>("/api/parent/children"),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CHILDREN)
+      : () => apiGet<ChildProfile[]>("/api/parent/children"),
   });
 }
 
@@ -65,12 +84,19 @@ export function useChild(usn: string) {
   });
 }
 
+const MOCK_CHILD_ATTENDANCE: StudentAttendanceSummary[] = [
+  { courseId: "21CS51", courseName: "Database Management Systems", courseCode: "21CS51", totalClasses: 40, attended: 34, pct: 85, canMiss: 3, mustAttend: 0 },
+  { courseId: "21CS52", courseName: "Computer Networks", courseCode: "21CS52", totalClasses: 38, attended: 27, pct: 71, canMiss: 0, mustAttend: 2 },
+];
+
 export function useChildAttendance(usn: string) {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<StudentAttendanceSummary[]>({
     queryKey: parentKeys.childAttendance(usn),
-    queryFn: () =>
-      apiGet<StudentAttendanceSummary[]>(`/api/parent/children/${usn}/attendance`),
-    enabled: !!usn,
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CHILD_ATTENDANCE)
+      : () => apiGet<StudentAttendanceSummary[]>(`/api/parent/children/${usn}/attendance`),
+    enabled: USE_MOCKS ? true : !!usn,
   });
 }
 

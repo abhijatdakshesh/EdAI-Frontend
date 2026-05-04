@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import type { NextRequest } from 'next/server';
 
 const CRITERION_LABELS: Record<number, string> = {
   1: 'Curricular Aspects',
@@ -23,7 +25,12 @@ interface NaacDashboardResponse {
   criteria: NaacDashboardCriterion[];
 }
 
-export async function GET(req: NextRequest) {
+export const GET = auth(async (req) => {
+  if (!req.auth?.accessToken) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  return _GET(req);
+});
+
+async function _GET(req: NextRequest) {
   const COMPLIANCE_SERVICE_URL = process.env.COMPLIANCE_SERVICE_URL ?? 'http://localhost:3002';
   const academicYear = req.nextUrl.searchParams.get('academicYear') ?? '2024-25';
 

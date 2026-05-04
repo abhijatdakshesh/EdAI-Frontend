@@ -1,11 +1,6 @@
 name: Deploy Production — Web Frontend
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/web/**"
-      - "packages/**"
   workflow_dispatch:
     inputs:
       confirm:
@@ -25,7 +20,7 @@ jobs:
 
   build-and-deploy:
     needs: [gate-check]
-    if: always() && (needs.gate-check.result == 'success' || github.event_name == 'push')
+    if: needs.gate-check.result == 'success'
     runs-on: ubuntu-latest
     environment: production
 
@@ -39,23 +34,26 @@ jobs:
 
       - name: Build and push to ACR
         run: |
-          az acr login --name edaiacr
+          az acr login --name edaiacrprod
           docker build \
-            -t edaiacr.azurecr.io/web:${{ github.sha }} \
-            -t edaiacr.azurecr.io/web:latest \
+            --build-arg NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" \
+            --build-arg NEXT_PUBLIC_SOCKET_URL="${{ secrets.NEXT_PUBLIC_SOCKET_URL }}" \
+            --build-arg NEXT_PUBLIC_USE_MOCKS=false \
+            -t edaiacrprod.azurecr.io/web:${{ github.sha }} \
+            -t edaiacrprod.azurecr.io/web:latest \
             -f apps/web/Dockerfile \
             .
-          docker push edaiacr.azurecr.io/web:${{ github.sha }}
-          docker push edaiacr.azurecr.io/web:latest
+          docker push edaiacrprod.azurecr.io/web:${{ github.sha }}
+          docker push edaiacrprod.azurecr.io/web:latest
 
       - name: Deploy to Container Apps
         run: |
           az containerapp update \
-            --name edai-web \
-            --resource-group edai-prod-rg \
-            --image edaiacr.azurecr.io/web:${{ github.sha }}
+            --name aca-web \
+            --resource-group rg-edai-prod-cin \
+            --image edaiacrprod.azurecr.io/web:${{ github.sha }}
 
       - name: Health check
         run: |
-          sleep 20
-          curl --fail "https://${{ secrets.PROD_DOMAIN }}" || (echo "Health check failed" && exit 1)
+          curl --retry 6 --retry-delay 10 --retry-connrefused --fail \
+            "https://${{ secrets.PROD_DOMAIN }}" || (echo "Health check failed" && exit 1)

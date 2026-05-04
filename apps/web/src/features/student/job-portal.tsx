@@ -82,7 +82,7 @@ export function JobPortal() {
                     </div>
                     <span className={cn("rounded px-2 py-0.5 text-xs font-medium",
                       j.type === "INTERNSHIP" ? "bg-[#E6EEF5] text-[#2F567A]" : "bg-[#EBF3EE] text-[#3D6B4F]")}>
-                      {j.type.replace("_", " ")}
+                      {j.type?.replace("_", " ") ?? ""}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-3 text-xs text-text-muted mb-3">

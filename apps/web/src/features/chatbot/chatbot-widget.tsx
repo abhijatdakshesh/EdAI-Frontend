@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import type { ChatMessage, ChatState } from './types';
 import { STUDENT_SUGGESTIONS, PARENT_SUGGESTIONS, TEACHER_SUGGESTIONS } from './types';
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
 
 const MOCK_RESPONSES: Record<string, string> = {
