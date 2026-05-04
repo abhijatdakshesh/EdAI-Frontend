@@ -123,7 +123,7 @@ export function DataExports() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(session && "accessToken" in session ? { Authorization: `Bearer ${(session as { accessToken: string }).accessToken}` } : {}),
+          ...((session as unknown as Record<string, unknown>)?.accessToken ? { Authorization: `Bearer ${(session as unknown as Record<string, unknown>).accessToken as string}` } : {}),
         },
         body: JSON.stringify(body),
       });

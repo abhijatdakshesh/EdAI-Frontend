@@ -43,8 +43,9 @@ async function _GET(req: NextRequest) {
     }
 
     const data = (await res.json()) as NaacDashboardResponse;
-    const overallScore = data.criteria.reduce((sum, c) => sum + (c.score ?? 0), 0);
-    const approvedCriteria = data.criteria.filter((c) => c.score !== null).length;
+    const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+    const overallScore = criteria.reduce((sum, c) => sum + (c.score ?? 0), 0);
+    const approvedCriteria = criteria.filter((c) => c.score !== null).length;
 
     return NextResponse.json({
       refreshedAt: new Date().toISOString(),
@@ -54,7 +55,7 @@ async function _GET(req: NextRequest) {
       totalCriteria: 7,
       approvedCriteria,
       pendingEvidence: 0,
-      criteria: data.criteria.map((c) => ({
+      criteria: criteria.map((c) => ({
         criterionId: `NAAC-C${c.criterion}`,
         framework: 'NAAC',
         code: `C${c.criterion}`,

@@ -117,6 +117,10 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
       socket!.on("connect", () => setConnected(true));
       socket!.on("disconnect", () => setConnected(false));
+      socket!.on("error", (err: unknown) => {
+        console.error("[Realtime] socket error", err);
+        setConnected(false);
+      });
       // Stop reconnecting on auth rejection — prevents infinite retry loop when token is expired
       socket!.on("connect_error", (err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);

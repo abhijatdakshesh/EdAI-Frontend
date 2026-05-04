@@ -1,6 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 
-export async function POST(req: NextRequest) {
+export const POST = auth(async (req) => {
+  if (!req.auth?.accessToken) {
+    return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  }
+
   const VOICE_SERVICE_URL = process.env.VOICE_SERVICE_URL ?? 'http://localhost:8090';
   try {
     const body = await req.json() as {
@@ -34,4 +39,4 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }
-}
+});

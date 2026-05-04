@@ -78,8 +78,8 @@ export default function DrivesPage() {
   const stats = {
     total: drives.length,
     confirmed: drives.filter(d => d.status === "CONFIRMED" || d.status === "ACTIVE").length,
-    totalEligible: drives.reduce((s, d) => s + d.totalEligible, 0),
-    estimatedHires: drives.reduce((s, d) => s + d.estimatedHires, 0),
+    totalEligible: (Array.isArray(drives) ? drives : []).reduce((s, d) => s + (d.totalEligible ?? 0), 0),
+    estimatedHires: (Array.isArray(drives) ? drives : []).reduce((s, d) => s + (d.estimatedHires ?? 0), 0),
   };
 
   return (
