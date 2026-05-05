@@ -100,8 +100,8 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Dev test accounts — only shown in development builds */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Demo accounts — shown when USE_MOCKS=true (demo/staging deployments) */}
+        {process.env.NEXT_PUBLIC_USE_MOCKS === 'true' && (
           <details className="mt-6">
             <summary className="cursor-pointer select-none text-xs text-text-secondary hover:text-primary">
               Test accounts (dev only)
