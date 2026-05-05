@@ -108,11 +108,25 @@ export function useChildResults(usn: string) {
   });
 }
 
+const MOCK_CHILD_FEES: FeesSummary = {
+  totalDue: 95000,
+  totalPaid: 95000,
+  totalOutstanding: 0,
+  status: "PAID",
+  items: [
+    { id: "f1", studentUsn: "1RV21CS001", component: "TUITION", amount: 75000, dueDate: "2024-07-01", paidDate: "2024-06-28", status: "PAID", semester: 5, academicYear: "2024-25", receiptNo: "RCT-2024-001" },
+    { id: "f2", studentUsn: "1RV21CS001", component: "EXAM", amount: 20000, dueDate: "2024-10-01", paidDate: "2024-09-25", status: "PAID", semester: 5, academicYear: "2024-25", receiptNo: "RCT-2024-002" },
+  ],
+};
+
 export function useChildFees(usn: string) {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<FeesSummary>({
     queryKey: parentKeys.childFees(usn),
-    queryFn: () => apiGet<FeesSummary>(`/api/parent/children/${usn}/fees`),
-    enabled: !!usn,
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CHILD_FEES)
+      : () => apiGet<FeesSummary>(`/api/parent/children/${usn}/fees`),
+    enabled: USE_MOCKS ? true : !!usn,
   });
 }
 
