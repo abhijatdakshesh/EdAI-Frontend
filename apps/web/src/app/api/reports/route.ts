@@ -26,7 +26,7 @@ export const POST = auth(async function POST(req) {
       status: 200,
       headers: {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${body.reportType}-report.zip"`,
+        'Content-Disposition': `attachment; filename="${body.reportType.replace(/[^a-zA-Z0-9_-]/g, '')}-report.zip"`,
       },
     });
   } catch (err) {
