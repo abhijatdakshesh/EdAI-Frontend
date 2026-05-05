@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { DepartmentSummary } from './types';
 import { MOCK_PROFILE } from './types';
 
-const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? 'true') === 'true' || process.env.NEXT_PUBLIC_USE_MOCK === 'true';
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
 const MOCK_SUMMARY: DepartmentSummary[] = [
   { department: 'Computer Science', semester: 8, total: 120, ready: 78, coaching: 32, highRisk: 10, avgScore: 72, avgCgpa: 7.8 },
@@ -54,11 +54,11 @@ export default function PlacementDashboard() {
     } finally { setRunning(null); }
   };
 
-  const totals = summary.reduce((acc, d) => ({
-    total: acc.total + d.total,
-    ready: acc.ready + d.ready,
-    coaching: acc.coaching + d.coaching,
-    highRisk: acc.highRisk + d.highRisk,
+  const totals = (summary ?? []).reduce((acc, d) => ({
+    total: acc.total + (d?.total ?? 0),
+    ready: acc.ready + (d?.ready ?? 0),
+    coaching: acc.coaching + (d?.coaching ?? 0),
+    highRisk: acc.highRisk + (d?.highRisk ?? 0),
   }), { total: 0, ready: 0, coaching: 0, highRisk: 0 });
 
   const mockCompanies: Company[] = [

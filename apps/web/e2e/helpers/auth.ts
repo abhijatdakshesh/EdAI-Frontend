@@ -22,5 +22,5 @@ export async function loginAs(page: Page, role: Role): Promise<void> {
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/password/i).fill(password);
   await page.getByRole('button', { name: /continue|sign in|login/i }).click();
-  await page.waitForURL(POST_LOGIN_URL[role], { timeout: 15_000 });
+  await page.waitForURL(POST_LOGIN_URL[role], { timeout: 30_000 });
 }

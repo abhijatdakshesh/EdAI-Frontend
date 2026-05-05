@@ -117,7 +117,7 @@ test('teacher: mark attendance — toggle student status from P to A', async ({ 
   await markAllPresent.click();
 
   // After marking all present, the summary should show 0 absent
-  await expect(page.getByText(/✗ 0 absent|0 absent/i).or(page.getByText(/absent/i))).toBeVisible();
+  await expect(page.getByText(/✗ 0 absent|0 absent/i).first()).toBeVisible();
 
   // Click "Mark All Absent" and verify the present count changes
   await page.getByRole('button', { name: /mark all absent/i }).click();
