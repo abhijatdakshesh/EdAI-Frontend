@@ -194,7 +194,7 @@ test('@P1 admin: timetable generator renders with new timetable button', async (
   await expect(page.getByText(/timetable generator/i).first()).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
   // Button text is "+ New Timetable"
-  await expect(page.getByRole('button', { name: /new timetable/i })).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByRole('button', { name: /new timetable/i }).first()).toBeVisible({ timeout: 8_000 });
 });
 
 // ─── Settings (/admin/settings) ───────────────────────────────────────────────
@@ -372,8 +372,8 @@ test('@P1 admin: alerts Mark Resolved button is visible on unresolved alert card
   await loginAsAdmin(page);
   await page.goto('/admin/alerts');
   await expect(page.getByText(/alert/i).first()).toBeVisible({ timeout: 10_000 });
-  const markResolved = page.getByText(/mark resolved/i)
-    .or(page.getByText(/no alerts|all resolved/i));
+  const markResolved = page.getByRole('button', { name: /mark resolved/i })
+    .or(page.getByText('No alerts match the current filters.'));
   await expect(markResolved.first()).toBeVisible({ timeout: 8_000 });
 });
 

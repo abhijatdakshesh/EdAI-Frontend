@@ -3,7 +3,7 @@ import { apiClient } from "@/lib/api/client";
 import { mockAssignmentsDashboard } from "./mock-data";
 import type { AssignmentsDashboardResponse } from "./types";
 
-const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? "true") === "true";
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
 export async function getAssignmentsDashboard(): Promise<AssignmentsDashboardResponse> {
   if (USE_MOCK) return mockAssignmentsDashboard;
