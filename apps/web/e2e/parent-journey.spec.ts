@@ -47,13 +47,20 @@ test('@P0 parent: fees page renders breakdown table and status indicators', asyn
   await page.goto('/parent/fees');
   await expect(page).toHaveURL(/parent\/fees/);
 
+  // Wait for the page shell (AppShell title) to confirm hydration is done.
   await expect(page.getByText(/fee|payment/i).first()).toBeVisible({ timeout: 10_000 });
-  // Fee amounts, status indicators, or empty state when no backend in CI
+
+  // Wait until the fee skeleton is gone — i.e. wait until the resolved state is painted.
+  // This prevents asserting during the brief animate-pulse window between the two React
+  // Query fetches (usn="" → usn="1RV21CS001") that was causing CI flakiness.
+  await expect(page.getByTestId('fees-loading-skeleton')).not.toBeVisible({ timeout: 12_000 });
+
+  // Now assert the settled state: fee amounts + status badges (mock data: PAID, ₹95000),
+  // or the empty state text if the component resolves with no data.
   const feeContent = page
     .getByText(/₹|paid|pending|due|total due|pending dues/i)
-    .or(page.getByText(/no children linked|no fee data/i))
-    .or(page.getByText(/loading/i));
-  await expect(feeContent.first()).toBeVisible({ timeout: 8_000 });
+    .or(page.getByText(/no children linked|no fee data/i));
+  await expect(feeContent.first()).toBeVisible({ timeout: 5_000 });
 });
 
 // ─── Results (/parent/results) ───────────────────────────────────────────────

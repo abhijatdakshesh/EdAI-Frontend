@@ -130,7 +130,7 @@ export function ParentFees() {
           <>
             {/* Summary */}
             {loadingFees ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-pulse">
+              <div data-testid="fees-loading-skeleton" className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-pulse">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="rounded border border-border bg-surface h-20" />
                 ))}

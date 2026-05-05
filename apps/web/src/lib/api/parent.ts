@@ -73,6 +73,9 @@ export function useMyChildren() {
     queryFn: USE_MOCKS
       ? () => Promise.resolve(MOCK_CHILDREN)
       : () => apiGet<ChildProfile[]>("/api/parent/children"),
+    // Keep children data fresh for 30 s so navigating between parent pages
+    // does not re-trigger a loading flash that creates a blank fees window.
+    staleTime: 30_000,
   });
 }
 
@@ -96,7 +99,10 @@ export function useChildAttendance(usn: string) {
     queryFn: USE_MOCKS
       ? () => Promise.resolve(MOCK_CHILD_ATTENDANCE)
       : () => apiGet<StudentAttendanceSummary[]>(`/api/parent/children/${usn}/attendance`),
-    enabled: USE_MOCKS ? true : !!usn,
+    // Gate on !!usn even in mock mode — same reason as useChildFees.
+    // Firing with usn="" creates a junk cache key and triggers a second
+    // loading cycle once the real USN is available.
+    enabled: !!usn,
   });
 }
 
@@ -126,7 +132,13 @@ export function useChildFees(usn: string) {
     queryFn: USE_MOCKS
       ? () => Promise.resolve(MOCK_CHILD_FEES)
       : () => apiGet<FeesSummary>(`/api/parent/children/${usn}/fees`),
-    enabled: USE_MOCKS ? true : !!usn,
+    // Always gate on !!usn — even in mock mode.
+    // Without this, the query fires with usn="" (cache key ["parent","child","","fees"])
+    // while children are loading, resolves immediately, then fires AGAIN with the real
+    // USN once children resolve (new cache key, cache miss → loadingFees=true again).
+    // That second loading window shows only the animate-pulse skeleton, which has no
+    // text content, causing the E2E locator to find nothing and time out.
+    enabled: !!usn,
   });
 }
 
