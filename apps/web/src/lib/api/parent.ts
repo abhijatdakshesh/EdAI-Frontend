@@ -40,6 +40,22 @@ export const parentKeys = {
   childFees: (usn: string) => ["parent", "child", usn, "fees"] as const,
 };
 
+// ─── Mock data (USE_MOCKS=true) ───────────────────────────────────────────────
+
+const MOCK_CHILDREN: ChildProfile[] = [
+  {
+    usn: "1RV21CS001",
+    name: "Arjun Sharma",
+    email: "arjun@rvce.edu.in",
+    dept: "CSE",
+    semester: 5,
+    section: "A",
+    cgpa: 8.42,
+    attendancePct: 78,
+    feeStatus: "PAID",
+  },
+];
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useParentDashboard() {
@@ -51,9 +67,15 @@ export function useParentDashboard() {
 }
 
 export function useMyChildren() {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<ChildProfile[]>({
     queryKey: parentKeys.children,
-    queryFn: () => apiGet<ChildProfile[]>("/api/parent/children"),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CHILDREN)
+      : () => apiGet<ChildProfile[]>("/api/parent/children"),
+    // Keep children data fresh for 30 s so navigating between parent pages
+    // does not re-trigger a loading flash that creates a blank fees window.
+    staleTime: 30_000,
   });
 }
 
@@ -65,11 +87,21 @@ export function useChild(usn: string) {
   });
 }
 
+const MOCK_CHILD_ATTENDANCE: StudentAttendanceSummary[] = [
+  { courseId: "21CS51", courseName: "Database Management Systems", courseCode: "21CS51", totalClasses: 40, attended: 34, pct: 85, canMiss: 3, mustAttend: 0 },
+  { courseId: "21CS52", courseName: "Computer Networks", courseCode: "21CS52", totalClasses: 38, attended: 27, pct: 71, canMiss: 0, mustAttend: 2 },
+];
+
 export function useChildAttendance(usn: string) {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<StudentAttendanceSummary[]>({
     queryKey: parentKeys.childAttendance(usn),
-    queryFn: () =>
-      apiGet<StudentAttendanceSummary[]>(`/api/parent/children/${usn}/attendance`),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CHILD_ATTENDANCE)
+      : () => apiGet<StudentAttendanceSummary[]>(`/api/parent/children/${usn}/attendance`),
+    // Gate on !!usn even in mock mode — same reason as useChildFees.
+    // Firing with usn="" creates a junk cache key and triggers a second
+    // loading cycle once the real USN is available.
     enabled: !!usn,
   });
 }
@@ -82,10 +114,30 @@ export function useChildResults(usn: string) {
   });
 }
 
+const MOCK_CHILD_FEES: FeesSummary = {
+  totalDue: 95000,
+  totalPaid: 95000,
+  totalOutstanding: 0,
+  status: "PAID",
+  items: [
+    { id: "f1", studentUsn: "1RV21CS001", component: "TUITION", amount: 75000, dueDate: "2024-07-01", paidDate: "2024-06-28", status: "PAID", semester: 5, academicYear: "2024-25", receiptNo: "RCT-2024-001" },
+    { id: "f2", studentUsn: "1RV21CS001", component: "EXAM", amount: 20000, dueDate: "2024-10-01", paidDate: "2024-09-25", status: "PAID", semester: 5, academicYear: "2024-25", receiptNo: "RCT-2024-002" },
+  ],
+};
+
 export function useChildFees(usn: string) {
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<FeesSummary>({
     queryKey: parentKeys.childFees(usn),
-    queryFn: () => apiGet<FeesSummary>(`/api/parent/children/${usn}/fees`),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_CHILD_FEES)
+      : () => apiGet<FeesSummary>(`/api/parent/children/${usn}/fees`),
+    // Always gate on !!usn — even in mock mode.
+    // Without this, the query fires with usn="" (cache key ["parent","child","","fees"])
+    // while children are loading, resolves immediately, then fires AGAIN with the real
+    // USN once children resolve (new cache key, cache miss → loadingFees=true again).
+    // That second loading window shows only the animate-pulse skeleton, which has no
+    // text content, causing the E2E locator to find nothing and time out.
     enabled: !!usn,
   });
 }

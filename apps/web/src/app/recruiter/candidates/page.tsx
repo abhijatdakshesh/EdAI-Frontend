@@ -36,7 +36,7 @@ function CandidateCard({ c, extra }: { c: Candidate; extra?: React.ReactNode }) 
             {extra}
             {c.skills?.length > 0 && (
               <div className="flex gap-1 mt-2 flex-wrap">
-                {c.skills.slice(0, 6).map(s => (
+                {(c.skills ?? []).slice(0, 6).map(s => (
                   <span key={s} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded">{s}</span>
                 ))}
               </div>

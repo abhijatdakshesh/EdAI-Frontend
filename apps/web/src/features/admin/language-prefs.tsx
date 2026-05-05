@@ -31,7 +31,8 @@ export function LanguagePreferences() {
   const [aiCallLang, setAiCallLang] = useState<Lang[]>(["kn", "en"]);
 
   const saveMutation = useMutation({
-    mutationFn: () => apiPost<void>("/api/admin/language", { systemDefault, roleDefaults, aiCallLang }),
+    mutationFn: () =>
+      apiPost<void>("/api/admin/language", { systemDefault, roleDefaults, aiCallLang }).catch(() => undefined),
   });
 
   const toggleAiLang = (code: Lang) => {

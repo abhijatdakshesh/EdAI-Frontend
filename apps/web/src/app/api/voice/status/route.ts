@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 
 const VOICE_SERVICE_URL = process.env.VOICE_SERVICE_URL ?? 'http://localhost:8090';
 
-export async function GET(req: NextRequest) {
+export const GET = auth(async (req) => {
+  if (!req.auth?.accessToken) {
+    return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  }
+
   const callId = req.nextUrl.searchParams.get('callId');
   if (!callId) return NextResponse.json({ error: 'callId required' }, { status: 400 });
 
@@ -13,4 +18,4 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 502 });
   }
-}
+});

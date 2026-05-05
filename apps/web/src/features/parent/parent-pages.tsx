@@ -98,7 +98,8 @@ export function ParentAttendance() {
   const activeUsn = children[0]?.usn ?? "";
   const childName = children[0]?.name ?? "";
 
-  const { data: courses = [], isLoading: loadingCourses } = useChildAttendance(activeUsn);
+  const { data: rawCourses, isLoading: loadingCourses } = useChildAttendance(activeUsn);
+  const courses = Array.isArray(rawCourses) ? rawCourses : [];
 
   const overall =
     courses.length > 0

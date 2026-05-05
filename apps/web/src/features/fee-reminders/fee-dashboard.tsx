@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Fragment } from 'react';
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react';
 import {
   getFeeDashboardSummary,
   getOutstandingFees,
@@ -63,6 +63,8 @@ export default function FeeDashboard() {
   const [history, setHistory] = useState<Record<string, ReminderRecord[]>>({});
   const [callingId, setCallingId] = useState<string | null>(null);
   const [callResult, setCallResult] = useState<Record<string, string>>({});
+  const mountedRef = useRef(true);
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false; }; }, []);
 
   const loadFees = useCallback(
     async (opts?: { riskLevel?: string; department?: string; overdueOnly?: boolean }) => {
@@ -75,11 +77,15 @@ export default function FeeDashboard() {
   );
 
   useEffect(() => {
-    void Promise.all([getFeeDashboardSummary(), getOutstandingFees()]).then(([s, f]) => {
-      setSummary(s);
-      setFees(f);
-      setLoading(false);
-    });
+    void Promise.all([getFeeDashboardSummary(), getOutstandingFees()])
+      .then(([s, f]) => {
+        setSummary(s);
+        setFees(f);
+      })
+      .catch((err: unknown) => {
+        console.error('Failed to load fee dashboard', err);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   const applyFilters = () => {
@@ -93,7 +99,7 @@ export default function FeeDashboard() {
     setExpandedId(prev => (prev === id ? null : id));
     if (!history[id]) {
       const h = await getReminderHistory(id);
-      setHistory(prev => ({ ...prev, [id]: h }));
+      if (mountedRef.current) setHistory(prev => ({ ...prev, [id]: h }));
     }
   };
 

@@ -56,6 +56,43 @@ export const jobKeys = {
   applied: ["jobs", "applied"] as const,
 };
 
+// ─── Mock data (USE_MOCKS=true) ───────────────────────────────────────────────
+
+const MOCK_JOBS: Job[] = [
+  {
+    id: "mock-job-1",
+    company: "Infosys",
+    role: "Software Engineer",
+    type: "FULL_TIME",
+    location: "Bengaluru",
+    package: "6.5 LPA",
+    description: "Full-stack development role.",
+    requirements: ["B.E/B.Tech", "CGPA ≥ 7.0"],
+    skills: ["Java", "React", "SQL"],
+    deadline: "2025-06-30",
+    postedAt: "2025-05-01",
+    active: true,
+    minCgpa: 7.0,
+    targetDepts: ["CSE", "ISE", "ECE"],
+  },
+  {
+    id: "mock-job-2",
+    company: "Wipro",
+    role: "Data Analyst Intern",
+    type: "INTERNSHIP",
+    location: "Bengaluru",
+    package: "25,000/month",
+    description: "Analytics and reporting internship.",
+    requirements: ["B.E/B.Tech"],
+    skills: ["Python", "SQL", "Power BI"],
+    deadline: "2025-06-15",
+    postedAt: "2025-05-02",
+    active: true,
+    minCgpa: 6.5,
+    targetDepts: ["CSE", "ISE"],
+  },
+];
+
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
 export function useJobs(filters: JobsFilter = {}) {
@@ -66,9 +103,12 @@ export function useJobs(filters: JobsFilter = {}) {
   if (filters.dept) params.set("dept", filters.dept);
   const qs = params.toString();
 
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<Job[]>({
     queryKey: jobKeys.list(filters),
-    queryFn: () => apiGet<Job[]>(`/api/jobs${qs ? `?${qs}` : ""}`),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(MOCK_JOBS)
+      : () => apiGet<Job[]>(`/api/jobs${qs ? `?${qs}` : ""}`),
   });
 }
 

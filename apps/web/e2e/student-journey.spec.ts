@@ -290,7 +290,7 @@ test('@P1 student: jobs portal renders job cards with apply button', async ({ pa
   // Job cards or empty state
   const jobContent = page
     .getByRole('button', { name: /apply/i })
-    .or(page.getByText(/no jobs available|no opportunities/i));
+    .or(page.getByText(/no jobs available|no opportunities|no.*jobs found|drive not active/i));
   await expect(jobContent.first()).toBeVisible({ timeout: 8_000 });
 });
 

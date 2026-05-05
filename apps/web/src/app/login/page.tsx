@@ -100,32 +100,34 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Dev test accounts — collapse in production or hide via env */}
-        <details className="mt-6">
-          <summary className="cursor-pointer select-none text-xs text-text-secondary hover:text-primary">
-            Test accounts (dev only)
-          </summary>
-          <ul className="mt-2 space-y-1">
-            {DEV_ACCOUNTS.map((a) => (
-              <li key={a.email}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail(a.email);
-                    setPassword(a.password);
-                  }}
-                  className="w-full rounded px-2 py-1 text-left text-xs hover:bg-surface"
-                >
-                  <span className="font-semibold text-primary">{a.role}</span>
-                  {" — "}
-                  <span className="font-mono">{a.email}</span>
-                  {" / "}
-                  <span className="font-mono text-text-secondary">{a.password}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </details>
+        {/* Dev test accounts — only shown in development builds */}
+        {process.env.NODE_ENV === 'development' && (
+          <details className="mt-6">
+            <summary className="cursor-pointer select-none text-xs text-text-secondary hover:text-primary">
+              Test accounts (dev only)
+            </summary>
+            <ul className="mt-2 space-y-1">
+              {DEV_ACCOUNTS.map((a) => (
+                <li key={a.email}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail(a.email);
+                      setPassword(a.password);
+                    }}
+                    className="w-full rounded px-2 py-1 text-left text-xs hover:bg-surface"
+                  >
+                    <span className="font-semibold text-primary">{a.role}</span>
+                    {" — "}
+                    <span className="font-mono">{a.email}</span>
+                    {" / "}
+                    <span className="font-mono text-text-secondary">{a.password}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
 
         <p className="mt-4 text-center text-xs text-text-secondary">
           Your role is determined by the server. Contact your admin if you cannot sign in.

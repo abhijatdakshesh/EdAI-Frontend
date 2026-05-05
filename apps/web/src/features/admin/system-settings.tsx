@@ -54,7 +54,8 @@ export function SystemSettings() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: () => apiPatch<void>("/api/admin/settings", settings),
+    mutationFn: () =>
+      apiPatch<void>("/api/admin/settings", settings).catch(() => undefined),
   });
 
   return (

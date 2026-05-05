@@ -52,7 +52,11 @@ export function StudentDashboard() {
     queryKey: ["student-dashboard"],
     queryFn: () => apiGet<StudentDashboardData>("/api/student/dashboard"),
     staleTime: 60_000,
-    retry: 1,
+    retry: (failureCount, err) => {
+      const msg = err instanceof Error ? err.message : '';
+      if (msg.includes('401') || msg.toLowerCase().includes('unauthorized')) return false;
+      return failureCount < 1;
+    },
   });
 
   const { data: vtuWindow } = useActiveVTUWindow();

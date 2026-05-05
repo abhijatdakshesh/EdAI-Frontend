@@ -8,7 +8,9 @@ const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? "true") === "true";
 export async function getDashboard(): Promise<DashboardResponse> {
   if (USE_MOCK) return mockDashboard;
   try {
-    return await apiClient.get<DashboardResponse>("/analytics/dashboard");
+    const result = await apiClient.get<DashboardResponse>("/api/analytics/admin/dashboard");
+    if (!Array.isArray(result?.kpis)) return mockDashboard;
+    return result;
   } catch {
     return mockDashboard;
   }

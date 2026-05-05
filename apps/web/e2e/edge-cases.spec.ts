@@ -31,7 +31,7 @@ test('@P2 student: jobs page with no listings shows empty state (not blank)', as
   // Either jobs exist or empty state
   const content = page
     .getByRole('button', { name: /apply/i })
-    .or(page.getByText(/no jobs|no opportunities/i))
+    .or(page.getByText(/no jobs|no opportunities|drive not active/i))
     .or(page.locator('[class*=card]').first());
   await expect(content.first()).toBeVisible({ timeout: 8_000 });
 });

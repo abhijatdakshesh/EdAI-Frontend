@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import type { NextRequest } from 'next/server';
 
 const CRITERION_LABELS: Record<number, string> = {
   1: 'Curricular Aspects',
@@ -23,7 +25,12 @@ interface NaacDashboardResponse {
   criteria: NaacDashboardCriterion[];
 }
 
-export async function GET(req: NextRequest) {
+export const GET = auth(async (req) => {
+  if (!req.auth?.accessToken) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  return _GET(req);
+});
+
+async function _GET(req: NextRequest) {
   const COMPLIANCE_SERVICE_URL = process.env.COMPLIANCE_SERVICE_URL ?? 'http://localhost:3002';
   const academicYear = req.nextUrl.searchParams.get('academicYear') ?? '2024-25';
 
@@ -36,8 +43,9 @@ export async function GET(req: NextRequest) {
     }
 
     const data = (await res.json()) as NaacDashboardResponse;
-    const overallScore = data.criteria.reduce((sum, c) => sum + (c.score ?? 0), 0);
-    const approvedCriteria = data.criteria.filter((c) => c.score !== null).length;
+    const criteria = Array.isArray(data.criteria) ? data.criteria : [];
+    const overallScore = criteria.reduce((sum, c) => sum + (c.score ?? 0), 0);
+    const approvedCriteria = criteria.filter((c) => c.score !== null).length;
 
     return NextResponse.json({
       refreshedAt: new Date().toISOString(),
@@ -47,7 +55,7 @@ export async function GET(req: NextRequest) {
       totalCriteria: 7,
       approvedCriteria,
       pendingEvidence: 0,
-      criteria: data.criteria.map((c) => ({
+      criteria: criteria.map((c) => ({
         criterionId: `NAAC-C${c.criterion}`,
         framework: 'NAAC',
         code: `C${c.criterion}`,
