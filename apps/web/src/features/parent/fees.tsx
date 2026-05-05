@@ -135,7 +135,11 @@ export function ParentFees() {
                   <div key={i} className="rounded border border-border bg-surface h-20" />
                 ))}
               </div>
-            ) : fees ? (
+            ) : !fees ? (
+              <p className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted">
+                No fee data available.
+              </p>
+            ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
                   { label: "Total Due", value: `₹${fees.totalDue.toLocaleString()}` },
@@ -150,7 +154,7 @@ export function ParentFees() {
                   </div>
                 ))}
               </div>
-            ) : null}
+            )}
 
             {/* Pending dues */}
             {pendingItems.length > 0 && (
