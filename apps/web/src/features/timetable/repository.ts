@@ -261,7 +261,7 @@ export async function getConfig(id: string): Promise<TimetableConfig> {
 
 export async function generateTimetable(configId: string): Promise<GeneratedTimetable> {
   if (USE_MOCK) {
-    // Simulate Gemini latency
+    // Simulate Claude latency
     await new Promise(r => setTimeout(r, 3000));
     const views = buildMockViews(MOCK_SLOTS);
     return {
