@@ -34,8 +34,8 @@ export default function PlacementDashboard() {
 
   useEffect(() => {
     if (USE_MOCK) { setSummary(MOCK_SUMMARY); return; }
-    fetch('/api/placement/dashboard/summary').then(r => r.json()).then((d: DepartmentSummary[]) => setSummary(d));
-    fetch('/api/placement/companies').then(r => r.json()).then((d: Company[]) => setCompanies(d));
+    fetch('/api/placement/dashboard/summary').then(r => r.ok ? r.json() : Promise.reject(r.status)).then((d: DepartmentSummary[]) => setSummary(d)).catch(() => setSummary([]));
+    fetch('/api/placement/companies').then(r => r.ok ? r.json() : Promise.reject(r.status)).then((d: Company[]) => setCompanies(d)).catch(() => setCompanies([]));
   }, []);
 
   const handleLookup = async () => {

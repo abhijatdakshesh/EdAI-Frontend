@@ -372,7 +372,8 @@ test('@P1 admin: alerts Mark Resolved button is visible on unresolved alert card
   await loginAsAdmin(page);
   await page.goto('/admin/alerts');
   await expect(page.getByText(/alert/i).first()).toBeVisible({ timeout: 10_000 });
-  const markResolved = page.getByText(/mark resolved|no alerts match|all resolved|no unresolved/i);
+  const markResolved = page.getByRole('button', { name: /mark resolved/i })
+    .or(page.getByText('No alerts match the current filters.'));
   await expect(markResolved.first()).toBeVisible({ timeout: 8_000 });
 });
 

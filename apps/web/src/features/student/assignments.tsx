@@ -8,12 +8,16 @@ import { useStudentAssignments, useSubmitAssignment, type AssignmentStatus, type
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
+function relDate(offsetDays: number): string {
+  return new Date(Date.now() + offsetDays * 86_400_000).toISOString().slice(0, 10);
+}
+
 const MOCK_ASSIGNMENTS: Assignment[] = [
-  { id: 'a1', title: 'Operating Systems Lab Report', courseId: 'cs601', courseName: 'Operating Systems', courseCode: 'CS601', dueDate: '2026-05-10', maxMarks: 50, description: 'Write a lab report on process scheduling algorithms.', status: 'PENDING' },
-  { id: 'a2', title: 'DBMS Mini Project', courseId: 'cs602', courseName: 'Database Management Systems', courseCode: 'CS602', dueDate: '2026-04-30', maxMarks: 100, description: 'Design and implement a college ERP mini-project.', status: 'SUBMITTED', submittedAt: '2026-04-28' },
-  { id: 'a3', title: 'Distributed Hash Table', courseId: 'cs603', courseName: 'Distributed Systems', courseCode: 'CS603', dueDate: '2026-04-20', maxMarks: 80, description: 'Implement DHT using Chord protocol.', status: 'GRADED', grade: 72, feedback: 'Good implementation, improve documentation.' },
-  { id: 'a4', title: 'CNN Image Classifier', courseId: 'cs604', courseName: 'Machine Learning', courseCode: 'CS604', dueDate: '2026-04-15', maxMarks: 60, description: 'Build a CNN to classify CIFAR-10 images.', status: 'LATE' },
-  { id: 'a5', title: 'Network Packet Analyzer', courseId: 'cs605', courseName: 'Computer Networks', courseCode: 'CS605', dueDate: '2026-05-20', maxMarks: 40, description: 'Analyze network traffic using Wireshark.', status: 'PENDING' },
+  { id: 'a1', title: 'Operating Systems Lab Report', courseId: 'cs601', courseName: 'Operating Systems', courseCode: 'CS601', dueDate: relDate(5), maxMarks: 50, description: 'Write a lab report on process scheduling algorithms.', status: 'PENDING' },
+  { id: 'a2', title: 'DBMS Mini Project', courseId: 'cs602', courseName: 'Database Management Systems', courseCode: 'CS602', dueDate: relDate(-2), maxMarks: 100, description: 'Design and implement a college ERP mini-project.', status: 'SUBMITTED', submittedAt: relDate(-3) },
+  { id: 'a3', title: 'Distributed Hash Table', courseId: 'cs603', courseName: 'Distributed Systems', courseCode: 'CS603', dueDate: relDate(-10), maxMarks: 80, description: 'Implement DHT using Chord protocol.', status: 'GRADED', grade: 72, feedback: 'Good implementation, improve documentation.' },
+  { id: 'a4', title: 'Network Packet Analyzer', courseId: 'cs604', courseName: 'Computer Networks', courseCode: 'CS604', dueDate: relDate(15), maxMarks: 40, description: 'Analyze network traffic using Wireshark.', status: 'PENDING' },
+  { id: 'a5', title: 'CNN Image Classifier', courseId: 'cs605', courseName: 'Machine Learning', courseCode: 'CS605', dueDate: relDate(20), maxMarks: 60, description: 'Build a CNN to classify CIFAR-10 images.', status: 'SUBMITTED', submittedAt: relDate(-1) },
 ];
 
 const statusStyle: Record<string, string> = {
