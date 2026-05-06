@@ -93,7 +93,7 @@ const MOCK_DASHBOARD: NaacDashboard = {
           maxScore: 40, earnedScore: null, scorePercent: null, status: 'AUTO',
           data: { digital_docs_issued: 342, automated_calls: 134, digital_payments: 289 },
           evidenceColumns: [], evidenceRows: [],
-          edaiNote: 'EdAI itself is the e-governance evidence — document generation, voice calls, fee tracking all count toward this metric',
+          edaiNote: 'Ed8AI itself is the e-governance evidence — document generation, voice calls, fee tracking all count toward this metric',
         },
       ],
     },

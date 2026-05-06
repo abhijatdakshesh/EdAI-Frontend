@@ -17,7 +17,7 @@ export interface AttendanceAlert {
   guardianNotified: boolean;
 }
 
-/** Rolling daily campus-wide present rate (%) for charts — EdAI guide: 30-day trend. */
+/** Rolling daily campus-wide present rate (%) for charts — Ed8AI guide: 30-day trend. */
 export interface DailyPresentRatePoint {
   date: string;
   ratePct: number;

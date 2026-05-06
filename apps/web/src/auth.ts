@@ -1,5 +1,5 @@
 /**
- * NextAuth v5 configuration for EdAI / RV Trust.
+ * NextAuth v5 configuration for Ed8AI / RV Trust.
  *
  * Authentication flow:
  *   1. User submits email + password on /login.
@@ -71,8 +71,8 @@ const DEV_JWT_SECRET = new TextEncoder().encode(
 async function makeDevJwt(payload: Record<string, unknown>): Promise<string> {
   return new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
-    .setIssuer("edai-identity")
-    .setAudience("edai-services")
+    .setIssuer("ed8ai-identity")
+    .setAudience("ed8ai-services")
     .setExpirationTime("24h")
     .sign(DEV_JWT_SECRET);
 }
@@ -127,7 +127,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   providers: [
     Credentials({
-      name: "EdAI Identity",
+      name: "Ed8AI Identity",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },

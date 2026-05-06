@@ -56,7 +56,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <Image src="/rv-logo.png" alt="RV Trust" width={36} height={36} className="object-contain invert" />
             <div>
-              <p className="font-semibold text-sm leading-tight tracking-tight">EDAI For RV & RSST Institutions</p>
+              <p className="font-semibold text-sm leading-tight tracking-tight">ED8AI For RV & RSST Institutions</p>
               <p className="text-[10px] text-text-muted leading-tight">RV Educational Institutions </p>
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function HomePage() {
         <div className="flex justify-center mb-6">
           <Image src="/rv-logo.png" alt="RV Trust" width={72} height={72} className="object-contain invert" />
         </div>
-        <p className="label-track mb-4 text-text-secondary">RV Educational Institutions· Powered by EdAI</p>
+        <p className="label-track mb-4 text-text-secondary">RV Educational Institutions· Powered by Ed8AI</p>
         <h1 className="display text-5xl sm:text-6xl lg:text-7xl leading-tight mx-auto max-w-3xl">
           One Platform.<br />
           Every Role.

@@ -27,7 +27,7 @@ export function portalLabel(role: UserRole): string {
     case "PARENT":
       return "Parent Portal";
     default:
-      return "EdAI";
+      return "Ed8AI";
   }
 }
 
@@ -102,7 +102,7 @@ export const navItems: NavItem[] = [
   { key: "stu-placement",     title: "My Placement",            route: "/student/placement",      allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-fees",          title: "Fees & Scholarships",     route: "/student/fees",           allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-hostel",        title: "Hostel & Transport",      route: "/student/hostel",         allowedRoles: ["STUDENT"],                                      group: "Student" },
-  { key: "stu-chatbot",       title: "Ask EdAI",                route: "/student/chatbot",        allowedRoles: ["STUDENT"],                                      group: "Student" },
+  { key: "stu-chatbot",       title: "Ask Ed8AI",                route: "/student/chatbot",        allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-hr",            title: "HR & Staff",              route: "/student/hr",             allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-study-plan",    title: "My Study Plan",           route: "/student/study-plan",     allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-exam-prep",     title: "Exam Prep & Wellness",    route: "/student/exam-prep",      allowedRoles: ["STUDENT"],                                      group: "Student" },
@@ -123,10 +123,10 @@ export const navItems: NavItem[] = [
   { key: "par-announce",      title: "Announcements",           route: "/parent/announcements",   allowedRoles: ["PARENT"],                                       group: "Parent" },
   { key: "par-messages",      title: "Messages",                route: "/parent/messages",        allowedRoles: ["PARENT"],                                       group: "Parent" },
   { key: "par-scholarship",   title: "Scholarship Eligibility", route: "/parent/scholarship",     allowedRoles: ["PARENT"],                                       group: "Parent" },
-  { key: "par-chatbot",       title: "Ask EdAI",                route: "/parent/chatbot",         allowedRoles: ["PARENT"],                                       group: "Parent" },
+  { key: "par-chatbot",       title: "Ask Ed8AI",                route: "/parent/chatbot",         allowedRoles: ["PARENT"],                                       group: "Parent" },
 
   // ── TEACHER CHATBOT ────────────────────────────────────────────────────────
-  { key: "tea-chatbot",       title: "Ask EdAI",                route: "/teacher/chatbot",        allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
+  { key: "tea-chatbot",       title: "Ask Ed8AI",                route: "/teacher/chatbot",        allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
 
   // ── ADMIN CHATBOT SESSIONS ────────────────────────────────────────────────
   { key: "admin-chatbot",     title: "Chat Sessions",           route: "/admin/chatbot",          allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },

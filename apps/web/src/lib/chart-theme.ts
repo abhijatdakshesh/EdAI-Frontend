@@ -1,4 +1,4 @@
-/** Raycraft palette for Recharts — mirrors RV_Trust / EdAI theme guides. */
+/** Raycraft palette for Recharts — mirrors RV_Trust / Ed8AI theme guides. */
 export const RAYCRAFT_CHART = {
   cream: "#F2EFE9",
   espresso: "#1C1810",

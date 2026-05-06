@@ -137,7 +137,7 @@ export default function TpoPage() {
         <div>
           <p className="text-sm font-semibold text-blue-800">TPO Co-Approval Required Before Every Offer</p>
           <p className="text-xs text-blue-700 mt-0.5">
-            Per VTU / autonomous college placement policy, the TPO must verify each student's eligibility (CGPA, backlog status, tier locks) before any offer letter is generated. EdAI enforces this automatically — no offer can be created without TPO approval status = APPROVED.
+            Per VTU / autonomous college placement policy, the TPO must verify each student's eligibility (CGPA, backlog status, tier locks) before any offer letter is generated. Ed8AI enforces this automatically — no offer can be created without TPO approval status = APPROVED.
           </p>
         </div>
       </div>

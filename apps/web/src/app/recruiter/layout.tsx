@@ -27,7 +27,7 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className="w-60 bg-white border-r border-stone-200 flex flex-col">
         <div className="px-6 py-5 border-b border-stone-200">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider">EdAI Recruiter</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider">Ed8AI Recruiter</p>
           <h1 className="text-lg font-bold text-stone-900 mt-0.5">Recruiter Portal</h1>
         </div>
         <nav className="flex-1 p-4 space-y-1">

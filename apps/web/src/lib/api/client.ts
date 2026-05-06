@@ -1,5 +1,5 @@
 /**
- * EdAI Web — authenticated API client.
+ * Ed8AI Web — authenticated API client.
  *
  * Attaches Bearer token from NextAuth session (`accessToken`).
  * Falls back to unauthenticated requests when no session (e.g. public mocks).

@@ -55,7 +55,7 @@ export default async function VerifyPage({ params }: { params: { uuid: string } 
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="bg-[#2C1810] rounded-t-xl px-6 py-5">
-          <h1 className="text-white text-xl font-bold">EdAI Document Verification</h1>
+          <h1 className="text-white text-xl font-bold">Ed8AI Document Verification</h1>
           <p className="text-[#C4A882] text-sm mt-1">Official certificate verification portal</p>
         </div>
 
@@ -109,7 +109,7 @@ export default async function VerifyPage({ params }: { params: { uuid: string } 
               {data.valid && (
                 <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
                   <p className="text-xs text-green-700">
-                    This document was issued by EdAI on behalf of the institution and is cryptographically verified. Do not accept if the student name or document type above does not match the physical copy.
+                    This document was issued by Ed8AI on behalf of the institution and is cryptographically verified. Do not accept if the student name or document type above does not match the physical copy.
                   </p>
                 </div>
               )}
@@ -118,7 +118,7 @@ export default async function VerifyPage({ params }: { params: { uuid: string } 
         </div>
 
         <p className="text-center text-xs text-[#8B7355] mt-4">
-          EdAI by Raycraft Technologies · DPDP Act 2023 compliant
+          Ed8AI by Raycraft Technologies · DPDP Act 2023 compliant
         </p>
       </div>
     </div>
