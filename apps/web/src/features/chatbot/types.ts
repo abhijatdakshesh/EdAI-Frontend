@@ -18,6 +18,7 @@ export interface ChatState {
   isOpen: boolean;
   isConnected: boolean;
   hasConsented: boolean;
+  wsError: boolean;
 }
 
 export interface ChatbotSession {

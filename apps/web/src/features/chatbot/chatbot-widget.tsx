@@ -34,6 +34,7 @@ export default function ChatbotWidget() {
     isOpen: false,
     isConnected: false,
     hasConsented: false,
+    wsError: false,
   });
   const [input, setInput] = useState('');
   const [language, setLanguage] = useState<string>(
@@ -100,6 +101,10 @@ export default function ChatbotWidget() {
 
       socket.on('chat:done', ({ conversationId }: { conversationId: string }) => {
         setState(s => ({ ...s, isTyping: false, conversationId }));
+      });
+
+      socket.io.on('reconnect_failed', () => {
+        setState(s => ({ ...s, wsError: true }));
       });
 
       socket.on('chat:error', () => {
@@ -176,6 +181,7 @@ export default function ChatbotWidget() {
           },
           body: JSON.stringify({ message: text, conversationId: state.conversationId }),
         });
+        if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json() as { conversationId: string; message: string; timestamp: string };
         setState(s => ({
           ...s,
@@ -189,7 +195,16 @@ export default function ChatbotWidget() {
           }],
         }));
       } catch {
-        setState(s => ({ ...s, isTyping: false }));
+        setState(s => ({
+          ...s,
+          isTyping: false,
+          messages: [...s.messages, {
+            id: `${Date.now()}-err`,
+            role: 'assistant',
+            content: 'Sorry, I could not reach the server. Please try again.',
+            timestamp: new Date().toISOString(),
+          }],
+        }));
       }
     }
   }, [session, state.conversationId, language]);
@@ -275,7 +290,7 @@ export default function ChatbotWidget() {
               <div>
                 <p className="font-semibold text-sm">Ed8AI Assistant</p>
                 <p className="text-xs text-blue-200">
-                  {state.isConnected || USE_MOCK ? '● Online' : '○ Connecting...'}
+                  {state.isConnected || USE_MOCK ? '● Online' : state.wsError ? '● REST mode' : '○ Connecting...'}
                 </p>
               </div>
             </div>
