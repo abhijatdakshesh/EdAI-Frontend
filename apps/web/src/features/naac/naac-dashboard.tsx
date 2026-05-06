@@ -307,7 +307,7 @@ export default function NaacDashboardPage() {
       {generatingId && (
         <div className="fixed bottom-6 right-6 bg-[#1a1a1a] text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 z-50">
           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm">Gemini is writing the SSR paragraph for {generatingId}...</span>
+          <span className="text-sm">Claude is writing the SSR paragraph for {generatingId}...</span>
         </div>
       )}
     </AppShell>

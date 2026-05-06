@@ -316,7 +316,7 @@ function FormStage({
     return (
       <div className="text-center py-24">
         <div className="w-12 h-12 border-2 border-[#1a1a1a] border-t-transparent rounded-full animate-spin mx-auto mb-5" />
-        <p className="font-medium text-[#1a1a1a]">Gemini is solving your timetable...</p>
+        <p className="font-medium text-[#1a1a1a]">Claude is solving your timetable...</p>
         <p className="text-sm text-[#6B6358] mt-2">This may take up to 30 seconds</p>
       </div>
     );
@@ -942,7 +942,7 @@ export default function TimetableGenerator() {
       {stage === 'generating' && (
         <div className="text-center py-24">
           <div className="w-12 h-12 border-2 border-[#1a1a1a] border-t-transparent rounded-full animate-spin mx-auto mb-5" />
-          <p className="font-medium text-[#1a1a1a]">Gemini is solving your timetable...</p>
+          <p className="font-medium text-[#1a1a1a]">Claude is solving your timetable...</p>
           <p className="text-sm text-[#6B6358] mt-2">This may take up to 30 seconds</p>
         </div>
       )}
