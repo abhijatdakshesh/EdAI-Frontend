@@ -72,3 +72,10 @@ export const TEACHER_SUGGESTIONS = [
   'How many classes have I completed?',
   'Who has the lowest marks in my subject?',
 ];
+
+export const PUBLIC_SUGGESTIONS = [
+  'What programs does RV College offer?',
+  'How do I apply for admission?',
+  'What is the placement record?',
+  'Tell me about the campus and hostels',
+];
