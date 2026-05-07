@@ -31,7 +31,8 @@ type FilterOption = "all" | AssignmentStatus;
 
 export function MyAssignments() {
   const { session } = useAuth();
-  const usn = session?.user?.id ?? "";
+  // Prefer sapId (USN) when present — backend submissions are keyed by USN, not user.id
+  const usn = session?.user?.sapId ?? session?.user?.id ?? "";
   const [filter, setFilter] = useState<FilterOption>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitUrl, setSubmitUrl] = useState("");
