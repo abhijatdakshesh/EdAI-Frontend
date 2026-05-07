@@ -1,91 +1,79 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/lib/api/academics";
 import { useStudentAttendance } from "@/lib/api/attendance";
 import { useAuth } from "@/lib/auth/use-auth";
-import { apiPost, apiDelete } from "@/lib/api/client";
-
-const STORAGE_KEY_PREFIX = "ed8ai-enrolled-courses:";
+import { apiGet, apiPost, apiDelete } from "@/lib/api/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function MyCourses() {
   const { session } = useAuth();
   const usn = session?.user?.sapId ?? session?.user?.id ?? "";
-  const storageKey = `${STORAGE_KEY_PREFIX}${usn}`;
+  const qc = useQueryClient();
 
   const { data: allCourses = [], isLoading: loadingCourses } = useCourses();
   const { data: attendance = [] } = useStudentAttendance(usn);
+  const { data: enrolledData } = useQuery<{ courseIds: string[] }>({
+    queryKey: ["student", "enrollments", usn],
+    queryFn: () => apiGet<{ courseIds: string[] }>("/api/student/courses"),
+    enabled: !!usn,
+  });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [pending, setPending] = useState<{ id: string; action: "enroll" | "unenroll" } | null>(null);
-  const [enrolledIds, setEnrolledIds] = useState<Set<string>>(() => new Set());
 
-  // Hydrate from localStorage once usn is known
-  useEffect(() => {
-    if (!usn || typeof window === "undefined") return;
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) setEnrolledIds(new Set(JSON.parse(raw) as string[]));
-    } catch {
-      /* ignore corrupt storage */
-    }
-  }, [usn, storageKey]);
-
-  const persist = useCallback(
-    (next: Set<string>) => {
-      if (typeof window === "undefined") return;
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
-      } catch {
-        /* quota — best effort */
-      }
-    },
-    [storageKey],
-  );
-
+  const enrolledSet = useMemo(() => new Set(enrolledData?.courseIds ?? []), [enrolledData]);
   const attMap = useMemo(() => Object.fromEntries(attendance.map((a) => [a.courseId, a])), [attendance]);
 
-  // A course is "enrolled" if it's in the local set OR has attendance history
+  const enrollMutation = useMutation({
+    mutationFn: (courseId: string) => apiPost(`/api/student/courses/${courseId}/enroll`, {}),
+    onMutate: async (courseId) => {
+      await qc.cancelQueries({ queryKey: ["student", "enrollments", usn] });
+      const prev = qc.getQueryData<{ courseIds: string[] }>(["student", "enrollments", usn]);
+      qc.setQueryData<{ courseIds: string[] }>(["student", "enrollments", usn], {
+        courseIds: Array.from(new Set([...(prev?.courseIds ?? []), courseId])),
+      });
+      return { prev };
+    },
+    onError: (_err, _courseId, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["student", "enrollments", usn], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["student", "enrollments", usn] }),
+  });
+
+  const unenrollMutation = useMutation({
+    mutationFn: (courseId: string) => apiDelete(`/api/student/courses/${courseId}/enroll`),
+    onMutate: async (courseId) => {
+      await qc.cancelQueries({ queryKey: ["student", "enrollments", usn] });
+      const prev = qc.getQueryData<{ courseIds: string[] }>(["student", "enrollments", usn]);
+      qc.setQueryData<{ courseIds: string[] }>(["student", "enrollments", usn], {
+        courseIds: (prev?.courseIds ?? []).filter((id) => id !== courseId),
+      });
+      return { prev };
+    },
+    onError: (_err, _courseId, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["student", "enrollments", usn], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["student", "enrollments", usn] }),
+  });
+
   const isEnrolledFor = useCallback(
-    (courseId: string) => enrolledIds.has(courseId) || !!attMap[courseId],
-    [enrolledIds, attMap],
+    (courseId: string) => enrolledSet.has(courseId) || !!attMap[courseId],
+    [enrolledSet, attMap],
   );
 
-  const handleEnroll = async (courseId: string) => {
-    setPending({ id: courseId, action: "enroll" });
-    // Optimistic local update — survives refresh via localStorage
-    const next = new Set(enrolledIds);
-    next.add(courseId);
-    setEnrolledIds(next);
-    persist(next);
-    // Best-effort backend sync (fire-and-forget; failure does not roll back local state)
-    try {
-      await apiPost(`/api/student/courses/${courseId}/enroll`, {});
-    } catch {
-      /* backend not implemented yet — local state already reflects enrollment */
-    } finally {
-      setPending(null);
-    }
-  };
+  const pending = enrollMutation.isPending
+    ? { id: enrollMutation.variables as string, action: "enroll" as const }
+    : unenrollMutation.isPending
+    ? { id: unenrollMutation.variables as string, action: "unenroll" as const }
+    : null;
 
-  const handleUnenroll = async (courseId: string) => {
-    setPending({ id: courseId, action: "unenroll" });
-    const next = new Set(enrolledIds);
-    next.delete(courseId);
-    setEnrolledIds(next);
-    persist(next);
-    try {
-      await apiDelete(`/api/student/courses/${courseId}/enroll`);
-    } catch {
-      /* best effort */
-    } finally {
-      setPending(null);
-    }
-  };
+  const handleEnroll = (courseId: string) => enrollMutation.mutate(courseId);
+  const handleUnenroll = (courseId: string) => unenrollMutation.mutate(courseId);
 
   const filtered = allCourses.filter((c) =>
     !search ||
