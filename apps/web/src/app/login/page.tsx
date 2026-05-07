@@ -100,13 +100,13 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Demo accounts — shown when USE_MOCKS=true (demo/staging deployments) */}
-        {process.env.NEXT_PUBLIC_USE_MOCKS === 'true' && (
-          <details className="mt-6">
-            <summary className="cursor-pointer select-none text-xs text-text-secondary hover:text-primary">
-              Test accounts (dev only)
+        {/* Demo accounts — visible in non-production builds for quick portal testing */}
+        {process.env.NODE_ENV !== 'production' && (
+          <details className="mt-6 rounded border border-border bg-background/50 p-3" open>
+            <summary className="cursor-pointer select-none text-sm font-semibold text-primary">
+              Demo credentials — click to autofill
             </summary>
-            <ul className="mt-2 space-y-1">
+            <ul className="mt-3 space-y-1">
               {DEV_ACCOUNTS.map((a) => (
                 <li key={a.email}>
                   <button
@@ -115,10 +115,9 @@ export default function LoginPage() {
                       setEmail(a.email);
                       setPassword(a.password);
                     }}
-                    className="w-full rounded px-2 py-1 text-left text-xs hover:bg-surface"
+                    className="w-full rounded px-2 py-1.5 text-left text-xs hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
                   >
-                    <span className="font-semibold text-primary">{a.role}</span>
-                    {" — "}
+                    <span className="inline-block w-20 font-semibold text-primary">{a.role}</span>
                     <span className="font-mono">{a.email}</span>
                     {" / "}
                     <span className="font-mono text-text-secondary">{a.password}</span>

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import type { ChatMessage, ChatState } from './types';
-import { STUDENT_SUGGESTIONS, PARENT_SUGGESTIONS, TEACHER_SUGGESTIONS } from './types';
+import { STUDENT_SUGGESTIONS, PARENT_SUGGESTIONS, TEACHER_SUGGESTIONS, PUBLIC_SUGGESTIONS } from './types';
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001';
@@ -46,7 +46,8 @@ export default function ChatbotWidget() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const role = (session?.user as Record<string, string> | undefined)?.role ?? 'STUDENT';
-  const suggestions = role === 'TEACHER' || role === 'FACULTY' || role === 'HOD' ? TEACHER_SUGGESTIONS
+  const suggestions = !session ? PUBLIC_SUGGESTIONS
+    : role === 'TEACHER' || role === 'FACULTY' || role === 'HOD' ? TEACHER_SUGGESTIONS
     : role === 'PARENT' ? PARENT_SUGGESTIONS
     : STUDENT_SUGGESTIONS;
 
@@ -55,9 +56,16 @@ export default function ChatbotWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.messages, state.isTyping]);
 
-  // Connect WebSocket when widget opens and user has consented
+  // Connect WebSocket when widget opens and user has consented (logged-in only).
+  // Anonymous visitors skip WS entirely and use POST /chatbot/public/ask via REST.
   useEffect(() => {
-    if (!state.isOpen || !session || !state.hasConsented) return;
+    if (!state.isOpen || !state.hasConsented) return;
+    if (!session) {
+      // Public mode — no WS, no auth, no streaming. Mark "online" so status
+      // doesn't read "○ Connecting...".
+      setState(s => ({ ...s, isConnected: true }));
+      return;
+    }
     if (USE_MOCK) {
       setState(s => ({ ...s, isConnected: true }));
       return;
@@ -165,6 +173,41 @@ export default function ChatbotWidget() {
       return;
     }
 
+    // Public (no session) path — call anonymous endpoint, no token, no conversationId
+    if (!session) {
+      try {
+        const res = await fetch(`${API_URL}/api/chatbot/public/ask`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text }),
+        });
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json() as { message: string; timestamp: string };
+        setState(s => ({
+          ...s,
+          isTyping: false,
+          messages: [...s.messages, {
+            id: `${Date.now()}-bot`,
+            role: 'assistant',
+            content: data.message,
+            timestamp: data.timestamp,
+          }],
+        }));
+      } catch {
+        setState(s => ({
+          ...s,
+          isTyping: false,
+          messages: [...s.messages, {
+            id: `${Date.now()}-err`,
+            role: 'assistant',
+            content: 'Sorry, I could not reach the server. Please try again.',
+            timestamp: new Date().toISOString(),
+          }],
+        }));
+      }
+      return;
+    }
+
     const socket = socketRef.current;
     if (socket?.connected) {
       socket.emit('chat:message', { message: text, conversationId: state.conversationId, language });
@@ -219,7 +262,9 @@ export default function ChatbotWidget() {
   const openChat = () => {
     setState(s => {
       if (s.messages.length === 0) {
-        const greeting = role === 'TEACHER' || role === 'FACULTY'
+        const greeting = !session
+          ? "Welcome to RV College of Engineering! I can help with general college info — programs, departments, admissions, placements, and campus life. Log in for personal academic data."
+          : role === 'TEACHER' || role === 'FACULTY'
           ? "Hello! I'm your Ed8AI assistant. Ask me about your schedule, at-risk students, or attendance data."
           : role === 'PARENT'
           ? "Namaste! I'm Ed8AI, your child's academic companion. Ask me anything about their progress."
