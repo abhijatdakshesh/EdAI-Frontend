@@ -3,7 +3,7 @@ import { apiClient } from "@/lib/api/client";
 import { mockMarksDashboard } from "./mock-data";
 import type { MarksDashboardResponse } from "./types";
 
-const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? "true") === "true";
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
 
 export async function getMarksDashboard(): Promise<MarksDashboardResponse> {
   if (USE_MOCK) return mockMarksDashboard;

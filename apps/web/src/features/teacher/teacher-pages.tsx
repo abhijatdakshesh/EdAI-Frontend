@@ -8,7 +8,24 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import { useClasses } from "@/lib/api/academics";
 import { useClassAttendanceSummary, useAtRiskStudents } from "@/lib/api/attendance";
-import { useTeacherIAMarks } from "@/lib/api/vtu";
+import { useTeacherIAMarks, type IAMarksRow } from "@/lib/api/vtu";
+
+function exportVTUFormat(subjectId: string, rows: IAMarksRow[]) {
+  const header = "USN,Student Name,IA 1 (/25),IA 2 (/25),IA 3 (/25),Total (/75)";
+  const lines = rows.map((r) => {
+    const ia1 = r.ia1 ?? 0;
+    const ia2 = r.ia2 ?? 0;
+    const total = ia1 + ia2;
+    return `${r.studentUsn},"${r.studentName}",${ia1},${ia2},0,${total}`;
+  });
+  const csv = [header, ...lines].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `VTU_IA_${subjectId || "marks"}_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 import { useAnnouncements, usePostAnnouncement } from "@/lib/api/comms";
 import { useTriggerCall } from "@/lib/api/comms";
 import { useAuth } from "@/lib/auth/use-auth";
@@ -320,7 +337,12 @@ export function IAVTUMarks() {
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-          <Button size="sm" variant="outline" disabled={rows.length === 0}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={rows.length === 0}
+            onClick={() => exportVTUFormat(subjectId, rows)}
+          >
             Export to VTU Format
           </Button>
         </div>

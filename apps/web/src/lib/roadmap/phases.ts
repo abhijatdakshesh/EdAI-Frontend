@@ -66,6 +66,7 @@ export const navItems: NavItem[] = [
   { key: "integrations",      title: "Integrations",            route: "/integrations",           allowedRoles: ["ADMIN"],                                        group: "Admin" },
   { key: "promotion",         title: "Student Promotion",       route: "/admin/promotion",        allowedRoles: ["ADMIN","HOD","PRINCIPAL"],                      group: "Admin" },
   { key: "data-exports",      title: "Data Exports",            route: "/admin/exports",          allowedRoles: ["ADMIN","HOD","PRINCIPAL","DEAN"],               group: "Admin" },
+  { key: "result-analysis",   title: "Result Analysis",         route: "/admin/results",          allowedRoles: ["ADMIN","PRINCIPAL","HOD","DEAN"],               group: "Admin" },
 
   // ── TEACHER PORTAL ────────────────────────────────────────────────────────
 
