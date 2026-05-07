@@ -30,15 +30,20 @@ export function StudentProfile() {
     prefLang: "",
   });
 
+  // Depend on scalar fields, not the whole session object (which gets a new
+  // reference on every next-auth poll and would re-fire this effect forever).
+  const sessionName = session?.user?.name ?? null;
+  const sessionUsn = session?.user?.id ?? null;
+  const sessionEmail = session?.user?.email ?? null;
   useEffect(() => {
-    if (!session) return;
+    if (!sessionUsn && !sessionEmail) return;
     setProfile((p) => ({
       ...p,
-      name: session.user.name ?? p.name,
-      usn: session.user.id ?? p.usn,
-      email: session.user.email ?? p.email,
+      name: sessionName ?? p.name,
+      usn: sessionUsn ?? p.usn,
+      email: sessionEmail ?? p.email,
     }));
-  }, [session]);
+  }, [sessionName, sessionUsn, sessionEmail]);
 
   async function handleSave() {
     setSaving(true);
