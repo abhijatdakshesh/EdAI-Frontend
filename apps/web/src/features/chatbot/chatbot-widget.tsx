@@ -23,7 +23,7 @@ function getMockResponse(message: string): string {
   return MOCK_RESPONSES['default'] ?? '';
 }
 
-const CONSENT_TEXT = "EdAI will use your academic data (attendance, marks, fees, schedule) to answer your questions. Data is processed securely. By continuing, you consent to this use under DPDP Act 2023.";
+const CONSENT_TEXT = "Ed8AI will use your academic data (attendance, marks, fees, schedule) to answer your questions. Data is processed securely. By continuing, you consent to this use under DPDP Act 2023.";
 
 export default function ChatbotWidget() {
   const { data: session } = useSession();
@@ -34,10 +34,11 @@ export default function ChatbotWidget() {
     isOpen: false,
     isConnected: false,
     hasConsented: false,
+    wsError: false,
   });
   const [input, setInput] = useState('');
   const [language, setLanguage] = useState<string>(
-    typeof window !== 'undefined' ? (localStorage.getItem('edai-chat-lang') ?? 'en') : 'en'
+    typeof window !== 'undefined' ? (localStorage.getItem('ed8ai-chat-lang') ?? 'en') : 'en'
   );
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const socketRef = useRef<any>(null);
@@ -100,6 +101,10 @@ export default function ChatbotWidget() {
 
       socket.on('chat:done', ({ conversationId }: { conversationId: string }) => {
         setState(s => ({ ...s, isTyping: false, conversationId }));
+      });
+
+      socket.io.on('reconnect_failed', () => {
+        setState(s => ({ ...s, wsError: true }));
       });
 
       socket.on('chat:error', () => {
@@ -176,6 +181,7 @@ export default function ChatbotWidget() {
           },
           body: JSON.stringify({ message: text, conversationId: state.conversationId }),
         });
+        if (!res.ok) throw new Error(`${res.status}`);
         const data = await res.json() as { conversationId: string; message: string; timestamp: string };
         setState(s => ({
           ...s,
@@ -189,7 +195,16 @@ export default function ChatbotWidget() {
           }],
         }));
       } catch {
-        setState(s => ({ ...s, isTyping: false }));
+        setState(s => ({
+          ...s,
+          isTyping: false,
+          messages: [...s.messages, {
+            id: `${Date.now()}-err`,
+            role: 'assistant',
+            content: 'Sorry, I could not reach the server. Please try again.',
+            timestamp: new Date().toISOString(),
+          }],
+        }));
       }
     }
   }, [session, state.conversationId, language]);
@@ -205,10 +220,10 @@ export default function ChatbotWidget() {
     setState(s => {
       if (s.messages.length === 0) {
         const greeting = role === 'TEACHER' || role === 'FACULTY'
-          ? "Hello! I'm your EdAI assistant. Ask me about your schedule, at-risk students, or attendance data."
+          ? "Hello! I'm your Ed8AI assistant. Ask me about your schedule, at-risk students, or attendance data."
           : role === 'PARENT'
-          ? "Namaste! I'm EdAI, your child's academic companion. Ask me anything about their progress."
-          : "Hi! I'm EdAI, your personal academic assistant. Ask me about your classes, attendance, marks, or fees!";
+          ? "Namaste! I'm Ed8AI, your child's academic companion. Ask me anything about their progress."
+          : "Hi! I'm Ed8AI, your personal academic assistant. Ask me about your classes, attendance, marks, or fees!";
         return {
           ...s,
           isOpen: true,
@@ -230,8 +245,8 @@ export default function ChatbotWidget() {
         <button
           onClick={openChat}
           className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110"
-          title="Chat with EdAI"
-          aria-label="Open EdAI chat"
+          title="Chat with Ed8AI"
+          aria-label="Open Ed8AI chat"
         >
           <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -245,7 +260,7 @@ export default function ChatbotWidget() {
         <div className="fixed bottom-6 right-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-gray-200 p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold">AI</div>
-            <p className="font-semibold text-sm">EdAI Assistant</p>
+            <p className="font-semibold text-sm">Ed8AI Assistant</p>
           </div>
           <p className="text-xs text-gray-600 leading-relaxed mb-4">{CONSENT_TEXT}</p>
           <div className="flex gap-2">
@@ -273,16 +288,16 @@ export default function ChatbotWidget() {
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-bold">AI</div>
               <div>
-                <p className="font-semibold text-sm">EdAI Assistant</p>
+                <p className="font-semibold text-sm">Ed8AI Assistant</p>
                 <p className="text-xs text-blue-200">
-                  {state.isConnected || USE_MOCK ? '● Online' : '○ Connecting...'}
+                  {state.isConnected || USE_MOCK ? '● Online' : state.wsError ? '● REST mode' : '○ Connecting...'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <select
                 value={language}
-                onChange={e => { setLanguage(e.target.value); localStorage.setItem('edai-chat-lang', e.target.value); }}
+                onChange={e => { setLanguage(e.target.value); localStorage.setItem('ed8ai-chat-lang', e.target.value); }}
                 className="text-xs bg-white/20 text-white rounded px-1 py-0.5 border border-white/30 outline-none cursor-pointer"
                 title="Response language"
               >

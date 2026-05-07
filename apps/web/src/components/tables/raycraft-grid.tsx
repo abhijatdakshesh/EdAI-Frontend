@@ -1,5 +1,6 @@
 "use client";
 
+import { ModuleRegistry, AllCommunityModule } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
@@ -9,6 +10,8 @@ import { cn } from "@/lib/utils";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import "@/styles/ag-grid-raycraft.css";
+
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 type RaycraftGridProps = ComponentProps<typeof AgGridReact> & {
   className?: string;

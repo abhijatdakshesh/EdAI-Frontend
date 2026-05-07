@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   let session = null;
-  try { session = await auth(); } catch (e) { console.warn('[EdAI] Auth unavailable during build:', e); }
+  try { session = await auth(); } catch (e) { console.warn('[Ed8AI] Auth unavailable during build:', e); }
   return (
     <html lang="en">
       <body>

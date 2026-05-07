@@ -3,16 +3,20 @@ const nextJest = require('next/jest');
 const createJestConfig = nextJest({ dir: './' });
 
 /** @type {import('jest').Config} */
-const config = {
+const customConfig = {
   displayName: '@rv/web',
-  // Default environment for API route tests
   testEnvironment: 'node',
-  // Per-file override: tsx component tests use @jest-environment jsdom docblock
   testEnvironmentOptions: {},
   setupFiles: ['<rootDir>/jest.setup.ts'],
-  setupFilesAfterFramework: [],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.jsdom.ts'],
   restoreMocks: true,
   moduleNameMapper: {
+    // Intercept next-auth and its providers at the import-specifier level so that
+    // @auth/core (ESM-only) never enters Jest's module graph. Must come before @/.
+    '^jose$': '<rootDir>/__mocks__/jose.js',
+    '^next-auth$': '<rootDir>/__mocks__/next-auth/index.js',
+    '^next-auth/providers/credentials$': '<rootDir>/__mocks__/next-auth/providers/credentials.js',
+    '^@/auth$': '<rootDir>/src/__mocks__/auth.js',
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testMatch: [
@@ -46,4 +50,16 @@ const config = {
   },
 };
 
-module.exports = createJestConfig(config);
+// Override nextJest's transformIgnorePatterns to allow transforming
+// ESM-only packages that are transitive deps of next-auth.
+async function jestConfig() {
+  const nextJestConfig = await createJestConfig(customConfig)();
+  return {
+    ...nextJestConfig,
+    transformIgnorePatterns: [
+      '/node_modules/(?!(next-auth|@auth/core|oauth4webapi|@panva|jose|openid-client)/).*',
+    ],
+  };
+}
+
+module.exports = jestConfig;

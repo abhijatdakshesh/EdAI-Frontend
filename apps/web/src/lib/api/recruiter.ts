@@ -819,8 +819,8 @@ export function useOutreachGenerator() {
             const skill = c.skills[0] ?? "technical";
             const isWhatsApp = body.channel === "WHATSAPP";
             const msg = isWhatsApp
-              ? `Hi ${c.name.split(" ")[0]}! 👋 We came across your profile on EdAI and were impressed by your ${skill} skills and strong academic record (CGPA ${c.cgpa}). We have an exciting opening that's a great match for your profile. Would you be open to a quick 15-min chat this week? Reply YES to know more. — Recruiter`
-              : `Hi ${c.name},\n\nI came across your profile on EdAI and was impressed by your expertise in ${skill} and your strong academic performance (CGPA ${c.cgpa}).\n\nWe are currently hiring for a role that closely aligns with your skills and career interests. I'd love to share more details.\n\nWould you have 15 minutes this week for a quick call?\n\nBest regards,\nRecruiter`;
+              ? `Hi ${c.name.split(" ")[0]}! 👋 We came across your profile on Ed8AI and were impressed by your ${skill} skills and strong academic record (CGPA ${c.cgpa}). We have an exciting opening that's a great match for your profile. Would you be open to a quick 15-min chat this week? Reply YES to know more. — Recruiter`
+              : `Hi ${c.name},\n\nI came across your profile on Ed8AI and was impressed by your expertise in ${skill} and your strong academic performance (CGPA ${c.cgpa}).\n\nWe are currently hiring for a role that closely aligns with your skills and career interests. I'd love to share more details.\n\nWould you have 15 minutes this week for a quick call?\n\nBest regards,\nRecruiter`;
             return {
               candidateUsn: c.studentId,
               candidateName: c.name,

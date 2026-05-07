@@ -45,6 +45,17 @@
 
 import { NextRequest } from 'next/server';
 
+// Mock @/auth to avoid ESM/next-auth parse errors in Jest node env.
+// Routes use auth(handler) as a wrapper — the mock calls handler with req.auth set.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+jest.mock('@/auth', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  auth: (handler: any) => (req: any) => { req.auth = { accessToken: 'test-token' }; return handler(req); },
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  handlers: {},
+}));
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 /** Build a GET NextRequest with optional academicYear query param */
