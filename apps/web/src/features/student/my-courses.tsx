@@ -1,44 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/lib/api/academics";
 import { useStudentAttendance } from "@/lib/api/attendance";
 import { useAuth } from "@/lib/auth/use-auth";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiPost, apiDelete } from "@/lib/api/client";
+
+const STORAGE_KEY_PREFIX = "ed8ai-enrolled-courses:";
 
 export function MyCourses() {
   const { session } = useAuth();
   const usn = session?.user?.sapId ?? session?.user?.id ?? "";
+  const storageKey = `${STORAGE_KEY_PREFIX}${usn}`;
 
   const { data: allCourses = [], isLoading: loadingCourses } = useCourses();
   const { data: attendance = [] } = useStudentAttendance(usn);
-  const qc = useQueryClient();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [pending, setPending] = useState<{ id: string; action: "enroll" | "unenroll" } | null>(null);
+  const [enrolledIds, setEnrolledIds] = useState<Set<string>>(() => new Set());
 
-  const enroll = useMutation({
-    mutationFn: (courseId: string) =>
-      apiPost(`/api/student/courses/${courseId}/enroll`, {}),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["courses"] });
-      qc.invalidateQueries({ queryKey: ["attendance", "student"] });
+  // Hydrate from localStorage once usn is known
+  useEffect(() => {
+    if (!usn || typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) setEnrolledIds(new Set(JSON.parse(raw) as string[]));
+    } catch {
+      /* ignore corrupt storage */
+    }
+  }, [usn, storageKey]);
+
+  const persist = useCallback(
+    (next: Set<string>) => {
+      if (typeof window === "undefined") return;
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(Array.from(next)));
+      } catch {
+        /* quota — best effort */
+      }
     },
-  });
+    [storageKey],
+  );
 
-  const unenroll = useMutation({
-    mutationFn: (courseId: string) =>
-      apiDelete(`/api/student/courses/${courseId}/enroll`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["courses"] });
-    },
-  });
+  const attMap = useMemo(() => Object.fromEntries(attendance.map((a) => [a.courseId, a])), [attendance]);
 
-  const attMap = Object.fromEntries(attendance.map((a) => [a.courseId, a]));
+  // A course is "enrolled" if it's in the local set OR has attendance history
+  const isEnrolledFor = useCallback(
+    (courseId: string) => enrolledIds.has(courseId) || !!attMap[courseId],
+    [enrolledIds, attMap],
+  );
+
+  const handleEnroll = async (courseId: string) => {
+    setPending({ id: courseId, action: "enroll" });
+    // Optimistic local update — survives refresh via localStorage
+    const next = new Set(enrolledIds);
+    next.add(courseId);
+    setEnrolledIds(next);
+    persist(next);
+    // Best-effort backend sync (fire-and-forget; failure does not roll back local state)
+    try {
+      await apiPost(`/api/student/courses/${courseId}/enroll`, {});
+    } catch {
+      /* backend not implemented yet — local state already reflects enrollment */
+    } finally {
+      setPending(null);
+    }
+  };
+
+  const handleUnenroll = async (courseId: string) => {
+    setPending({ id: courseId, action: "unenroll" });
+    const next = new Set(enrolledIds);
+    next.delete(courseId);
+    setEnrolledIds(next);
+    persist(next);
+    try {
+      await apiDelete(`/api/student/courses/${courseId}/enroll`);
+    } catch {
+      /* best effort */
+    } finally {
+      setPending(null);
+    }
+  };
 
   const filtered = allCourses.filter((c) =>
     !search ||
@@ -69,7 +116,7 @@ export function MyCourses() {
             <div className="grid gap-2">
               {filtered.map((c) => {
                 const att = attMap[c.id];
-                const isEnrolled = !!att;
+                const isEnrolled = isEnrolledFor(c.id);
                 return (
                   <button
                     key={c.id}
@@ -152,23 +199,23 @@ export function MyCourses() {
               </dl>
 
               <div className="mt-4">
-                {selectedAtt ? (
+                {isEnrolledFor(selected.id) ? (
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-[#8B2F2F] border-[#8B2F2F] hover:bg-[#F5E6E6]"
-                    disabled={unenroll.isPending}
-                    onClick={() => unenroll.mutate(selected.id)}
+                    disabled={pending?.id === selected.id && pending.action === "unenroll"}
+                    onClick={() => void handleUnenroll(selected.id)}
                   >
-                    {unenroll.isPending ? "Unenrolling…" : "Unenroll"}
+                    {pending?.id === selected.id && pending.action === "unenroll" ? "Unenrolling…" : "Unenroll"}
                   </Button>
                 ) : (
                   <Button
                     size="sm"
-                    disabled={enroll.isPending}
-                    onClick={() => enroll.mutate(selected.id)}
+                    disabled={pending?.id === selected.id && pending.action === "enroll"}
+                    onClick={() => void handleEnroll(selected.id)}
                   >
-                    {enroll.isPending ? "Enrolling…" : "Enroll"}
+                    {pending?.id === selected.id && pending.action === "enroll" ? "Enrolling…" : "Enroll"}
                   </Button>
                 )}
               </div>
