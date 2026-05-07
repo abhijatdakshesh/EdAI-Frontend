@@ -1,14 +1,27 @@
 "use client";
 
+import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useMyStudyPlan, useCompleteStudyTask, useGenerateStudyPlan } from "@/lib/api/counselor";
 
 export function StudyPlan() {
-  const { data: plan, isLoading } = useMyStudyPlan();
+  const { data: plan, isLoading, refetch } = useMyStudyPlan();
   const completeTask = useCompleteStudyTask();
   const generatePlan = useGenerateStudyPlan();
+  const [genError, setGenError] = useState<string | null>(null);
+
+  async function handleGenerate() {
+    setGenError(null);
+    try {
+      await generatePlan.mutateAsync();
+      // Force a refetch in case TanStack v5 prefix-invalidation didn't kick in
+      await refetch();
+    } catch (e) {
+      setGenError((e as Error).message ?? "Failed to generate plan");
+    }
+  }
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayTasks = plan?.tasks.filter((t) => t.scheduledDate === todayStr) ?? [];
@@ -31,11 +44,14 @@ export function StudyPlan() {
           <div className="flex items-center justify-between">
             <p className="label-track">Study Progress</p>
             <Button size="sm" variant="outline"
-              onClick={() => void generatePlan.mutateAsync()}
+              onClick={() => void handleGenerate()}
               disabled={generatePlan.isPending}>
               {generatePlan.isPending ? "Generating…" : "Generate New Plan"}
             </Button>
           </div>
+          {genError && (
+            <p className="text-xs rounded bg-[#F5E6E6] text-[#8B2F2F] px-3 py-2">{genError}</p>
+          )}
 
           {isLoading ? (
             <div className="grid gap-3">
