@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { AppShell } from '@/components/layout/shell';
 import type { StudentPlacementProfile, CompanyMatch, CompanyType } from './types';
 import { STATUS_STYLE, COMPANY_TYPES, MOCK_PROFILE, MOCK_MATCHES } from './types';
 
@@ -49,9 +51,9 @@ export default function StudentPlacementView() {
     } finally { setGenerating(false); }
   };
 
-  if (status === 'loading') return <div className="p-8 text-center text-gray-400">Loading…</div>;
-  if (!usn && !USE_MOCK) return <div className="p-8 text-center text-gray-400">Please sign in to view your placement profile.</div>;
-  if (!profile) return <div className="p-8 text-center text-gray-400">Loading placement profile...</div>;
+  if (status === 'loading') return <AppShell title="My Placement"><div className="p-8 text-center text-gray-400">Loading…</div></AppShell>;
+  if (!usn && !USE_MOCK) return <AppShell title="My Placement"><div className="p-8 text-center text-gray-400">Please sign in to view your placement profile.</div></AppShell>;
+  if (!profile) return <AppShell title="My Placement"><div className="p-8 text-center text-gray-400">Loading placement profile...</div></AppShell>;
 
   const statusStyle = STATUS_STYLE[profile.placementStatus] ?? STATUS_STYLE['NEEDS_COACHING'];
   const readinessScore = profile.readinessScore ?? 0;
@@ -67,7 +69,17 @@ export default function StudentPlacementView() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <AppShell title="My Placement">
+    <div className="max-w-4xl mx-auto px-4 py-2">
+      <Link
+        href="/student/dashboard"
+        className="inline-flex items-center gap-1.5 mb-4 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Dashboard
+      </Link>
       <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-6">
         <div className="flex items-start justify-between">
           <div>
@@ -181,5 +193,6 @@ export default function StudentPlacementView() {
         </div>
       )}
     </div>
+    </AppShell>
   );
 }
