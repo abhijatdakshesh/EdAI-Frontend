@@ -16,7 +16,7 @@ const gradeColors: Record<string, string> = {
 
 export function ResultsPortal() {
   const { session } = useAuth();
-  const usn = session?.user?.id ?? "";
+  const usn = session?.user?.sapId ?? session?.user?.id ?? "";
   const { data, isLoading, isError } = useStudentResults(usn);
 
   const semesters = data?.semesters ?? [];
