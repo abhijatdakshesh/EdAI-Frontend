@@ -209,7 +209,25 @@ export function useConfirmIASubmission() {
   return useMutation({
     mutationFn: (submissionId: string) =>
       apiPost(`/api/ia/submissions/${submissionId}/confirm`, {}),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["vtu", "ia-submissions"] }),
+    // Optimistic update: flip status to CONFIRMED in every cached list
+    // immediately so the row visibly changes even before the network round-trips.
+    onMutate: async (submissionId) => {
+      await qc.cancelQueries({ queryKey: ["vtu", "ia-submissions"] });
+      const snapshots = qc.getQueriesData<IASubmission[]>({ queryKey: ["vtu", "ia-submissions"] });
+      for (const [key, list] of snapshots) {
+        if (!Array.isArray(list)) continue;
+        qc.setQueryData<IASubmission[]>(
+          key,
+          list.map((s) => (s.id === submissionId ? { ...s, status: "CONFIRMED" } : s)),
+        );
+      }
+      return { snapshots };
+    },
+    onError: (_err, _id, ctx) => {
+      // Roll back if the server rejected the confirm
+      if (ctx?.snapshots) for (const [key, prev] of ctx.snapshots) qc.setQueryData(key, prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["vtu", "ia-submissions"] }),
   });
 }
 
