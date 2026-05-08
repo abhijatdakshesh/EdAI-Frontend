@@ -65,9 +65,19 @@ export function HRStaff() {
                 <p className="text-xs mt-2">{c.email}</p>
                 <p className="text-xs text-text-muted">{c.phone}</p>
                 <div className="mt-3 flex gap-2">
-                  <a href={`mailto:${c.email}`} className="flex-1">
-                    <Button size="sm" variant="outline" className="w-full text-xs" aria-label={`Email ${c.name}`}>
-                      Email
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(c.email)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1"
+                  >
+                    <Button size="sm" variant="outline" className="w-full text-xs" aria-label={`Email ${c.name} via Gmail`}>
+                      Email (Gmail)
+                    </Button>
+                  </a>
+                  <a href={`mailto:${c.email}`} className="shrink-0">
+                    <Button size="sm" variant="outline" className="text-xs" aria-label={`Open default mail client for ${c.name}`} title="Open default mail client">
+                      ✉︎
                     </Button>
                   </a>
                 </div>
