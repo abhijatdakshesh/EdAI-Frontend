@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useParentDashboard, useMyChildren } from "@/lib/api/parent";
 import { useParentNotifications, useParentCallHistory } from "@/lib/api/parent-comms";
 import { useAuth } from "@/lib/auth/use-auth";
+import { VTUNotificationsPanel } from "@/features/vtu/notifications-panel";
 
 export function ParentDashboard() {
   const { session } = useAuth();
@@ -130,6 +131,8 @@ export function ParentDashboard() {
             </div>
           )}
         </div>
+
+        <VTUNotificationsPanel limit={8} />
       </div>
     </AppShell>
   );
