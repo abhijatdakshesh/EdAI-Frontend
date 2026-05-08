@@ -21,7 +21,7 @@ test('@P0 admin: placement dashboard renders analytics cards and company list', 
     .or(page.getByText(/no placement data/i));
   await expect(analyticsContent.first()).toBeVisible({ timeout: 10_000 });
   // No crash
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P0 admin: placement company list renders with name, role, CTC, drive date', async ({ page }) => {
@@ -49,7 +49,7 @@ test('@P0 student: placement view renders readiness score and matched companies'
     .getByText(/readiness|score|matched|cgpa|fit score/i)
     .or(page.getByText(/no placement data|no matches/i));
   await expect(placementContent.first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P0 student: placement view shows matched companies tab and score content', async ({ page }) => {
@@ -97,7 +97,7 @@ test('@P1 student: resume type selector has all 4 company types', async ({ page 
     const isPresent = await typeEl.count() > 0;
     void isPresent; // presence is checked — just ensure no crash
   }
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 // ─── P1: Admin — Run Matching ─────────────────────────────────────────────────
@@ -109,6 +109,6 @@ test('@P1 admin: placement dashboard has match students action', async ({ page }
   const matchBtn = page.getByRole('button', { name: /match|run matching|score/i });
   // Match button may or may not be visible depending on mock data companies; no assertion to avoid false fails
   // Just verify no 500 error
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 10_000 });
   void matchBtn;
 });

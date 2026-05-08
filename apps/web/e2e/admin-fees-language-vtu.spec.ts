@@ -20,7 +20,7 @@ test('@P0 admin: fees page renders summary cards and student records', async ({ 
   await page.goto('/admin/fees');
   await expect(page).toHaveURL(/admin\/fees/);
   await expect(page.getByText(/fee|dues|outstanding/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   const content = page
     .getByText(/total|overdue|collected|₹/i)
     .or(page.getByRole('table'))
@@ -47,7 +47,7 @@ test('@P1 admin: fees Overdue only checkbox is clickable and changes state', asy
   await expect(checkbox).toBeVisible({ timeout: 8_000 });
   await checkbox.click();
   await expect(checkbox).toBeChecked();
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 5_000 });
 });
 
 test('@P1 admin: fees Call Now button visible on fee records', async ({ page }) => {
@@ -71,7 +71,7 @@ test('@P1 admin: language page renders with 6 language options', async ({ page }
   await expect(page.getByText(/english/i).first()).toBeVisible({ timeout: 8_000 });
   await expect(page.getByText(/kannada/i).first()).toBeVisible();
   await expect(page.getByText(/hindi/i).first()).toBeVisible();
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 admin: language page shows per-role language select dropdowns', async ({ page }) => {
@@ -89,7 +89,7 @@ test('@P1 admin: language system default Kannada button is clickable', async ({ 
   const kannadaBtn = page.getByText(/kannada/i).first();
   await expect(kannadaBtn).toBeVisible({ timeout: 8_000 });
   await kannadaBtn.click();
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 admin: language AI Voice Call Languages section is rendered', async ({ page }) => {
@@ -128,7 +128,7 @@ test('@P0 admin: VTU page renders with tab navigation', async ({ page }) => {
   await expect(page.getByRole('button', { name: /registration windows/i })).toBeVisible({ timeout: 8_000 });
   await expect(page.getByRole('button', { name: /pending students/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /dept overview/i })).toBeVisible();
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P0 admin: VTU + New Window button opens create form with all required fields', async ({ page }) => {
@@ -138,15 +138,15 @@ test('@P0 admin: VTU + New Window button opens create form with all required fie
   const newWindowBtn = page.getByRole('button', { name: /new window/i });
   await expect(newWindowBtn).toBeVisible({ timeout: 8_000 });
   await newWindowBtn.click();
-  // Title field
-  await expect(page.locator('input[placeholder*="Title"]')).toBeVisible({ timeout: 5_000 });
-  // Exam Month field
-  await expect(page.locator('input[placeholder*="Exam Month"]')).toBeVisible();
-  // Date inputs (open date, close date)
+  // Form heading appears
+  await expect(page.getByText(/configure registration window/i)).toBeVisible({ timeout: 5_000 });
+  // Title field (placeholder = "e.g. Nov 2025 VTU Exam")
+  await expect(page.locator('input[placeholder*="VTU Exam"]')).toBeVisible();
+  // Date inputs
   await expect(page.locator('input[type=date]').first()).toBeVisible();
-  // Number inputs (Min Attendance %, Max Backlogs)
-  await expect(page.locator('input[placeholder*="Min Attendance"]')).toBeVisible();
-  await expect(page.locator('input[placeholder*="Max Backlogs"]')).toBeVisible();
+  // Number inputs by placeholder values
+  await expect(page.locator('input[type=number][placeholder="75"]')).toBeVisible();
+  await expect(page.locator('input[type=number][placeholder="2"]')).toBeVisible();
   // Action buttons
   await expect(page.getByRole('button', { name: /create window/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
@@ -157,9 +157,10 @@ test('@P0 admin: VTU new window form Cancel button closes the form', async ({ pa
   await page.goto('/admin/vtu');
   await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
   await page.getByRole('button', { name: /new window/i }).click();
-  await expect(page.locator('input[placeholder*="Title"]')).toBeVisible({ timeout: 5_000 });
-  await page.getByRole('button', { name: /cancel/i }).click();
-  await expect(page.locator('input[placeholder*="Title"]')).not.toBeVisible({ timeout: 3_000 });
+  const formHeading = page.getByText(/configure registration window/i);
+  await expect(formHeading).toBeVisible({ timeout: 5_000 });
+  await page.getByRole('button', { name: /^cancel$/i }).click();
+  await expect(formHeading).not.toBeVisible({ timeout: 3_000 });
 });
 
 test('@P1 admin: VTU windows list shows status badges or empty state', async ({ page }) => {

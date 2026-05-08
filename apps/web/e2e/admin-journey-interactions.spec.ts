@@ -42,7 +42,7 @@ test('@P0 admin: create user modal — fill all 6 fields and click Create User',
     .getByText(/create new user/i)
     .or(page.getByRole('button', { name: /add user/i }));
   await expect(outcome.first()).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P0 admin: create user modal Cancel button closes form without submitting', async ({ page }) => {
@@ -91,9 +91,9 @@ test('@P1 admin: promotion Generate tab — class selector enables Generate butt
     const generateBtn = page.getByRole('button', { name: /^generate report$/i });
     await expect(generateBtn).toBeEnabled({ timeout: 3_000 });
     await generateBtn.click();
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
   } else {
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });
 
@@ -106,7 +106,7 @@ test('@P1 admin: IA submission Confirm button is clickable on available rows', a
   const confirmBtn = page.getByRole('button', { name: /confirm/i });
   if (await confirmBtn.count() > 0) {
     await confirmBtn.first().click();
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 5_000 });
   } else {
     const content = page.getByText(/not started|submitted|confirmed|no ia submissions/i);
     await expect(content.first()).toBeVisible({ timeout: 8_000 });

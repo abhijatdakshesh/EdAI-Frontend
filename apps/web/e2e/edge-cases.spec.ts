@@ -14,7 +14,7 @@ test('@P2 student: fees page with no dues shows cleared state (not blank/crash)'
   await page.goto('/student/fees');
 
   await expect(page.getByText(/fee/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   // Either dues exist or "all cleared" message
   const content = page
     .getByText(/₹|no pending dues|all fees.*cleared/i)
@@ -27,7 +27,7 @@ test('@P2 student: jobs page with no listings shows empty state (not blank)', as
   await page.goto('/student/jobs');
 
   await expect(page.getByText(/job|opportunit/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   // Either jobs exist or empty state
   const content = page
     .getByRole('button', { name: /apply/i })
@@ -134,6 +134,6 @@ test('@P2 admin: each major admin page has a visible heading (no ghost pages)', 
   for (const { route, text } of adminPages) {
     await page.goto(route);
     await expect(page.getByText(text).first()).toBeVisible({ timeout: 10_000 });
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });

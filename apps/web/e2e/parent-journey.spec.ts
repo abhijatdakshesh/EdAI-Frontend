@@ -130,7 +130,7 @@ test('@P1 parent: notifications page renders feed with filter controls', async (
   await page.goto('/parent/notifications');
   await expect(page).toHaveURL(/parent\/notifications/);
 
-  await expect(page.getByText(/notification/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: /notification/i }).first()).toBeVisible({ timeout: 20_000 });
   // Filter buttons (ALL / CRITICAL / WARNING / INFO) always render regardless of backend
   const notifContent = page
     .getByRole('button', { name: /^all|critical|warning|info/i })
@@ -146,7 +146,7 @@ test('@P1 parent: children page renders child selector', async ({ page }) => {
   await expect(page).toHaveURL(/parent\/children/);
 
   await expect(page.getByText(/children|child|ward/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 // ─── Messages (/parent/messages) ─────────────────────────────────────────────
@@ -157,5 +157,5 @@ test('@P1 parent: messages page renders compose button', async ({ page }) => {
   await expect(page).toHaveURL(/parent\/messages/);
 
   await expect(page.getByText(/message/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });

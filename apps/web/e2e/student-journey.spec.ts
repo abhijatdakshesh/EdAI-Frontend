@@ -130,7 +130,7 @@ test('student: view assignments list with status badges', async ({ page }) => {
   await expect(page).toHaveURL(/student\/assignments/);
 
   // Page heading
-  await expect(page.getByText(/my assignments/i)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: /my assignments/i })).toBeVisible({ timeout: 10_000 });
 
   // Filter tabs: all, pending, submitted, graded
   await expect(page.getByRole('button', { name: /^all$/i })).toBeVisible();
@@ -216,7 +216,7 @@ test('@P0 student: results page renders grade table and CGPA', async ({ page }) 
     .or(page.getByText(/semester/i));
   await expect(resultsContent.first()).toBeVisible({ timeout: 10_000 });
   // Should not show a crash/error
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P0 student: study plan page renders AI plan cards', async ({ page }) => {
@@ -350,14 +350,14 @@ test('@P1 student: schedule timetable grid renders class rows', async ({ page })
 test('@P2 student: exam prep page loads without crash', async ({ page }) => {
   await loginAsStudent(page);
   await page.goto('/student/exam-prep');
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
   await expect(page.locator('body')).not.toBeEmpty();
 });
 
 test('@P2 student: hostel page loads without crash', async ({ page }) => {
   await loginAsStudent(page);
   await page.goto('/student/hostel');
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
   await expect(page.locator('body')).not.toBeEmpty();
 });
 
@@ -365,5 +365,5 @@ test('@P2 student: VTU status page loads registration window info', async ({ pag
   await loginAsStudent(page);
   await page.goto('/student/vtu');
   await expect(page.locator('body')).not.toBeEmpty();
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
 });

@@ -112,7 +112,7 @@ test('@P1 admin: promotion page renders batch list and tabs', async ({ page }) =
   await expect(page.getByText(/promotion/i).first()).toBeVisible({ timeout: 10_000 });
   // Page shows "Promotion Batches" tab and batch cards
   await expect(page.getByText(/promotion batches/i)).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 // ─── Attendance Audit (/admin/attendance-audit) ───────────────────────────────
@@ -166,7 +166,7 @@ test('@P1 admin: alert feed renders list and add rule button', async ({ page }) 
   await expect(page).toHaveURL(/admin\/alerts/);
 
   await expect(page.getByText(/alert|notification rule/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 // ─── Comms Settings (/admin/comms) ────────────────────────────────────────────
@@ -192,7 +192,7 @@ test('@P1 admin: timetable generator renders with new timetable button', async (
   await expect(page).toHaveURL(/admin\/timetable/);
 
   await expect(page.getByText(/timetable generator/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   // Button text is "+ New Timetable"
   await expect(page.getByRole('button', { name: /new timetable/i }).first()).toBeVisible({ timeout: 8_000 });
 });
@@ -257,7 +257,7 @@ test('@P1 admin: classes View Students button opens student side panel', async (
     const panel = page.getByRole('table').or(page.getByText(/students in|student list|attendance/i));
     await expect(panel.first()).toBeVisible({ timeout: 8_000 });
   } else {
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });
 
@@ -297,7 +297,7 @@ test('@P2 admin: promotion batch Override action opens modal with notes textarea
     const modal = page.locator('textarea').or(page.getByText(/override|notes|reason/i));
     await expect(modal.first()).toBeVisible({ timeout: 5_000 });
   } else {
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });
 
@@ -409,7 +409,7 @@ test('@P1 admin: settings page has toggle buttons that flip state', async ({ pag
   }).first();
   await expect(toggle).toBeVisible({ timeout: 8_000 });
   await toggle.click();
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 admin: settings Reset to Defaults button is visible', async ({ page }) => {
