@@ -55,5 +55,7 @@ jobs:
 
       - name: Health check
         run: |
+          DOMAIN="${{ secrets.PROD_DOMAIN }}"
+          DOMAIN="${DOMAIN:-app.raycraft.in}"
           curl --retry 6 --retry-delay 10 --retry-connrefused --fail \
-            "https://${{ secrets.PROD_DOMAIN }}" || (echo "Health check failed" && exit 1)
+            "https://${DOMAIN}" || (echo "Health check failed" && exit 1)
