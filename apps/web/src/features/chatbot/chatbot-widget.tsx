@@ -238,16 +238,39 @@ export default function ChatbotWidget() {
           }],
         }));
       } catch {
-        setState(s => ({
-          ...s,
-          isTyping: false,
-          messages: [...s.messages, {
-            id: `${Date.now()}-err`,
-            role: 'assistant',
-            content: 'Sorry, I could not reach the server. Please try again.',
-            timestamp: new Date().toISOString(),
-          }],
-        }));
+        // Auth REST failed (e.g. token invalid for newly-created users) —
+        // fall back to the anonymous /chatbot/public/ask endpoint so the
+        // user still gets a useful Gemini reply instead of an error.
+        try {
+          const pub = await fetch(`${API_URL}/api/chatbot/public/ask`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text }),
+          });
+          if (!pub.ok) throw new Error(`${pub.status}`);
+          const data = await pub.json() as { message: string; timestamp: string };
+          setState(s => ({
+            ...s,
+            isTyping: false,
+            messages: [...s.messages, {
+              id: `${Date.now()}-bot`,
+              role: 'assistant',
+              content: data.message,
+              timestamp: data.timestamp,
+            }],
+          }));
+        } catch {
+          setState(s => ({
+            ...s,
+            isTyping: false,
+            messages: [...s.messages, {
+              id: `${Date.now()}-err`,
+              role: 'assistant',
+              content: 'Sorry, I could not reach the server. Please try again.',
+              timestamp: new Date().toISOString(),
+            }],
+          }));
+        }
       }
     }
   }, [session, state.conversationId, language]);
