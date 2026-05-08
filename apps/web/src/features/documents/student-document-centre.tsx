@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
+import { FileText, Download, Clock, CheckCircle, XCircle, AlertCircle, PlusCircle, ArrowLeft } from 'lucide-react';
+import { AppShell } from '@/components/layout/shell';
 import { DocumentRequest, DocType, DocStatus, DOC_TYPE_LABELS, STATUS_COLORS, PURPOSE_OPTIONS } from './types';
 import { getMyDocuments, requestDocument } from './repository';
 import { buildDownloadUrl } from '@/lib/api/documents';
@@ -26,6 +28,7 @@ export default function StudentDocumentCentre({ studentName }: { studentName?: s
   const [purpose, setPurpose] = useState('');
   const [purposeDetail, setPurposeDetail] = useState('');
   const [consentGiven, setConsentGiven] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     getMyDocuments().then(d => { setDocs(d); setLoading(false); }).catch(() => setLoading(false));
@@ -50,6 +53,9 @@ export default function StudentDocumentCentre({ studentName }: { studentName?: s
       setPurpose('');
       setPurposeDetail('');
       setConsentGiven(false);
+      setSubmitSuccess(`Request ${doc.docNumber ?? doc.id.slice(0, 8)} submitted — status: ${doc.status}.`);
+      // Auto-clear toast after 6s
+      setTimeout(() => setSubmitSuccess(null), 6000);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to submit request. Please try again.');
     } finally {
@@ -58,7 +64,21 @@ export default function StudentDocumentCentre({ studentName }: { studentName?: s
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <AppShell title="My Documents">
+    <div className="p-2 max-w-4xl mx-auto space-y-6">
+      <Link
+        href="/student/dashboard"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#5C4A35] hover:text-[#2C1810] transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Dashboard
+      </Link>
+      {submitSuccess && (
+        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 flex items-center justify-between gap-4">
+          <span>✓ {submitSuccess}</span>
+          <button onClick={() => setSubmitSuccess(null)} className="text-green-700 hover:text-green-900 text-lg leading-none" aria-label="Dismiss">×</button>
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[#2C1810]">My Documents</h1>
@@ -211,5 +231,6 @@ export default function StudentDocumentCentre({ studentName }: { studentName?: s
         </div>
       )}
     </div>
+    </AppShell>
   );
 }
