@@ -14,10 +14,20 @@ WORKDIR /app
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 ARG NEXT_PUBLIC_SOCKET_URL=http://localhost:3001
 ARG NEXT_PUBLIC_USE_MOCKS=false
+# AUTH_SECRET is required at build time because src/auth.ts validates it
+# at module load (Next.js 14 collects page data during the production build,
+# which evaluates all server modules). Falls back to a build-only placeholder;
+# the runtime container should override this via Container Apps env.
+ARG AUTH_SECRET=build-time-placeholder-override-at-runtime
+ARG NEXTAUTH_URL=http://localhost:3000
+ARG IDENTITY_SERVICE_URL=http://localhost:3001
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 ENV NEXT_PUBLIC_USE_MOCKS=$NEXT_PUBLIC_USE_MOCKS
+ENV AUTH_SECRET=$AUTH_SECRET
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+ENV IDENTITY_SERVICE_URL=$IDENTITY_SERVICE_URL
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
