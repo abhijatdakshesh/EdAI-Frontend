@@ -13,19 +13,16 @@ export interface NavItem {
 
 export function portalLabel(role: UserRole): string {
   switch (role) {
-    case "ADMIN":
-    case "PRINCIPAL":
-    case "DEAN":
-    case "TRUSTEE":
-      return "Admin Portal";
-    case "FACULTY":
-    case "HOD":
-    case "COUNSELLOR":
-      return "Teacher Portal";
-    case "STUDENT":
-      return "Student Portal";
-    case "PARENT":
-      return "Parent Portal";
+    case "ADMIN":      return "Admin Portal";
+    case "PRINCIPAL":  return "Principal Portal";
+    case "DEAN":       return "Dean Portal";
+    case "TRUSTEE":    return "Trustee Portal";
+    case "HOD":        return "HoD Portal";
+    case "FACULTY":    return "Teacher Portal";
+    case "COUNSELLOR": return "Counsellor Portal";
+    case "STUDENT":    return "Student Portal";
+    case "PARENT":     return "Parent Portal";
+    case "RECRUITER":  return "Recruiter Portal";
     default:
       return "Ed8AI";
   }
