@@ -215,12 +215,14 @@ export function UploadResults() {
         method: "POST",
         body: fd,
       });
-      if (!res.ok) throw new Error("Upload failed");
-      return res.json();
+      const json = (await res.json().catch(() => ({}))) as { error?: string; message?: string; rowsAccepted?: number };
+      if (!res.ok) throw new Error(json.error ?? `Upload failed (${res.status})`);
+      return json;
     },
-    onSuccess: () => {
-      setUploadMsg({ type: "success", text: "Marks uploaded and published." });
+    onSuccess: (json) => {
+      setUploadMsg({ type: "success", text: json?.message ?? `Marks uploaded (${json?.rowsAccepted ?? 0} rows).` });
       setFile(null);
+      if (fileRef.current) fileRef.current.value = "";
     },
     onError: (e: Error) => setUploadMsg({ type: "error", text: e.message }),
   });
