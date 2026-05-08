@@ -195,24 +195,42 @@ export function VTUAdmin() {
           <div className="rounded border border-[#1C1810] bg-surface p-5 grid gap-3">
             <p className="font-medium">Configure Registration Window</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              <input placeholder="Title (e.g. Nov 2025 Exam)" value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="col-span-2 rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
-              <input placeholder="Exam Month (e.g. Nov 2025)" value={form.examMonth}
-                onChange={(e) => setForm({ ...form, examMonth: e.target.value })}
-                className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
-              <input type="date" value={form.openDate}
-                onChange={(e) => setForm({ ...form, openDate: e.target.value })}
-                className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
-              <input type="date" value={form.closeDate}
-                onChange={(e) => setForm({ ...form, closeDate: e.target.value })}
-                className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
-              <input type="number" placeholder="Min Attendance %" value={form.eligibilityRules.minAttendancePct}
-                onChange={(e) => setForm({ ...form, eligibilityRules: { ...form.eligibilityRules, minAttendancePct: Number(e.target.value) } })}
-                className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
-              <input type="number" placeholder="Max Backlogs" value={form.eligibilityRules.maxBacklogs}
-                onChange={(e) => setForm({ ...form, eligibilityRules: { ...form.eligibilityRules, maxBacklogs: Number(e.target.value) } })}
-                className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              <div className="col-span-2">
+                <label className="block text-xs font-medium text-text-muted mb-1">Window Title</label>
+                <input placeholder="e.g. Nov 2025 VTU Exam" value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="w-full rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-1">Exam Month</label>
+                <input placeholder="e.g. Nov 2025" value={form.examMonth}
+                  onChange={(e) => setForm({ ...form, examMonth: e.target.value })}
+                  className="w-full rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-1">Registration Opens</label>
+                <input type="date" value={form.openDate}
+                  onChange={(e) => setForm({ ...form, openDate: e.target.value })}
+                  className="w-full rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-1">Registration Closes</label>
+                <input type="date" value={form.closeDate}
+                  onChange={(e) => setForm({ ...form, closeDate: e.target.value })}
+                  className="w-full rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-1">Min Attendance % (eligibility)</label>
+                <input type="number" min={0} max={100} placeholder="75" value={form.eligibilityRules.minAttendancePct}
+                  onChange={(e) => setForm({ ...form, eligibilityRules: { ...form.eligibilityRules, minAttendancePct: Number(e.target.value) } })}
+                  className="w-full rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-muted mb-1">Max Backlogs Allowed</label>
+                <input type="number" min={0} placeholder="2" value={form.eligibilityRules.maxBacklogs}
+                  onChange={(e) => setForm({ ...form, eligibilityRules: { ...form.eligibilityRules, maxBacklogs: Number(e.target.value) } })}
+                  className="w-full rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none" />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={() => createWindow.mutate(form, { onSuccess: () => setShowCreate(false) })}
