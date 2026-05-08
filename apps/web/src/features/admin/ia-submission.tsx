@@ -160,10 +160,14 @@ export function IASubmissionDashboard() {
                           {sub.status === "SUBMITTED" && (
                             <Button
                               size="sm"
-                              disabled={confirmSub.isPending}
-                              onClick={() => confirmSub.mutate(sub.id)}
+                              disabled={confirmSub.isPending && confirmSub.variables === sub.id}
+                              onClick={() =>
+                                confirmSub.mutate(sub.id, {
+                                  onError: (err) => alert(`Confirm failed: ${(err as Error).message}`),
+                                })
+                              }
                             >
-                              {confirmSub.isPending ? "Confirming…" : "Confirm"}
+                              {confirmSub.isPending && confirmSub.variables === sub.id ? "Confirming…" : "Confirm"}
                             </Button>
                           )}
                           {sub.status === "CONFIRMED" && (

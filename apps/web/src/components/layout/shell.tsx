@@ -48,7 +48,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
   return (
     <div className="min-h-screen bg-background text-text-primary">
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 md:grid-cols-[240px_1fr]">
-        <aside className="border-r border-border bg-surface px-4 py-6">
+        <aside className="border-r border-border bg-surface px-4 py-6 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
           <Link href={homeRoute} className="block">
             <p className="label-track">RV Trust</p>
             <h2 className="mt-2 text-3xl">{portalName}</h2>

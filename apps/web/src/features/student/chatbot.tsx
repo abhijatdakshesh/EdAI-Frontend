@@ -43,17 +43,27 @@ export function StudentChatbot() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
 
     try {
-      const data = await apiFetch<{ answer: string }>("/api/chatbot/query", {
-        method: "POST",
-        body: JSON.stringify({
-          question: text,
-          userId,
-          language: session?.user?.preferredLanguage ?? "en",
-        }),
-      });
+      // Try the authed REST chatbot first (knowledge-graph aware), then fall
+      // back to the always-working public Gemini endpoint if it fails. This
+      // mirrors the floating widget's cascade so /student/chatbot never
+      // shows a generic "couldn't reach" error when the backend is healthy.
+      let answer = '';
+      try {
+        const r = await apiFetch<{ message: string }>("/api/chatbot/message", {
+          method: "POST",
+          body: JSON.stringify({ message: text }),
+        });
+        answer = r.message;
+      } catch {
+        const r = await apiFetch<{ message: string }>("/api/chatbot/public/ask", {
+          method: "POST",
+          body: JSON.stringify({ message: text }),
+        });
+        answer = r.message;
+      }
       setMessages((m) => [
         ...m,
-        { id: crypto.randomUUID(), role: "assistant", text: data.answer },
+        { id: crypto.randomUUID(), role: "assistant", text: answer },
       ]);
     } catch {
       setMessages((m) => [

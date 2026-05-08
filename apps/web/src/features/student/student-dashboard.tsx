@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { apiGet } from "@/lib/api/client";
 import { useActiveVTUWindow } from "@/lib/api/vtu";
+import { VTUNotificationsPanel } from "@/features/vtu/notifications-panel";
 import Link from "next/link";
 
 interface DashboardStats {
@@ -209,6 +210,8 @@ export function StudentDashboard() {
             )}
           </div>
         </div>
+
+        <VTUNotificationsPanel limit={8} />
       </div>
     </AppShell>
   );

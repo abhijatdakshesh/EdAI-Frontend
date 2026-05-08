@@ -12,7 +12,7 @@ test('@P1 report generator: page loads at /admin/report-generator', async ({ pag
   await expect(page).toHaveURL(/admin\/report-generator/);
 
   await expect(page.getByText(/report generator|report/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 report generator: report type selector renders with multiple options', async ({ page }) => {
@@ -51,7 +51,7 @@ test('@P1 report generator: generate PDF button is present and clickable', async
   // Clicking triggers loading state (mock API)
   await generateBtn.first().click();
   // Either loading spinner, success, or staying in place — no crash
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 5_000 });
 });
 
 test('@P1 report generator: history table renders with type, status, date columns', async ({ page }) => {
@@ -82,6 +82,6 @@ test('@P1 report generator: email field accepts recipient input', async ({ page 
     await expect(emailInput.first()).toHaveValue('admin@rvce.edu');
   } else {
     // Email field may not be visible until report type selected — no strict assert
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });

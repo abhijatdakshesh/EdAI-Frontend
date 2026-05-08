@@ -1,44 +1,79 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useCourses } from "@/lib/api/academics";
 import { useStudentAttendance } from "@/lib/api/attendance";
 import { useAuth } from "@/lib/auth/use-auth";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiPost, apiDelete } from "@/lib/api/client";
+import { apiGet, apiPost, apiDelete } from "@/lib/api/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function MyCourses() {
   const { session } = useAuth();
   const usn = session?.user?.sapId ?? session?.user?.id ?? "";
+  const qc = useQueryClient();
 
   const { data: allCourses = [], isLoading: loadingCourses } = useCourses();
   const { data: attendance = [] } = useStudentAttendance(usn);
-  const qc = useQueryClient();
+  const { data: enrolledData } = useQuery<{ courseIds: string[] }>({
+    queryKey: ["student", "enrollments", usn],
+    queryFn: () => apiGet<{ courseIds: string[] }>("/api/student/courses"),
+    enabled: !!usn,
+  });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
-  const enroll = useMutation({
-    mutationFn: (courseId: string) =>
-      apiPost(`/api/student/courses/${courseId}/enroll`, {}),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["courses"] });
-      qc.invalidateQueries({ queryKey: ["attendance", "student"] });
+  const enrolledSet = useMemo(() => new Set(enrolledData?.courseIds ?? []), [enrolledData]);
+  const attMap = useMemo(() => Object.fromEntries(attendance.map((a) => [a.courseId, a])), [attendance]);
+
+  const enrollMutation = useMutation({
+    mutationFn: (courseId: string) => apiPost(`/api/student/courses/${courseId}/enroll`, {}),
+    onMutate: async (courseId) => {
+      await qc.cancelQueries({ queryKey: ["student", "enrollments", usn] });
+      const prev = qc.getQueryData<{ courseIds: string[] }>(["student", "enrollments", usn]);
+      qc.setQueryData<{ courseIds: string[] }>(["student", "enrollments", usn], {
+        courseIds: Array.from(new Set([...(prev?.courseIds ?? []), courseId])),
+      });
+      return { prev };
     },
+    onError: (_err, _courseId, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["student", "enrollments", usn], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["student", "enrollments", usn] }),
   });
 
-  const unenroll = useMutation({
-    mutationFn: (courseId: string) =>
-      apiDelete(`/api/student/courses/${courseId}/enroll`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["courses"] });
+  const unenrollMutation = useMutation({
+    mutationFn: (courseId: string) => apiDelete(`/api/student/courses/${courseId}/enroll`),
+    onMutate: async (courseId) => {
+      await qc.cancelQueries({ queryKey: ["student", "enrollments", usn] });
+      const prev = qc.getQueryData<{ courseIds: string[] }>(["student", "enrollments", usn]);
+      qc.setQueryData<{ courseIds: string[] }>(["student", "enrollments", usn], {
+        courseIds: (prev?.courseIds ?? []).filter((id) => id !== courseId),
+      });
+      return { prev };
     },
+    onError: (_err, _courseId, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["student", "enrollments", usn], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["student", "enrollments", usn] }),
   });
 
-  const attMap = Object.fromEntries(attendance.map((a) => [a.courseId, a]));
+  const isEnrolledFor = useCallback(
+    (courseId: string) => enrolledSet.has(courseId) || !!attMap[courseId],
+    [enrolledSet, attMap],
+  );
+
+  const pending = enrollMutation.isPending
+    ? { id: enrollMutation.variables as string, action: "enroll" as const }
+    : unenrollMutation.isPending
+    ? { id: unenrollMutation.variables as string, action: "unenroll" as const }
+    : null;
+
+  const handleEnroll = (courseId: string) => enrollMutation.mutate(courseId);
+  const handleUnenroll = (courseId: string) => unenrollMutation.mutate(courseId);
 
   const filtered = allCourses.filter((c) =>
     !search ||
@@ -69,7 +104,7 @@ export function MyCourses() {
             <div className="grid gap-2">
               {filtered.map((c) => {
                 const att = attMap[c.id];
-                const isEnrolled = !!att;
+                const isEnrolled = isEnrolledFor(c.id);
                 return (
                   <button
                     key={c.id}
@@ -152,23 +187,23 @@ export function MyCourses() {
               </dl>
 
               <div className="mt-4">
-                {selectedAtt ? (
+                {isEnrolledFor(selected.id) ? (
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-[#8B2F2F] border-[#8B2F2F] hover:bg-[#F5E6E6]"
-                    disabled={unenroll.isPending}
-                    onClick={() => unenroll.mutate(selected.id)}
+                    disabled={pending?.id === selected.id && pending.action === "unenroll"}
+                    onClick={() => void handleUnenroll(selected.id)}
                   >
-                    {unenroll.isPending ? "Unenrolling…" : "Unenroll"}
+                    {pending?.id === selected.id && pending.action === "unenroll" ? "Unenrolling…" : "Unenroll"}
                   </Button>
                 ) : (
                   <Button
                     size="sm"
-                    disabled={enroll.isPending}
-                    onClick={() => enroll.mutate(selected.id)}
+                    disabled={pending?.id === selected.id && pending.action === "enroll"}
+                    onClick={() => void handleEnroll(selected.id)}
                   >
-                    {enroll.isPending ? "Enrolling…" : "Enroll"}
+                    {pending?.id === selected.id && pending.action === "enroll" ? "Enrolling…" : "Enroll"}
                   </Button>
                 )}
               </div>

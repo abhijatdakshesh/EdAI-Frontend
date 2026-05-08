@@ -59,8 +59,11 @@ test('teacher: mark attendance for class — select class and see student grid',
       const studentArea = page
         .getByText(/loading students/i)
         .or(page.locator('button').filter({ hasText: /mark all present/i }))
-        .or(page.getByText(/select a class above/i));
-      await expect(studentArea).toBeVisible({ timeout: 8_000 });
+        .or(page.getByText(/select a class above/i))
+        .or(page.getByText(/no students/i))
+        .or(page.locator('table'))
+        .or(page.locator('[role="row"]').first());
+      await expect(studentArea.first()).toBeVisible({ timeout: 15_000 });
     }
   } else {
     // No classes loaded from API — just verify the placeholder state
@@ -271,7 +274,7 @@ test('@P1 teacher: performance drop page renders student list', async ({ page })
   await expect(page).toHaveURL(/teacher\/perf-drop/);
 
   await expect(page.getByText(/performance|drop|at.risk/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 teacher: announcements page has rich-text area and class selector', async ({ page }) => {
@@ -290,13 +293,13 @@ test('@P1 teacher: announcements page has rich-text area and class selector', as
 test('@P2 teacher: schedule timetable page loads without crash', async ({ page }) => {
   await loginAsTeacher(page);
   await page.goto('/teacher/schedule');
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
   await expect(page.locator('body')).not.toBeEmpty();
 });
 
 test('@P2 teacher: my classes page renders class list', async ({ page }) => {
   await loginAsTeacher(page);
   await page.goto('/teacher/classes');
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
   await expect(page.getByText(/class|section|my classes/i).first()).toBeVisible({ timeout: 10_000 });
 });

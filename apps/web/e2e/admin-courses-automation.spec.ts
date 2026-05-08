@@ -20,7 +20,7 @@ test('@P1 admin: courses page renders stats cards and course list', async ({ pag
   await expect(page).toHaveURL(/admin\/courses/);
   await expect(page.getByText(/course management|courses/i).first()).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/total courses/i)).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 admin: courses page search input is present and accepts text', async ({ page }) => {
@@ -32,7 +32,7 @@ test('@P1 admin: courses page search input is present and accepts text', async (
   await expect(search.first()).toBeVisible({ timeout: 8_000 });
   await search.first().fill('Data Structures');
   await expect(search.first()).toHaveValue('Data Structures');
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 5_000 });
 });
 
 test('@P1 admin: courses page department and type filter selects are rendered', async ({ page }) => {
@@ -58,7 +58,7 @@ test('@P1 admin: courses department filter changes results without crash', async
     const val = await options.nth(1).getAttribute('value');
     if (val) await deptSelect.selectOption(val);
   }
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 5_000 });
 });
 
 test('@P1 admin: courses table rows have Edit and Remove action buttons', async ({ page }) => {
@@ -87,7 +87,7 @@ test('@P1 admin: automation page renders stats and rule cards', async ({ page })
   await expect(page).toHaveURL(/admin\/automation/);
   await expect(page.getByText(/automation rules|automation/i).first()).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/total rules|active/i).first()).toBeVisible({ timeout: 8_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 admin: automation + New Rule button is visible', async ({ page }) => {

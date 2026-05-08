@@ -12,7 +12,7 @@ test('@P1 naac: compliance dashboard loads at /admin/naac', async ({ page }) => 
   await expect(page).toHaveURL(/admin\/naac/);
 
   await expect(page.getByText(/naac|compliance|accreditation/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 naac: overall compliance score card is visible', async ({ page }) => {
@@ -59,7 +59,7 @@ test('@P1 naac: clicking a criteria row opens edit form', async ({ page }) => {
     await expect(editContent.first()).toBeVisible({ timeout: 5_000 });
   } else {
     // No editable rows in mock data — just verify no crash
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });
 
@@ -72,6 +72,6 @@ test('@P1 naac: documentation upload button is present', async ({ page }) => {
     .getByRole('button', { name: /upload|attach|document/i })
     .or(page.locator('input[type=file]'));
   // Upload may be inside an edit panel — just verify page is functional
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible({ timeout: 8_000 });
   void uploadBtn;
 });

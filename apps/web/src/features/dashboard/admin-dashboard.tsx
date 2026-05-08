@@ -15,6 +15,7 @@ import {
 
 import { AppShell } from "@/components/layout/shell";
 import { ModuleCard } from "@/components/layout/module-card";
+import { VTUNotificationsPanel } from "@/features/vtu/notifications-panel";
 import { Button } from "@/components/ui/button";
 import { RAYCRAFT_CHART } from "@/lib/chart-theme";
 import { cn } from "@/lib/utils";
@@ -205,6 +206,8 @@ export function AdminDashboard() {
         ) : isLoading ? (
           <ModuleCard heading="Loading" description="Loading command center…" />
         ) : null}
+
+        <VTUNotificationsPanel limit={10} />
       </div>
     </AppShell>
   );

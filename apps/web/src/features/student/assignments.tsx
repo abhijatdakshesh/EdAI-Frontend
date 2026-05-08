@@ -31,7 +31,8 @@ type FilterOption = "all" | AssignmentStatus;
 
 export function MyAssignments() {
   const { session } = useAuth();
-  const usn = session?.user?.id ?? "";
+  // Prefer sapId (USN) when present — backend submissions are keyed by USN, not user.id
+  const usn = session?.user?.sapId ?? session?.user?.id ?? "";
   const [filter, setFilter] = useState<FilterOption>("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [submitUrl, setSubmitUrl] = useState("");
@@ -97,8 +98,8 @@ export function MyAssignments() {
                     <p className="font-medium">{a.title}</p>
                     <p className="text-xs text-text-muted mt-0.5">{a.courseName}</p>
                   </div>
-                  <span className={cn("rounded px-2 py-0.5 text-xs font-medium shrink-0", statusStyle[a.status])}>
-                    {a.status.toLowerCase()}
+                  <span className={cn("rounded px-2 py-0.5 text-xs font-medium shrink-0", statusStyle[a.status ?? "PENDING"])}>
+                    {(a.status ?? "pending").toLowerCase()}
                   </span>
                 </div>
                 <div className="flex gap-4 mt-2 text-xs text-text-muted">
@@ -139,7 +140,7 @@ export function MyAssignments() {
               )}
               <div className="flex justify-between">
                 <dt className="text-text-muted">Status</dt>
-                <dd><span className={cn("rounded px-2 py-0.5 text-xs font-medium", statusStyle[selected.status])}>{selected.status.toLowerCase()}</span></dd>
+                <dd><span className={cn("rounded px-2 py-0.5 text-xs font-medium", statusStyle[selected.status ?? "PENDING"])}>{(selected.status ?? "pending").toLowerCase()}</span></dd>
               </div>
             </dl>
             {selected.status === "PENDING" && (

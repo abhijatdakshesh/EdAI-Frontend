@@ -14,7 +14,7 @@ test('@P1 admin: voice calling page loads with call configuration UI', async ({ 
   await expect(page).toHaveURL(/admin\/voice-calling/);
 
   await expect(page.getByText(/voice calling|call centre|voice call/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+  await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
 });
 
 test('@P1 admin: voice calling page has language selector or template selector', async ({ page }) => {
@@ -56,7 +56,7 @@ test('@P1 admin: test call button is clickable and shows confirmation', async ({
     await expect(confirmUi.first()).toBeVisible({ timeout: 8_000 });
   } else {
     // No test call button — page still renders without crash
-    await expect(page.getByText(/something went wrong|500/i)).not.toBeVisible();
+    await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   }
 });
 

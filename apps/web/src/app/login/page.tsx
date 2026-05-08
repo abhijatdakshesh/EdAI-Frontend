@@ -100,8 +100,8 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Demo accounts — visible in non-production builds for quick portal testing */}
-        {process.env.NODE_ENV !== 'production' && (
+        {/* Demo accounts — always visible on the Ed8AI demo deployment */}
+        {true && (
           <details className="mt-6 rounded border border-border bg-background/50 p-3" open>
             <summary className="cursor-pointer select-none text-sm font-semibold text-primary">
               Demo credentials — click to autofill
