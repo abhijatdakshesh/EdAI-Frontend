@@ -402,8 +402,8 @@ export function VTUAdmin() {
                               <td className="px-4 py-2 text-[#3D6B4F]">{s.eligibleCount}</td>
                               <td className="px-4 py-2 text-[#8B2F2F]">{s.ineligibleCount}</td>
                               <td className="px-4 py-2">
-                                <span className={cn("rounded px-2 py-0.5 text-xs font-medium", regStatusStyle[s.status])}>
-                                  {s.status.replace("_", " ")}
+                                <span className={cn("rounded px-2 py-0.5 text-xs font-medium", regStatusStyle[s.status ?? "PENDING"])}>
+                                  {(s.status ?? "PENDING").replace(/_/g, " ")}
                                 </span>
                               </td>
                               <td className="px-4 py-2 text-text-muted text-xs">{s.lastRemindedAt ?? "—"}</td>
