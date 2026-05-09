@@ -59,6 +59,13 @@ export function UserManagement() {
   const total = data?.total ?? 0;
 
   function handleCreate() {
+    // KAN-24 #1: STUDENT records key on sapId (USN). Without it the dashboard
+    // falls through to UUID lookup and renders demo data tagged for another
+    // student. Block submit so the admin sets it explicitly at create time.
+    if (form.role === "STUDENT" && !(form.sapId ?? "").trim()) {
+      alert("USN / SAP ID is required for STUDENT accounts. Without it the student dashboard cannot map to the right academic record.");
+      return;
+    }
     createUser.mutate(form, {
       onSuccess: () => {
         setShowCreate(false);
@@ -148,10 +155,16 @@ export function UserManagement() {
               </select>
               <input
                 type="text"
-                placeholder="SAP ID (optional)"
+                placeholder={form.role === "STUDENT" ? "USN / SAP ID (required)" : "SAP ID (optional)"}
                 value={form.sapId ?? ""}
                 onChange={(e) => setForm({ ...form, sapId: e.target.value })}
-                className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
+                required={form.role === "STUDENT"}
+                className={cn(
+                  "rounded border bg-white px-3 py-1.5 text-sm focus:outline-none",
+                  form.role === "STUDENT" && !(form.sapId ?? "").trim()
+                    ? "border-[#8B2F2F]"
+                    : "border-border",
+                )}
               />
               <input
                 type="text"
