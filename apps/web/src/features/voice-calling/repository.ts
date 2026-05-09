@@ -64,25 +64,28 @@ export async function triggerCall(req: TriggerCallRequest): Promise<TriggerCallR
   if (USE_MOCK) {
     return { callId: 'call-mock-' + Date.now().toString(), status: 'INITIATED', message: 'Call queued successfully' };
   }
-  // Use relative URL so request hits the Next.js BFF route, not NEXT_PUBLIC_API_BASE_URL
-  const raw = await fetch('/api/voice/trigger', {
+  // Backend exposes the call trigger at /api/comms/calls/trigger with a
+  // simplified body shape. Earlier the FE pointed at a non-existent
+  // /api/voice/trigger endpoint → prod returned 502/404 (KAN-17).
+  const raw = await fetch('/api/comms/calls/trigger', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      studentId: req.studentId,
-      parentPhone: req.parentPhone,
-      language: req.language,
-      callType: req.callType,
-      institutionId: req.institutionId ?? 'RVCE',
-      studentContext: req.studentContext,
+      studentUsn: req.studentId,
+      type: req.callType,
+      language: req.language ?? 'en',
     }),
   });
   if (!raw.ok) {
-    const err = (await raw.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? `Voice trigger failed: ${raw.status}`);
+    const err = (await raw.json().catch(() => ({}))) as { error?: string; message?: string };
+    throw new Error(err.error ?? err.message ?? `Voice trigger failed: ${raw.status}`);
   }
-  const res = (await raw.json()) as BackendTriggerResponse;
-  return { callId: res.callId, status: res.status, message: 'Call queued successfully' };
+  const res = (await raw.json()) as Partial<BackendTriggerResponse> & { id?: string; status?: string };
+  return {
+    callId: res.callId ?? res.id ?? `call-${Date.now()}`,
+    status: res.status ?? 'INITIATED',
+    message: 'Call queued successfully',
+  };
 }
 
 // GoVoiceCallStatus is the shape returned by the Go voice service

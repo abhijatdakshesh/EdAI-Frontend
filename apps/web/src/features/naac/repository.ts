@@ -124,7 +124,10 @@ function mapBackendDashboard(raw: any): NaacDashboard {
       maxScore: c.maxScore,
       earnedScore: c.earnedScore,
       scorePercent: c.maxScore > 0 ? Math.round((c.earnedScore / c.maxScore) * 1000) / 10 : 0,
-      cgpaContribution: c.weightedScore ?? 0,
+      // cgpaContribution must be 0..4 (NAAC CGPA scale). Backend returns
+      // weightedScore in 0..weightage range (up to 350 for C2), so map to
+      // CGPA = pctEarned * 4. Fixes KAN-21 (UI was showing 163.33).
+      cgpaContribution: c.maxScore > 0 ? Math.round((c.earnedScore / c.maxScore) * 4 * 100) / 100 : 0,
       metrics: (c.metrics ?? []).map((m: any) => ({
         metricId: m.id,
         metricName: m.name,
