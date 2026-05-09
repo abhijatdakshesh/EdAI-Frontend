@@ -162,6 +162,12 @@ function TriggerCallTab() {
             <option value="hi">Hindi</option>
             <option value="ta">Tamil</option>
             <option value="te">Telugu</option>
+            <option value="mr">Marathi</option>
+            <option value="bn">Bengali</option>
+            <option value="gu">Gujarati</option>
+            <option value="ml">Malayalam</option>
+            <option value="pa">Punjabi</option>
+            <option value="or">Odia</option>
           </select>
         </div>
 
@@ -237,7 +243,10 @@ function CallLogsTab() {
     return new Date(iso).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
-  const langLabel: Record<string, string> = { kn: 'KN', en: 'EN', hi: 'HI', ta: 'TA', te: 'TE' };
+  const langLabel: Record<string, string> = {
+    kn: 'KN', en: 'EN', hi: 'HI', ta: 'TA', te: 'TE',
+    mr: 'MR', bn: 'BN', gu: 'GU', ml: 'ML', pa: 'PA', or: 'OR',
+  };
 
   return (
     <div className="space-y-4">

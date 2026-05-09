@@ -11,7 +11,9 @@ export type CallState =
   | 'BUSY'
   | 'ALL_RETRIES_EXHAUSTED';
 
-export type Language = 'en' | 'hi' | 'kn' | 'ta' | 'te';
+export type Language =
+  | 'en' | 'hi' | 'kn' | 'ta' | 'te'
+  | 'mr' | 'bn' | 'gu' | 'ml' | 'pa' | 'or';
 
 export type TurnRole = 'AI' | 'PARENT';
 
