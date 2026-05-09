@@ -1,4 +1,4 @@
-import { apiGet } from '@/lib/api/client';
+import { apiGet, apiPost } from '@/lib/api/client';
 
 import { mockCallLogsResponse } from './mock-data';
 import type { CallLogsResponse, CallRecord, CallState, CallType, Language, TriggerCallRequest, TriggerCallResult } from './types';
@@ -67,25 +67,26 @@ export async function triggerCall(req: TriggerCallRequest): Promise<TriggerCallR
   // Backend exposes the call trigger at /api/comms/calls/trigger with a
   // simplified body shape. Earlier the FE pointed at a non-existent
   // /api/voice/trigger endpoint → prod returned 502/404 (KAN-17).
-  const raw = await fetch('/api/comms/calls/trigger', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      studentUsn: req.studentId,
-      type: req.callType,
-      language: req.language ?? 'en',
-    }),
-  });
-  if (!raw.ok) {
-    const err = (await raw.json().catch(() => ({}))) as { error?: string; message?: string };
-    throw new Error(err.error ?? err.message ?? `Voice trigger failed: ${raw.status}`);
+  // Use apiPost so token refresh + 401 retry work (Daniel: don't bypass apiFetch).
+  try {
+    const res = await apiPost<Partial<BackendTriggerResponse> & { id?: string; status?: string }>(
+      '/api/comms/calls/trigger',
+      {
+        studentUsn: req.studentId,
+        type: req.callType,
+        language: req.language ?? 'en',
+      },
+    );
+    return {
+      callId: res.callId ?? res.id ?? `call-${Date.now()}`,
+      status: res.status ?? 'INITIATED',
+      message: 'Call queued successfully',
+    };
+  } catch (err) {
+    // Operator must see real failures — do not synthesize success.
+    const msg = err instanceof Error ? err.message : 'Voice trigger failed';
+    throw new Error(msg);
   }
-  const res = (await raw.json()) as Partial<BackendTriggerResponse> & { id?: string; status?: string };
-  return {
-    callId: res.callId ?? res.id ?? `call-${Date.now()}`,
-    status: res.status ?? 'INITIATED',
-    message: 'Call queued successfully',
-  };
 }
 
 // GoVoiceCallStatus is the shape returned by the Go voice service
