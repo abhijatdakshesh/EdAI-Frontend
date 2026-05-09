@@ -30,7 +30,11 @@ test('@P0 admin: create user modal — fill all 6 fields and click Create User',
   await page.locator('input[placeholder="Email"]').fill('test.faculty@rvce.edu');
   await page.locator('input[type=password]').fill('Faculty@test123');
   await page.locator('select').first().selectOption('FACULTY');
-  await page.locator('input[placeholder="SAP ID (optional)"]').fill('FA099');
+  // Placeholder is dynamic per role (SAP ID required for STUDENT). Match either.
+  await page
+    .locator('input[placeholder*="SAP ID"]')
+    .first()
+    .fill('FA099');
   await page.locator('input[placeholder="Dept code (e.g. CSE)"]').fill('ISE');
 
   const createBtn = page.getByRole('button', { name: /create user/i });
