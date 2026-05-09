@@ -19,9 +19,12 @@ env:
 
 jobs:
   # ── P0: HARD BLOCK — release cannot proceed if any P0 fails ──────────────
+  # Runner label is configurable: set repo variable E2E_RUNNER_LABEL to
+  # 'ubuntu-latest' to flip back to GitHub-hosted once billing is restored.
+  # Defaults to 'self-hosted' (zero-cost macOS arm64 runner).
   playwright-p0:
     name: "P0 — Release Gate (BLOCKS)"
-    runs-on: self-hosted
+    runs-on: ${{ vars.E2E_RUNNER_LABEL || 'self-hosted' }}
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -46,14 +49,12 @@ jobs:
             apps/web/playwright-results.xml
           retention-days: 14
 
-  # ── P1+P2: REPORT ONLY — failures annotate the PR but never block merge ──
+  # ── P1+P2: full suite must pass; only continues past P0 if P0 was green ──
   playwright-p1-p2-report:
-    name: "P1+P2 — Report Only (non-blocking)"
-    runs-on: self-hosted
+    name: "P1+P2 — Full suite (must pass)"
+    runs-on: ${{ vars.E2E_RUNNER_LABEL || 'self-hosted' }}
     timeout-minutes: 30
     needs: playwright-p0
-    if: always()           # run even when P0 passes, just for visibility
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
@@ -63,14 +64,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
         working-directory: apps/web
-      - name: Run P1 tests (report only)
+      - name: Run P1 tests
         run: pnpm --filter @rv/web test:e2e:p1
-        continue-on-error: true
         env:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
-      - name: Run P2 tests (report only)
+      - name: Run P2 tests
         run: pnpm --filter @rv/web test:e2e --project=chromium --grep "@P2"
-        continue-on-error: true
         env:
           AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
       - name: Upload P1+P2 report
