@@ -4,7 +4,7 @@
  * Backend: /api/vtu
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPatch, apiPost } from "./client";
+import { apiGet, apiGetArray, apiPatch, apiPost } from "./client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ export const vtuKeys = {
 export function useVTUWindows() {
   return useQuery<VTUWindow[]>({
     queryKey: vtuKeys.windows,
-    queryFn: () => apiGet<VTUWindow[]>("/api/vtu/windows"),
+    queryFn: () => apiGetArray<VTUWindow>("/api/vtu/windows"),
   });
 }
 
@@ -136,7 +136,7 @@ export function useRunEligibilityCheck() {
 export function useVTUPendingStudents(windowId: string) {
   return useQuery<VTUPendingStudent[]>({
     queryKey: vtuKeys.pending(windowId),
-    queryFn: () => apiGet<VTUPendingStudent[]>(`/api/vtu/windows/${windowId}/pending`),
+    queryFn: () => apiGetArray<VTUPendingStudent>(`/api/vtu/windows/${windowId}/pending`),
     enabled: !!windowId,
   });
 }
@@ -151,7 +151,7 @@ export function useSendVTUReminders() {
 export function useVTUDeptOverview(windowId: string) {
   return useQuery<VTUDeptOverview[]>({
     queryKey: vtuKeys.deptOverview(windowId),
-    queryFn: () => apiGet<VTUDeptOverview[]>(`/api/vtu/windows/${windowId}/dept-overview`),
+    queryFn: () => apiGetArray<VTUDeptOverview>(`/api/vtu/windows/${windowId}/dept-overview`),
     enabled: !!windowId,
   });
 }
@@ -193,7 +193,7 @@ export function useIASubmissions(filters: IAFilter = {}) {
 
   return useQuery<IASubmission[]>({
     queryKey: vtuKeys.iaSubmissions(filters),
-    queryFn: () => apiGet<IASubmission[]>(`/api/ia/submissions${qs ? `?${qs}` : ""}`),
+    queryFn: () => apiGetArray<IASubmission>(`/api/ia/submissions${qs ? `?${qs}` : ""}`),
   });
 }
 
@@ -248,7 +248,7 @@ export interface IAEntryPayload {
 export function useTeacherIAMarks(subjectId: string) {
   return useQuery<IAMarksRow[]>({
     queryKey: ["ia", "teacher", subjectId],
-    queryFn: () => apiGet<IAMarksRow[]>(`/api/ia/teacher/marks?subjectId=${subjectId}`),
+    queryFn: () => apiGetArray<IAMarksRow>(`/api/ia/teacher/marks?subjectId=${subjectId}`),
     enabled: !!subjectId,
   });
 }

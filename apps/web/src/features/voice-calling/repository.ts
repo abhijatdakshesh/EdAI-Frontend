@@ -1,4 +1,4 @@
-import { apiGet } from '@/lib/api/client';
+import { apiGet, apiPost } from '@/lib/api/client';
 
 import { mockCallLogsResponse } from './mock-data';
 import type { CallLogsResponse, CallRecord, CallState, CallType, Language, TriggerCallRequest, TriggerCallResult } from './types';
@@ -64,25 +64,29 @@ export async function triggerCall(req: TriggerCallRequest): Promise<TriggerCallR
   if (USE_MOCK) {
     return { callId: 'call-mock-' + Date.now().toString(), status: 'INITIATED', message: 'Call queued successfully' };
   }
-  // Use relative URL so request hits the Next.js BFF route, not NEXT_PUBLIC_API_BASE_URL
-  const raw = await fetch('/api/voice/trigger', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      studentId: req.studentId,
-      parentPhone: req.parentPhone,
-      language: req.language,
-      callType: req.callType,
-      institutionId: req.institutionId ?? 'RVCE',
-      studentContext: req.studentContext,
-    }),
-  });
-  if (!raw.ok) {
-    const err = (await raw.json().catch(() => ({}))) as { error?: string };
-    throw new Error(err.error ?? `Voice trigger failed: ${raw.status}`);
+  // Backend exposes the call trigger at /api/comms/calls/trigger with a
+  // simplified body shape. Earlier the FE pointed at a non-existent
+  // /api/voice/trigger endpoint → prod returned 502/404 (KAN-17).
+  // Use apiPost so token refresh + 401 retry work (Daniel: don't bypass apiFetch).
+  try {
+    const res = await apiPost<Partial<BackendTriggerResponse> & { id?: string; status?: string }>(
+      '/api/comms/calls/trigger',
+      {
+        studentUsn: req.studentId,
+        type: req.callType,
+        language: req.language ?? 'en',
+      },
+    );
+    return {
+      callId: res.callId ?? res.id ?? `call-${Date.now()}`,
+      status: res.status ?? 'INITIATED',
+      message: 'Call queued successfully',
+    };
+  } catch (err) {
+    // Operator must see real failures — do not synthesize success.
+    const msg = err instanceof Error ? err.message : 'Voice trigger failed';
+    throw new Error(msg);
   }
-  const res = (await raw.json()) as BackendTriggerResponse;
-  return { callId: res.callId, status: res.status, message: 'Call queued successfully' };
 }
 
 // GoVoiceCallStatus is the shape returned by the Go voice service

@@ -142,6 +142,9 @@ export function VTUAdmin() {
     eligibilityRules: { minAttendancePct: 75, maxBacklogs: 0, feeClearance: true },
   });
 
+  // KAN-15: array safety is enforced at the API client layer via apiGetArray
+  // (see lib/api/vtu.ts) — useVTUPendingStudents now always returns []
+  // when the backend hands back null/error envelopes.
   const { data: pending = [], isLoading: loadingPending } = useVTUPendingStudents(
     selectedWindow?.id ?? "",
   );
@@ -420,8 +423,8 @@ export function VTUAdmin() {
                               <td className="px-4 py-2 text-[#3D6B4F]">{s.eligibleCount}</td>
                               <td className="px-4 py-2 text-[#8B2F2F]">{s.ineligibleCount}</td>
                               <td className="px-4 py-2">
-                                <span className={cn("rounded px-2 py-0.5 text-xs font-medium", regStatusStyle[s.status ?? "PENDING"])}>
-                                  {(s.status ?? "PENDING").replace(/_/g, " ")}
+                                <span className={cn("rounded px-2 py-0.5 text-xs font-medium", regStatusStyle[s.status ?? "PENDING"] ?? regStatusStyle.NOT_STARTED)}>
+                                  {String(s.status ?? "PENDING").replace(/_/g, " ")}
                                 </span>
                               </td>
                               <td className="px-4 py-2 text-text-muted text-xs">{s.lastRemindedAt ?? "—"}</td>
