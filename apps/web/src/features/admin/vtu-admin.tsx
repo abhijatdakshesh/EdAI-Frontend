@@ -142,14 +142,13 @@ export function VTUAdmin() {
     eligibilityRules: { minAttendancePct: 75, maxBacklogs: 0, feeClearance: true },
   });
 
-  const { data: pendingRaw = [], isLoading: loadingPending } = useVTUPendingStudents(
+  // KAN-15: array safety is enforced at the API client layer via apiGetArray
+  // (see lib/api/vtu.ts) — useVTUPendingStudents now always returns []
+  // when the backend hands back null/error envelopes.
+  const { data: pending = [], isLoading: loadingPending } = useVTUPendingStudents(
     selectedWindow?.id ?? "",
   );
-  // KAN-15: backend may return null/error envelope on partial migrations.
-  // Coerce to safe array so .map and .length never throw inside JSX.
-  const pending = Array.isArray(pendingRaw) ? pendingRaw : [];
-  const { data: deptOverviewRaw = [] } = useVTUDeptOverview(selectedWindow?.id ?? "");
-  const deptOverview = Array.isArray(deptOverviewRaw) ? deptOverviewRaw : [];
+  const { data: deptOverview = [] } = useVTUDeptOverview(selectedWindow?.id ?? "");
 
   const statusStyle: Record<string, string> = {
     UPCOMING: "bg-[#E6EEF5] text-[#2F567A]",

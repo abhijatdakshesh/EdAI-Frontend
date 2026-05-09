@@ -10,6 +10,30 @@ import { getSession } from "next-auth/react";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
+/**
+ * BFF-handled prefixes — these requests go to the Next.js route handlers
+ * under /apps/web/src/app/api/* (relative URL) instead of directly hitting
+ * the identity service. The Next handlers either provide a synthetic-success
+ * response (for endpoints the backend doesn't implement yet) or proxy to
+ * the upstream via the catch-all route. Keeping prod-tolerance for the demo.
+ */
+const BFF_PREFIXES = [
+  "/api/jobs/",                  // jobs/:id/apply synth fallback
+  "/api/hostel/",                // hostel/student, complaints, leave-requests
+  "/api/transport/",             // transport/student/:usn synth
+  "/api/hr/",                    // hr/grievances, hr/service-requests synth
+  "/api/wellness/stress-assessment", // synth scoring
+];
+
+function resolveRequestUrl(path: string): string {
+  // In the browser, relative paths hit the Next BFF on the same origin.
+  // SSR / Node still needs an absolute URL, so we keep API_BASE there.
+  if (typeof window !== "undefined" && BFF_PREFIXES.some((p) => path.startsWith(p))) {
+    return path; // relative → /api/... handled by Next route handlers
+  }
+  return `${API_BASE}${path}`;
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {},
@@ -26,7 +50,7 @@ export async function apiFetch<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const requestUrl = `${API_BASE}${path}`;
+  const requestUrl = resolveRequestUrl(path);
   let res: Response;
   try {
     res = await fetch(requestUrl, { ...init, headers });
@@ -64,7 +88,7 @@ export async function apiFetch<T>(
             ...headers,
             Authorization: `Bearer ${freshToken}`,
           };
-          const retry = await fetch(`${API_BASE}${path}`, {
+          const retry = await fetch(resolveRequestUrl(path), {
             ...init,
             headers: retryHeaders,
           });
@@ -98,6 +122,16 @@ export async function apiFetch<T>(
 }
 
 export const apiGet = <T>(path: string) => apiFetch<T>(path, { method: "GET" });
+
+// Always-array variant. Backend may return null / error envelope on partial-
+// migration / cold-start states; downstream JSX that calls .map / .length on
+// non-arrays crashes the whole route. Centralised so consumers don't each
+// reimplement the guard (Dev review on KAN-15). Use for any GET that the
+// frontend expects as a list.
+export const apiGetArray = async <T>(path: string): Promise<T[]> => {
+  const data = await apiFetch<unknown>(path, { method: "GET" });
+  return Array.isArray(data) ? (data as T[]) : [];
+};
 
 export const apiPost = <T>(path: string, body: unknown) =>
   apiFetch<T>(path, {
