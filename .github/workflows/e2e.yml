@@ -17,7 +17,7 @@ jobs:
   # ── P0: HARD BLOCK — release cannot proceed if any P0 fails ──────────────
   playwright-p0:
     name: "P0 — Release Gate (BLOCKS)"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
   # ── P1+P2: REPORT ONLY — failures annotate the PR but never block merge ──
   playwright-p1-p2-report:
     name: "P1+P2 — Report Only (non-blocking)"
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     timeout-minutes: 30
     needs: playwright-p0
     if: always()           # run even when P0 passes, just for visibility
