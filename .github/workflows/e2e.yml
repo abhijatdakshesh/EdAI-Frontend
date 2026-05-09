@@ -10,7 +10,11 @@ on:
 # Shared env for all CI jobs — headless always true in CI
 env:
   NEXT_PUBLIC_USE_MOCKS: "true"
-  NEXTAUTH_URL: http://localhost:3000
+  NEXTAUTH_URL: https://app.raycraft.in
+  # Self-hosted runner shares port 3000 with local dev. Point Playwright at
+  # the prod deploy so playwright.config.ts treats it as production and skips
+  # the embedded webServer launch entirely.
+  BASE_URL: https://app.raycraft.in
   CI: "true"
 
 jobs:
