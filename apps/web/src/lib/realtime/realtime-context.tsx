@@ -25,6 +25,8 @@ import {
 } from "react";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useTranscriptStore } from "@/features/voice-calling/transcript-store";
+import type { Turn } from "@/features/voice-calling/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -145,9 +147,26 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       });
 
       socket!.on("ai-call:completed", (data: unknown) => {
-        setLastAiCall(data as AiCallEvent);
+        const ev = data as AiCallEvent & { callId?: string };
+        setLastAiCall(ev as AiCallEvent);
+        if (ev.callId) {
+          useTranscriptStore.getState().setLive(ev.callId, false);
+        }
         void qc.invalidateQueries({ queryKey: ["parent-comms", "calls"] });
         void qc.invalidateQueries({ queryKey: ["admin-ai-call-logs"] });
+      });
+
+      socket!.on("ai-call:turn", (data: unknown) => {
+        const payload = data as { callId: string } & Turn;
+        if (payload?.callId) {
+          useTranscriptStore.getState().appendTurn(payload.callId, {
+            turn: payload.turn,
+            role: payload.role,
+            text: payload.text,
+            language: payload.language,
+            ts: payload.ts,
+          });
+        }
       });
 
       socket!.on("vtu:window-opened", () => {
@@ -169,6 +188,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
         socket.off("marks:update");
         socket.off("announcement:new");
         socket.off("ai-call:completed");
+        socket.off("ai-call:turn");
         socket.off("vtu:window-opened");
         socket.off("ia:submission-updated");
         socket.off("connect_error");

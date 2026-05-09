@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 import { getCallLogs, getCallStatus, triggerCall } from './repository';
 import type { CallLogsFilters } from './repository';
 import type { CallRecord, CallState, CallType, Language, TriggerCallResult } from './types';
+import { TranscriptDrawer } from './transcript-drawer';
+import { useTranscriptStore } from './transcript-store';
 
 // ── Badge colour maps ─────────────────────────────────────────────────────────
 
@@ -96,6 +98,8 @@ function TriggerCallTab() {
     try {
       const res = await triggerCall({ studentId: studentId.trim(), parentPhone: parentPhone.trim(), callType, language, studentContext: { name: studentId.trim() } });
       setResult(res);
+      // Mark this call as "live" so the transcript drawer shows the live pill.
+      useTranscriptStore.getState().setLive(res.callId, true);
       void startPolling(res.callId);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to trigger call');
@@ -341,19 +345,25 @@ function CallLogsTab() {
                 {expandedId === call.id && (
                   <tr key={`${call.id}-expand`} className="bg-[#F9F7F4]">
                     <td colSpan={7} className="px-4 py-3">
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div>
-                          <p className="label-track text-xs mb-1">AI Summary</p>
-                          <p className="text-sm text-text-secondary">{call.summaryEn ?? '—'}</p>
+                      <div className="space-y-4">
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <div>
+                            <p className="label-track text-xs mb-1">AI Summary</p>
+                            <p className="text-sm text-text-secondary">{call.summaryEn ?? '—'}</p>
+                          </div>
+                          <div>
+                            <p className="label-track text-xs mb-1">Parent Response</p>
+                            <p className="text-sm text-text-secondary">{call.parentResponse ?? '—'}</p>
+                          </div>
+                          <div>
+                            <p className="label-track text-xs mb-1">WhatsApp Sent</p>
+                            <p className="text-sm text-text-secondary">{call.whatsappSent ? 'Yes' : 'No'}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="label-track text-xs mb-1">Parent Response</p>
-                          <p className="text-sm text-text-secondary">{call.parentResponse ?? '—'}</p>
-                        </div>
-                        <div>
-                          <p className="label-track text-xs mb-1">WhatsApp Sent</p>
-                          <p className="text-sm text-text-secondary">{call.whatsappSent ? 'Yes' : 'No'}</p>
-                        </div>
+                        <TranscriptDrawer
+                          callId={call.id}
+                          live={!TERMINAL_STATES.includes(call.state)}
+                        />
                       </div>
                     </td>
                   </tr>
