@@ -35,7 +35,8 @@ jobs:
       - name: Build and push to ACR
         run: |
           az acr login --name edaiacrprod
-          docker build \
+          docker buildx create --use --name edaibuilder 2>/dev/null || true
+          docker buildx build --platform linux/amd64 --push \
             --build-arg NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" \
             --build-arg NEXT_PUBLIC_SOCKET_URL="${{ secrets.NEXT_PUBLIC_SOCKET_URL }}" \
             --build-arg NEXT_PUBLIC_USE_MOCKS=false \
@@ -43,8 +44,6 @@ jobs:
             -t edaiacrprod.azurecr.io/web:latest \
             -f apps/web/Dockerfile \
             .
-          docker push edaiacrprod.azurecr.io/web:${{ github.sha }}
-          docker push edaiacrprod.azurecr.io/web:latest
 
       - name: Deploy to Container Apps
         run: |
