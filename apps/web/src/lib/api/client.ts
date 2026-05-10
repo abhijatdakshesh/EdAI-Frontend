@@ -23,6 +23,7 @@ const BFF_PREFIXES = [
   "/api/transport/",             // transport/student/:usn synth
   "/api/hr/",                    // hr/grievances, hr/service-requests synth
   "/api/wellness/stress-assessment", // synth scoring
+  "/api/timetable/student/",     // weekly schedule synth (backend has no route yet)
 ];
 
 function resolveRequestUrl(path: string): string {
