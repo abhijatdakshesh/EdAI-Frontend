@@ -11,7 +11,19 @@ export type CallState =
   | 'BUSY'
   | 'ALL_RETRIES_EXHAUSTED';
 
-export type Language = 'en' | 'hi' | 'kn' | 'ta' | 'te';
+export type Language =
+  | 'en' | 'hi' | 'kn' | 'ta' | 'te'
+  | 'mr' | 'bn' | 'gu' | 'ml' | 'pa' | 'or';
+
+export type TurnRole = 'AI' | 'PARENT';
+
+export interface Turn {
+  turn: number;
+  role: TurnRole;
+  text: string;
+  language: string;
+  ts: string;
+}
 
 export interface CallRecord {
   id: string;
@@ -29,6 +41,8 @@ export interface CallRecord {
   createdAt: string;
   connectedAt?: string;
   endedAt?: string;
+  turns?: Turn[];
+  live?: boolean;
 }
 
 export interface TriggerCallRequest {
