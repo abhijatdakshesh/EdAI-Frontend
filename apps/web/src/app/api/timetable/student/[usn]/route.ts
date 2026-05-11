@@ -5,6 +5,20 @@ import { auth } from "@/auth";
 // Return a realistic CSE Sem-5 weekly schedule so the student/schedule page
 // renders meaningful data on every demo. When the backend ships the real
 // route, this BFF can forward instead of synthesising.
+//
+// IDOR_GUARDED: the [usn] segment is user-controlled. Students may only fetch
+// their OWN schedule (auth.user.sapId or fallback id must match the URL param).
+// Staff roles (ADMIN/HOD/COUNSELLOR/PRINCIPAL/DEAN/FACULTY) bypass the check
+// because they legitimately need cross-student visibility.
+
+const STAFF_ROLES = new Set([
+  "ADMIN",
+  "HOD",
+  "COUNSELLOR",
+  "PRINCIPAL",
+  "DEAN",
+  "FACULTY",
+]);
 
 type ClassEntry = {
   day: string;
@@ -48,9 +62,26 @@ const SCHEDULE: ClassEntry[] = [
   { day: "Saturday",  start: "11:00", end: "12:00", subject: "Soft Skills & Aptitude",           room: "LH-202",    faculty: "Prof. Latha Murthy", type: "elective" },
 ];
 
-export const GET = auth(async (req) => {
+export const GET = auth(async (req, ctx) => {
   if (!req.auth?.accessToken) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
+
+  // IDOR_GUARDED: enforce that students can only read their OWN schedule.
+  // The Next.js auth() wrapper passes the route context as the second arg;
+  // params is a Promise on App Router for dynamic segments.
+  const params = (await (ctx?.params as Promise<{ usn: string }> | undefined)) ?? { usn: "" };
+  const requestedUsn = params.usn;
+  const role = req.auth.user?.role;
+  const isStaff = role !== undefined && STAFF_ROLES.has(role);
+
+  if (!isStaff) {
+    const ownUsn = req.auth.user?.sapId ?? req.auth.user?.id;
+    if (!ownUsn || ownUsn !== requestedUsn) {
+      // 404 (not 403) so the route does not leak whether a USN exists.
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+  }
+
   return NextResponse.json(SCHEDULE);
 });

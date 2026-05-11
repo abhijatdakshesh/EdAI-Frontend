@@ -31,7 +31,10 @@ function getTodayName(): string {
 
 export function StudentSchedule() {
   const { session } = useAuth();
-  const usn = session?.user?.id ?? "";
+  // The /api/timetable/student/[usn] BFF route is IDOR-guarded against the
+  // session's sapId (USN) when present, falling back to the user UUID. Always
+  // send sapId first so the path matches what the guard checks.
+  const usn = session?.user?.sapId ?? session?.user?.id ?? "";
   const TODAY = getTodayName();
   const [selectedDay, setSelectedDay] = useState(TODAY);
 
