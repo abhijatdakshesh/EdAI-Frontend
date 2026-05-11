@@ -157,16 +157,25 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       });
 
       socket!.on("ai-call:turn", (data: unknown) => {
-        const payload = data as { callId: string } & Turn;
-        if (payload?.callId) {
-          useTranscriptStore.getState().appendTurn(payload.callId, {
-            turn: payload.turn,
-            role: payload.role,
-            text: payload.text,
-            language: payload.language,
-            ts: payload.ts,
-          });
+        const payload = data as { callId: string; parentId?: string } & Turn;
+        if (!payload?.callId) return;
+        // Privacy filter: a parent must only see their OWN call transcripts.
+        // ADMIN bypasses (centralised view). When the BE event lacks parentId
+        // (legacy emit) we fall through and trust the upstream room-scoped
+        // delivery — but logging once helps spot a regression.
+        const role = session?.user?.role;
+        const myId = session?.user?.id;
+        const isAdmin = role === "ADMIN";
+        if (!isAdmin && payload.parentId !== undefined && payload.parentId !== myId) {
+          return;
         }
+        useTranscriptStore.getState().appendTurn(payload.callId, {
+          turn: payload.turn,
+          role: payload.role,
+          text: payload.text,
+          language: payload.language,
+          ts: payload.ts,
+        });
       });
 
       socket!.on("vtu:window-opened", () => {

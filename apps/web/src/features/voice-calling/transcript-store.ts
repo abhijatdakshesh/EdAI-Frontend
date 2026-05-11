@@ -19,8 +19,12 @@ export const useTranscriptStore = create<TranscriptStore>((set) => ({
   appendTurn: (callId, turn) =>
     set((state) => {
       const existing = state.byCallId[callId] ?? { turns: [], live: true, updatedAt: 0 };
-      // Dedupe by turn index — Twilio webhooks can fire duplicates on retry.
-      const filtered = existing.turns.filter((t) => t.turn !== turn.turn);
+      // Dedupe by `${turn}-${role}` — Twilio webhooks can fire duplicates on
+      // retry, but PARENT and AI share the same turn index in our protocol so
+      // a turn-only dedupe key would drop one half of a legitimate exchange.
+      const dedupeKey = (t: Turn) => `${t.turn}-${t.role}`;
+      const incomingKey = dedupeKey(turn);
+      const filtered = existing.turns.filter((t) => dedupeKey(t) !== incomingKey);
       const turns = [...filtered, turn].sort((a, b) => a.turn - b.turn);
       return {
         byCallId: {
