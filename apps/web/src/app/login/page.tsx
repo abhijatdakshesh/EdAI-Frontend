@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { homeRouteForRole } from "@/lib/auth/use-auth";
@@ -48,7 +48,20 @@ export default function LoginPage() {
         setError("Invalid email or password. Try one of the test accounts below.");
         return;
       }
-      // Session update triggers the useEffect above
+
+      // KAN-27: previously we relied on useSession()'s polling to flip status
+      // to "authenticated" and the useEffect above to push the user. The
+      // session hook lagged the cookie write, so the URL changed but the UI
+      // stayed on /login until a manual refresh. Pull the fresh session
+      // synchronously so we know the role, then router.refresh() to force
+      // the App Router shell to re-evaluate against the new auth cookie,
+      // and router.replace() to navigate. The refresh + replace pair fixes
+      // the stuck-on-login render race.
+      const fresh = await getSession();
+      const role = fresh?.user?.role;
+      const target = role ? homeRouteForRole(role) : "/dashboard";
+      router.refresh();
+      router.replace(target);
     } finally {
       setPending(false);
     }
