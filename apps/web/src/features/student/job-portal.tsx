@@ -4,9 +4,33 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useJobs, useAppliedJobs, useApplyToJob } from "@/lib/api/jobs";
+import { useAuth } from "@/lib/auth/use-auth";
+import { useJobs, useAppliedJobs, useApplyToJob, type Job } from "@/lib/api/jobs";
+
+/**
+ * r19 — All / Eligible / Applied tabs were not filtering correctly. The
+ * old code treated "eligible" as a synonym for `j.active`, which meant
+ * Eligible == Active and the buckets were indistinguishable from "All".
+ * Eligible should now mean: drive is active AND the student satisfies
+ * advertised CGPA + department targeting.
+ */
+function isEligible(
+  job: Job,
+  opts: { cgpa: number | undefined; dept: string | undefined },
+): boolean {
+  if (!job.active) return false;
+  if (job.minCgpa != null && opts.cgpa != null && opts.cgpa < job.minCgpa) return false;
+  if (job.targetDepts && job.targetDepts.length > 0 && opts.dept) {
+    if (!job.targetDepts.includes(opts.dept)) return false;
+  }
+  return true;
+}
 
 export function JobPortal() {
+  const { session } = useAuth();
+  const studentCgpa = (session?.user as { cgpa?: number } | undefined)?.cgpa;
+  const studentDept = (session?.user as { department?: string } | undefined)?.department;
+
   const [filter, setFilter] = useState<"all" | "eligible" | "applied">("all");
   const [applyMsg, setApplyMsg] = useState<Record<string, string>>({});
 
@@ -15,12 +39,15 @@ export function JobPortal() {
   const applyMutation = useApplyToJob();
 
   const appliedJobIds = new Set(applications.map((a) => a.jobId));
+  const eligibilityOpts = { cgpa: studentCgpa, dept: studentDept };
 
   const filtered = jobs.filter((j) => {
     if (filter === "applied") return appliedJobIds.has(j.id);
-    if (filter === "eligible") return j.active;
+    if (filter === "eligible") return isEligible(j, eligibilityOpts);
     return true;
   });
+
+  const eligibleCount = jobs.filter((j) => isEligible(j, eligibilityOpts)).length;
 
   async function handleApply(jobId: string) {
     setApplyMsg((m) => ({ ...m, [jobId]: "" }));
@@ -38,8 +65,8 @@ export function JobPortal() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: "Active Drives", value: jobs.length },
-            { label: "Eligible For", value: jobs.filter((j) => j.active).length },
+            { label: "Active Drives", value: jobs.filter((j) => j.active).length },
+            { label: "Eligible For", value: eligibleCount },
             { label: "Applied", value: applications.length },
           ].map((s) => (
             <div key={s.label} className="rounded border border-border bg-surface p-4">
