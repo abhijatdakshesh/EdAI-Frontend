@@ -25,6 +25,7 @@ const BFF_PREFIXES = [
   "/api/wellness/stress-assessment", // synth scoring
   "/api/timetable/student/",     // weekly schedule synth (backend has no route yet)
   "/api/announcements",          // announcements synth fallback
+  "/api/parent/scholarship/",    // parent scholarship apply synth (no BE route)
 ];
 
 function resolveRequestUrl(path: string): string {
