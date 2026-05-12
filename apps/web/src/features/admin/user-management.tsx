@@ -66,6 +66,14 @@ export function UserManagement() {
       alert("USN / SAP ID is required for STUDENT accounts. Without it the student dashboard cannot map to the right academic record.");
       return;
     }
+    // KAN-26: PARENT accounts must explicitly link to a student USN. The
+    // backend used to silently auto-link the seed student '1RV21CS001' when
+    // the field was missing — fixed in identity service. Mirror the same
+    // guard in the UI so the admin sees the requirement at create time.
+    if (form.role === "PARENT" && !(form.parentStudentUsn ?? "").trim()) {
+      alert("Linked Student USN is required for PARENT accounts. Pick the student this parent should be able to view.");
+      return;
+    }
     createUser.mutate(form, {
       onSuccess: () => {
         setShowCreate(false);
@@ -148,7 +156,19 @@ export function UserManagement() {
               ))}
               <select
                 value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
+                onChange={(e) => {
+                  const nextRole = e.target.value as UserRole;
+                  // KAN-26: clear the parent USN when leaving the PARENT role
+                  // so a stale value can't sneak through. Strip the property
+                  // entirely (rather than set it to undefined) to satisfy
+                  // exactOptionalPropertyTypes.
+                  const { parentStudentUsn: _drop, ...rest } = form;
+                  setForm(
+                    nextRole === "PARENT"
+                      ? { ...rest, role: nextRole, parentStudentUsn: form.parentStudentUsn ?? "" }
+                      : { ...rest, role: nextRole },
+                  );
+                }}
                 className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
               >
                 {ALL_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -173,6 +193,23 @@ export function UserManagement() {
                 onChange={(e) => setForm({ ...form, departmentCode: e.target.value })}
                 className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
               />
+              {/* KAN-26: PARENT must explicitly link to a student USN */}
+              {form.role === "PARENT" && (
+                <input
+                  type="text"
+                  placeholder="Linked Student USN (required)"
+                  value={form.parentStudentUsn ?? ""}
+                  onChange={(e) => setForm({ ...form, parentStudentUsn: e.target.value })}
+                  required
+                  aria-label="Linked Student USN"
+                  className={cn(
+                    "rounded border bg-white px-3 py-1.5 text-sm focus:outline-none",
+                    !(form.parentStudentUsn ?? "").trim()
+                      ? "border-[#8B2F2F]"
+                      : "border-border",
+                  )}
+                />
+              )}
             </div>
             <div className="flex gap-2">
               <Button

@@ -51,6 +51,12 @@ export interface CreateUserPayload {
   sapId?: string;
   departmentCode?: string;
   preferredLanguage?: Language;
+  /**
+   * KAN-26: required when role === "PARENT". The Admin form blocks submit
+   * when missing; the backend re-validates with a friendly BadRequest if a
+   * client somehow bypasses the UI guard.
+   */
+  parentStudentUsn?: string;
 }
 
 export interface UpdateUserPayload {
