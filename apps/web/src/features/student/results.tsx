@@ -5,6 +5,7 @@ import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useStudentResults } from "@/lib/api/marks";
+import { formatCourseCode } from "@/lib/format/course-code";
 
 const gradeColors: Record<string, string> = {
   O: "bg-[#EBF3EE] text-[#3D6B4F]",
@@ -19,9 +20,12 @@ export function ResultsPortal() {
   const usn = session?.user?.sapId ?? session?.user?.id ?? "";
   const { data, isLoading, isError } = useStudentResults(usn);
 
-  const semesters = data?.semesters ?? [];
+  // r12-results — sort SEM1, SEM2, SEM3… in natural ascending order.
+  // Backend sometimes returns the latest semester first; sort defensively here.
+  const semesters = [...(data?.semesters ?? [])].sort((a, b) => a.semester - b.semester);
   const [activeSem, setActiveSem] = useState<number | null>(null);
-  const currentSem = activeSem ?? semesters[0]?.semester ?? null;
+  const latestSem = semesters[semesters.length - 1]?.semester ?? null;
+  const currentSem = activeSem ?? latestSem;
   const result = semesters.find((r) => r.semester === currentSem);
 
   return (
@@ -49,9 +53,9 @@ export function ResultsPortal() {
                   {data.cgpa.toFixed(2)}
                   <span className="text-base text-text-muted ml-1">/ 10.0</span>
                 </p>
-                <p className="text-xs text-text-muted mt-0.5">Up to Semester {semesters[0]?.semester ?? "—"}</p>
+                <p className="text-xs text-text-muted mt-0.5">Up to Semester {latestSem ?? "—"}</p>
               </div>
-              {semesters.slice(0, 2).map((r) => (
+              {semesters.slice(-2).map((r) => (
                 <div key={r.semester} className="rounded border border-border bg-surface p-4">
                   <p className="label-track">Sem {r.semester} SGPA</p>
                   <p className="text-2xl font-light mt-1">{r.sgpa}</p>
@@ -84,7 +88,7 @@ export function ResultsPortal() {
                   <tbody>
                     {result.subjects.map((s) => (
                       <tr key={s.code} className="border-t border-border even:bg-cream-50">
-                        <td className="px-4 py-2 font-mono text-xs">{s.code}</td>
+                        <td className="px-4 py-2 font-mono text-xs">{formatCourseCode(s.code)}</td>
                         <td className="px-4 py-2 font-medium">{s.name}</td>
                         <td className="px-4 py-2">{s.credits}</td>
                         <td className="px-4 py-2">{s.ia}/50</td>
