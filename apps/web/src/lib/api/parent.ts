@@ -92,13 +92,47 @@ const MOCK_CHILD_ATTENDANCE: StudentAttendanceSummary[] = [
   { courseId: "21CS52", courseName: "Computer Networks", courseCode: "21CS52", totalClasses: 38, attended: 27, pct: 71, canMiss: 0, mustAttend: 2 },
 ];
 
+// Backend currently returns { overall, subjects: [{code,name,held,attended,pct}] }
+// but ParentAttendance UI expects StudentAttendanceSummary[] keyed on
+// courseId/courseCode/courseName/totalClasses. Map at the hook boundary so
+// the UI stays unchanged and we don't silently lose data on shape drift.
+interface BackendChildAttendance {
+  overall: number;
+  subjects: Array<{ code: string; name: string; held: number; attended: number; pct: number }>;
+}
+
+function mapChildAttendance(raw: unknown): StudentAttendanceSummary[] {
+  if (Array.isArray(raw)) return raw as StudentAttendanceSummary[];
+  const data = raw as BackendChildAttendance | null;
+  if (!data || !Array.isArray(data.subjects)) return [];
+  return data.subjects.map((s) => {
+    const totalClasses = s.held ?? 0;
+    const attended = s.attended ?? 0;
+    const pct = s.pct ?? (totalClasses > 0 ? Math.round((attended / totalClasses) * 100) : 0);
+    // Project mustAttend so UI's "attend N more" hint works without crashing.
+    const target = 0.75;
+    const mustAttend = pct >= 75 ? 0 : Math.max(0, Math.ceil((target * totalClasses - attended) / (1 - target)));
+    const canMiss = pct >= 75 ? Math.max(0, Math.floor((attended - target * totalClasses) / target)) : 0;
+    return {
+      courseId: s.code,
+      courseCode: s.code,
+      courseName: s.name,
+      totalClasses,
+      attended,
+      pct,
+      canMiss,
+      mustAttend,
+    };
+  });
+}
+
 export function useChildAttendance(usn: string) {
   const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
   return useQuery<StudentAttendanceSummary[]>({
     queryKey: parentKeys.childAttendance(usn),
     queryFn: USE_MOCKS
       ? () => Promise.resolve(MOCK_CHILD_ATTENDANCE)
-      : () => apiGet<StudentAttendanceSummary[]>(`/api/parent/children/${usn}/attendance`),
+      : async () => mapChildAttendance(await apiGet<unknown>(`/api/parent/children/${usn}/attendance`)),
     // Gate on !!usn even in mock mode — same reason as useChildFees.
     // Firing with usn="" creates a junk cache key and triggers a second
     // loading cycle once the real USN is available.
