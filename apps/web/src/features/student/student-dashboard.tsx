@@ -8,6 +8,7 @@ import { apiGet } from "@/lib/api/client";
 import { useActiveVTUWindow } from "@/lib/api/vtu";
 import { VTUNotificationsPanel } from "@/features/vtu/notifications-panel";
 import Link from "next/link";
+import { appendAmPmToSchedule, formatCourseCode } from "@/lib/format/course-code";
 
 interface DashboardStats {
   attendancePct: number;
@@ -63,7 +64,18 @@ export function StudentDashboard() {
   const { data: vtuWindow } = useActiveVTUWindow();
 
   const stats = data?.stats;
-  const upcoming = data?.upcoming ?? [];
+  // Stu_01_02 — Upcoming list previously showed past-dated rows. Filter to today+.
+  // Compare on the YYYY-MM-DD prefix so timezone offsets don't cause off-by-one.
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const upcoming = (data?.upcoming ?? []).filter((u) => {
+    // Try to parse the row's date. Accept ISO YYYY-MM-DD or "MMM DD" with current year.
+    const iso = /^\d{4}-\d{2}-\d{2}/.test(u.date) ? u.date.slice(0, 10) : null;
+    if (iso) return iso >= todayKey;
+    // Fallback: try Date.parse — if it fails, keep the row (better than hiding good data).
+    const parsed = Date.parse(u.date);
+    if (Number.isNaN(parsed)) return true;
+    return new Date(parsed).toISOString().slice(0, 10) >= todayKey;
+  });
   const courses = data?.courses ?? [];
 
   return (
@@ -161,8 +173,9 @@ export function StudentDashboard() {
                     <div className="flex items-start justify-between">
                       <div>
                         <p className="font-medium text-sm">{c.name}</p>
-                        <p className="text-xs text-text-muted">{c.code} · {c.faculty}</p>
-                        <p className="text-xs text-text-muted mt-0.5">Next: {c.nextClass}</p>
+                        <p className="text-xs text-text-muted">{formatCourseCode(c.code)} · {c.faculty}</p>
+                        {/* Stu_01_01 — append AM/PM to the next-class line so "09:00" is unambiguous. */}
+                        <p className="text-xs text-text-muted mt-0.5">Next: {appendAmPmToSchedule(c.nextClass)}</p>
                       </div>
                       <span className={cn("rounded px-2 py-0.5 text-xs font-medium",
                         c.attendance >= 85 ? "bg-[#EBF3EE] text-[#3D6B4F]"
