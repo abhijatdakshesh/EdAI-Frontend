@@ -1,8 +1,28 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, Globe, RefreshCw } from "lucide-react";
+import { ExternalLink, Globe, LinkIcon, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { apiGet } from "@/lib/api/client";
+
+/**
+ * Some scraped VTU notifications point to portal sections that we own
+ * inside Ed8AI (Student Attendance, Student Feedback). Route those
+ * internally per portal instead of leaking back to vtu.ac.in (which
+ * routinely 404s and was filed as Stu_01_03 / Stu_01_04).
+ */
+function internalRouteFor(title: string, role: string | undefined): string | null {
+  const t = title.toLowerCase();
+  if (role === "STUDENT") {
+    if (t.includes("student attendance") || /\battendance\b/.test(t)) return "/student/attendance";
+    if (t.includes("student feedback") || /\bfeedback\b/.test(t)) return "/student/feedback";
+  }
+  if (role === "PARENT") {
+    if (t.includes("attendance")) return "/parent/attendance";
+  }
+  return null;
+}
 
 interface VtuNotification {
   title: string;
@@ -23,6 +43,8 @@ interface VtuNotificationsResponse {
  * see the same source-of-truth circulars.
  */
 export function VTUNotificationsPanel({ limit = 8 }: { limit?: number }) {
+  const { data: session } = useSession();
+  const role = session?.user?.role as string | undefined;
   const { data, isLoading, isError, refetch, isFetching } = useQuery<VtuNotificationsResponse>({
     queryKey: ["vtu", "live-notifications"],
     queryFn: () => apiGet<VtuNotificationsResponse>("/api/vtu/notifications"),
@@ -72,19 +94,35 @@ export function VTUNotificationsPanel({ limit = 8 }: { limit?: number }) {
 
       {items.length > 0 && (
         <ul className="grid gap-1.5">
-          {items.map((n) => (
-            <li key={n.link}>
-              <a
-                href={n.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-cream-100 transition-colors group"
-              >
-                <ExternalLink className="w-3.5 h-3.5 mt-0.5 text-text-muted group-hover:text-[#1C1810] shrink-0" />
-                <span className="leading-snug">{n.title}</span>
-              </a>
-            </li>
-          ))}
+          {items.map((n) => {
+            const internal = internalRouteFor(n.title, role);
+            if (internal) {
+              return (
+                <li key={n.link}>
+                  <Link
+                    href={internal}
+                    className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-cream-100 transition-colors group"
+                  >
+                    <LinkIcon className="w-3.5 h-3.5 mt-0.5 text-text-muted group-hover:text-[#1C1810] shrink-0" />
+                    <span className="leading-snug">{n.title}</span>
+                  </Link>
+                </li>
+              );
+            }
+            return (
+              <li key={n.link}>
+                <a
+                  href={n.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-cream-100 transition-colors group"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 mt-0.5 text-text-muted group-hover:text-[#1C1810] shrink-0" />
+                  <span className="leading-snug">{n.title}</span>
+                </a>
+              </li>
+            );
+          })}
         </ul>
       )}
 

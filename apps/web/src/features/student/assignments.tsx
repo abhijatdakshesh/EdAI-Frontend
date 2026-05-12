@@ -1,10 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useStudentAssignments, useSubmitAssignment, type AssignmentStatus, type Assignment } from "@/lib/api/assignments";
+
+// r16 — only allow common assignment formats. Validated client-side
+// before we hand the file off for upload.
+const ALLOWED_EXTS = [".pdf", ".doc", ".docx", ".zip"] as const;
+const ALLOWED_MIMES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/zip",
+  "application/x-zip-compressed",
+]);
+
+function isAllowedFileLike(input: { name?: string; type?: string }): boolean {
+  const name = (input.name ?? "").toLowerCase();
+  const type = (input.type ?? "").toLowerCase();
+  if (type && ALLOWED_MIMES.has(type)) return true;
+  return ALLOWED_EXTS.some((ext) => name.endsWith(ext));
+}
 
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCKS === 'true';
 
@@ -45,17 +63,39 @@ export function MyAssignments() {
   const mockFiltered = USE_MOCK
     ? (filter === "all" ? MOCK_ASSIGNMENTS : MOCK_ASSIGNMENTS.filter((a) => a.status === filter))
     : [];
-  const assignments = USE_MOCK ? mockFiltered : (query.data ?? []);
+  // r15 — defensive client-side filter so the All/Pending/Submitted/Graded
+  // tabs work even if the upstream `?status=` query param is dropped.
+  const serverList = query.data ?? [];
+  const filteredServerList = filter === "all" ? serverList : serverList.filter((a) => a.status === filter);
+  const assignments = USE_MOCK ? mockFiltered : filteredServerList;
   const isLoading = USE_MOCK ? false : query.isLoading;
   const submitMutation = useSubmitAssignment();
 
   const selected = assignments.find((a) => a.id === selectedId) ?? null;
 
+  // r17 — reset transient submit state every time the user switches assignments
+  // so a "Submitted" badge from one card never leaks onto the next pending card.
+  const lastSelectedId = useRef<string | null>(null);
+  useEffect(() => {
+    if (selected?.id !== lastSelectedId.current) {
+      setSubmitUrl("");
+      setSubmitMsg(null);
+      lastSelectedId.current = selected?.id ?? null;
+    }
+  }, [selected?.id]);
+
   async function handleSubmit() {
     if (!selected || !usn || !submitUrl.trim()) return;
     setSubmitMsg(null);
+    // r16 — validate file type. The submit field accepts either a URL
+    // (drive/dropbox/etc) or a filename — both are checked by extension.
+    const trimmed = submitUrl.trim();
+    if (!isAllowedFileLike({ name: trimmed })) {
+      setSubmitMsg("Wrong file type — please upload PDF/DOCX/ZIP");
+      return;
+    }
     try {
-      await submitMutation.mutateAsync({ assignmentId: selected.id, fileUrl: submitUrl.trim(), studentUsn: usn });
+      await submitMutation.mutateAsync({ assignmentId: selected.id, fileUrl: trimmed, studentUsn: usn });
       setSubmitMsg("Submitted successfully!");
       setSubmitUrl("");
     } catch {
@@ -64,7 +104,7 @@ export function MyAssignments() {
   }
 
   return (
-    <AppShell title="My Assignments">
+    <AppShell title="Assignments">
       <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
         <div className="grid gap-4">
           {/* Filter tabs */}

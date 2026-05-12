@@ -24,10 +24,22 @@ const catColors: Record<string, string> = {
 };
 
 export function StudentAnnouncements() {
+  // r18 — primary feed is comms-service. If it 404s (commonly true in dev
+  // and when the comms service hasn't shipped yet) we fall back to the
+  // synthetic /api/announcements route so the page is never blank.
   const { data: announcements = [], isLoading } = useQuery<Announcement[]>({
     queryKey: ["announcements", "student"],
-    queryFn: () => apiGet<Announcement[]>("/api/comms/announcements"),
+    queryFn: async () => {
+      try {
+        const data = await apiGet<Announcement[]>("/api/comms/announcements");
+        if (Array.isArray(data) && data.length > 0) return data;
+        throw new Error("empty");
+      } catch {
+        return apiGet<Announcement[]>("/api/announcements");
+      }
+    },
     staleTime: 300_000,
+    retry: false,
   });
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
