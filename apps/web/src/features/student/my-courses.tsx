@@ -9,6 +9,7 @@ import { useStudentAttendance } from "@/lib/api/attendance";
 import { useAuth } from "@/lib/auth/use-auth";
 import { apiGet, apiPost, apiDelete } from "@/lib/api/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatCourseCode, formatCourseLine } from "@/lib/format/course-code";
 
 export function MyCourses() {
   const { session } = useAuth();
@@ -85,7 +86,7 @@ export function MyCourses() {
   const selectedAtt = selected ? attMap[selected.id] : undefined;
 
   return (
-    <AppShell title="My Courses">
+    <AppShell title="Courses">
       <div className="grid gap-5">
         <input
           placeholder="Search courses…"
@@ -125,7 +126,8 @@ export function MyCourses() {
                           )}
                         </div>
                         <p className="text-xs text-text-muted mt-0.5">
-                          {c.code} · {c.type} · {c.credits} cr
+                          {/* r12 — render as "CS5-01 - 4 Credits"; replaces legacy "CS501--4cr". */}
+                          {formatCourseLine(c.code, c.credits)} · {c.type}
                         </p>
                       </div>
                       {att && (
@@ -151,7 +153,7 @@ export function MyCourses() {
             <div className="rounded border border-border bg-surface p-5 self-start sticky top-4">
               <p className="label-track">Course Details</p>
               <h3 className="mt-2 text-xl font-medium">{selected.name}</h3>
-              <p className="text-sm text-text-muted">{selected.code}</p>
+              <p className="text-sm text-text-muted">{formatCourseCode(selected.code)}</p>
               <span className="ray-rule ml-0" />
 
               <dl className="grid gap-3 text-sm">

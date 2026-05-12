@@ -37,7 +37,7 @@ export function StudyPlan() {
   );
 
   return (
-    <AppShell title="My Study Plan">
+    <AppShell title="Study Plan">
       <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
         {/* Weekly plan */}
         <div className="grid gap-4">

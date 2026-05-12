@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/shell";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth/use-auth";
 import { useStudentAttendance } from "@/lib/api/attendance";
+import { formatCourseCode } from "@/lib/format/course-code";
 
 export function MyAttendance() {
   const { session } = useAuth();
@@ -16,7 +17,7 @@ export function MyAttendance() {
     : 0;
 
   return (
-    <AppShell title="My Attendance">
+    <AppShell title="Attendance">
       <div className="grid gap-5">
         {error && (
           <p className="rounded bg-[#F5E6E6] px-4 py-3 text-sm text-[#8B2F2F]">
@@ -79,7 +80,8 @@ export function MyAttendance() {
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <p className="font-medium">{c.courseName}</p>
-                      <p className="text-xs text-text-muted">{c.courseCode}</p>
+                      {/* r14 — apply CS5-01 formatting consistently. */}
+                      <p className="text-xs text-text-muted">{formatCourseCode(c.courseCode)}</p>
                     </div>
                     <span className={cn("rounded px-2 py-0.5 text-xs font-medium",
                       c.pct >= 85 ? "bg-[#EBF3EE] text-[#3D6B4F]"
@@ -99,7 +101,8 @@ export function MyAttendance() {
                     <span>{c.attended} / {c.totalClasses} classes</span>
                     {c.mustAttend > 0
                       ? <span className="text-[#8B2F2F]">Attend next {c.mustAttend} to reach 75%</span>
-                      : <span className="text-[#3D6B4F]">Can miss {c.canMiss} more</span>}
+                      /* r13 — phrased positively as a "do-not-miss" instruction. */
+                      : <span className="text-[#3D6B4F]">{c.canMiss} class buffer remaining; do not miss further</span>}
                   </div>
                 </div>
               ))}
