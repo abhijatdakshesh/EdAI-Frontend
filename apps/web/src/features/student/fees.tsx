@@ -107,20 +107,30 @@ export function StudentFees() {
             ))}
           </div>
         ) : summary ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { label: "Total Due", value: `₹${(summary.totalDue ?? 0).toLocaleString()}`, warn: false },
-              { label: "Total Paid", value: `₹${(summary.totalPaid ?? 0).toLocaleString()}`, warn: false },
-              { label: "Outstanding", value: `₹${(summary.totalOutstanding ?? 0).toLocaleString()}`, warn: (summary.totalOutstanding ?? 0) > 0 },
-              { label: "Status", value: summary.status ?? "—", warn: summary.status !== "PAID" },
-            ].map((s) => (
-              <div key={s.label} className={cn("rounded border-l-4 bg-surface p-4",
-                s.warn ? "border-l-[#8B6914]" : "border-l-[#3D6B4F]")}>
-                <p className="label-track">{s.label}</p>
-                <p className="mt-1 text-xl font-light">{s.value}</p>
+          // r21 — KPI row mirrors Results Portal: Total Fee / Paid / Pending / Next Due
+          (() => {
+            const pending = summary.items?.filter((i) => i.status !== "PAID") ?? [];
+            const nextDue = pending
+              .map((i) => i.dueDate)
+              .filter(Boolean)
+              .sort()[0];
+            return (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { label: "Total Fee", value: `₹${(summary.totalDue ?? 0).toLocaleString()}`, warn: false },
+                  { label: "Paid", value: `₹${(summary.totalPaid ?? 0).toLocaleString()}`, warn: false },
+                  { label: "Pending", value: `₹${(summary.totalOutstanding ?? 0).toLocaleString()}`, warn: (summary.totalOutstanding ?? 0) > 0 },
+                  { label: "Next Due", value: nextDue ?? "—", warn: !!nextDue },
+                ].map((s) => (
+                  <div key={s.label} className={cn("rounded border-l-4 bg-surface p-4",
+                    s.warn ? "border-l-[#8B6914]" : "border-l-[#3D6B4F]")}>
+                    <p className="label-track">{s.label}</p>
+                    <p className="mt-1 text-xl font-light">{s.value}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()
         ) : null}
 
         {/* Tabs */}
@@ -152,39 +162,51 @@ export function StudentFees() {
                 <p className="text-xs text-text-muted">
                   Select fee items to pay together.
                 </p>
-                <div className="grid gap-2">
-                  {pendingItems.map((item) => (
-                    <label
-                      key={item.id}
-                      className={cn(
-                        "flex items-center gap-3 rounded border p-4 cursor-pointer transition-colors",
-                        selectedFeeIds.includes(item.id)
-                          ? "border-[#1C1810] bg-cream-100"
-                          : "border-border bg-surface hover:border-[#1C1810]",
-                      )}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedFeeIds.includes(item.id)}
-                        onChange={() => toggleFee(item.id)}
-                        className="rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">
-                          {componentLabel[item.component] ?? item.component}
-                        </p>
-                        <p className="text-xs text-text-muted">
-                          Sem {item.semester} · {item.academicYear} · Due {item.dueDate}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">₹{item.amount.toLocaleString()}</p>
-                        <span className={cn("rounded px-2 py-0.5 text-xs font-medium", statusColor[item.status])}>
-                          {item.status}
-                        </span>
-                      </div>
-                    </label>
-                  ))}
+                {/* r21 — itemised fee table matching Results Portal layout. */}
+                <div className="overflow-x-auto rounded border border-border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-cream-200">
+                      <tr>
+                        {["", "Component", "Semester", "Year", "Due Date", "Amount", "Status"].map((h) => (
+                          <th key={h} className="px-4 py-2 text-left label-track">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingItems.map((item) => (
+                        <tr
+                          key={item.id}
+                          className={cn(
+                            "border-t border-border cursor-pointer transition-colors",
+                            selectedFeeIds.includes(item.id) ? "bg-cream-100" : "even:bg-cream-50 hover:bg-cream-100",
+                          )}
+                          onClick={() => toggleFee(item.id)}
+                        >
+                          <td className="px-4 py-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedFeeIds.includes(item.id)}
+                              onChange={() => toggleFee(item.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded"
+                            />
+                          </td>
+                          <td className="px-4 py-2 font-medium">
+                            {componentLabel[item.component] ?? item.component}
+                          </td>
+                          <td className="px-4 py-2">Sem {item.semester}</td>
+                          <td className="px-4 py-2 text-text-muted">{item.academicYear}</td>
+                          <td className="px-4 py-2 text-text-muted">{item.dueDate}</td>
+                          <td className="px-4 py-2 font-medium">₹{item.amount.toLocaleString()}</td>
+                          <td className="px-4 py-2">
+                            <span className={cn("rounded px-2 py-0.5 text-xs font-medium", statusColor[item.status])}>
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
                 {payMsg && (
