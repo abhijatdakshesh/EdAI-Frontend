@@ -4,12 +4,22 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useClasses, useClassStudents } from "@/lib/api/academics";
+import { useClasses, useClassStudents, useCreateClass } from "@/lib/api/academics";
 import { useDepartments } from "@/lib/api/academics";
 
 export function ClassManagement() {
   const [deptFilter, setDeptFilter] = useState("");
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    departmentCode: "CSE",
+    semester: 1,
+    section: "A",
+    strength: 60,
+    classTeacherId: "",
+    academicYear: "2025-26",
+  });
 
   const { data: departments = [] } = useDepartments();
   const { data: classes = [], isLoading } = useClasses({
@@ -18,6 +28,7 @@ export function ClassManagement() {
   const { data: students = [], isLoading: loadingStudents } = useClassStudents(
     selectedClassId ?? "",
   );
+  const createClass = useCreateClass();
 
   const totalStrength = classes.reduce((a, c) => a + c.strength, 0);
   const depts = ["", ...departments.map((d) => d.code)];
@@ -56,11 +67,79 @@ export function ClassManagement() {
               </option>
             ))}
           </select>
-          <Button size="sm">+ Add Class</Button>
+          <Button size="sm" onClick={() => setShowAdd((v) => !v)}>
+            {showAdd ? "Cancel" : "+ Add Class"}
+          </Button>
           <Button size="sm" variant="outline">
             Manage Sections
           </Button>
         </div>
+
+        {showAdd && (
+          <form
+            className="rounded border border-border bg-surface p-4 grid gap-3 sm:grid-cols-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              createClass.mutate(form, {
+                onSuccess: () => {
+                  setShowAdd(false);
+                  setForm({ ...form, name: "" });
+                },
+              });
+            }}
+          >
+            <input
+              required
+              placeholder="Class name (e.g. CSE-A 2025)"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm sm:col-span-2"
+            />
+            <select
+              value={form.departmentCode}
+              onChange={(e) => setForm({ ...form, departmentCode: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+            >
+              {departments.length
+                ? departments.map((d) => (
+                    <option key={d.code} value={d.code}>
+                      {d.code}
+                    </option>
+                  ))
+                : ["CSE", "ISE", "ECE", "EEE", "ME"].map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+            </select>
+            <input
+              type="number" min={1} max={8}
+              value={form.semester}
+              onChange={(e) => setForm({ ...form, semester: +e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              placeholder="Sem"
+            />
+            <input
+              value={form.section}
+              onChange={(e) => setForm({ ...form, section: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              placeholder="Section (A)"
+            />
+            <input
+              type="number" min={10} max={120}
+              value={form.strength}
+              onChange={(e) => setForm({ ...form, strength: +e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              placeholder="Strength"
+            />
+            <Button type="submit" size="sm" className="sm:col-span-3" disabled={createClass.isPending || !form.name}>
+              {createClass.isPending ? "Creating…" : "Create Class"}
+            </Button>
+            {createClass.error && (
+              <p className="sm:col-span-3 text-xs text-[#8B2F2F]">
+                {(createClass.error as Error).message}
+              </p>
+            )}
+          </form>
+        )}
 
         {/* Table + student panel */}
         <div className="grid gap-5 lg:grid-cols-[1fr_340px]">

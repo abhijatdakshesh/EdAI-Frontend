@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   useCourses,
+  useCreateCourse,
   useDeactivateCourse,
   useDepartments,
   type CourseType,
@@ -21,6 +22,14 @@ export function CourseManagement() {
   const [deptFilter, setDeptFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState<CourseType | "">("");
   const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState<{
+    code: string; name: string; departmentCode: string;
+    semester: number; credits: number; type: CourseType;
+  }>({
+    code: "", name: "", departmentCode: "CSE",
+    semester: 1, credits: 3, type: "THEORY",
+  });
 
   const { data: departments = [] } = useDepartments();
   const { data: courses = [], isLoading } = useCourses({
@@ -29,6 +38,7 @@ export function CourseManagement() {
     search: search || undefined,
   });
   const deactivate = useDeactivateCourse();
+  const createCourse = useCreateCourse();
 
   return (
     <AppShell title="Course Management">
@@ -79,8 +89,87 @@ export function CourseManagement() {
             <option value="LAB">Lab</option>
             <option value="ELECTIVE">Elective</option>
           </select>
-          <Button size="sm">+ Add Course</Button>
+          <Button size="sm" onClick={() => setShowAdd((v) => !v)}>
+            {showAdd ? "Cancel" : "+ Add Course"}
+          </Button>
         </div>
+
+        {showAdd && (
+          <form
+            className="rounded border border-border bg-surface p-4 grid gap-3 sm:grid-cols-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              createCourse.mutate(form, {
+                onSuccess: () => {
+                  setShowAdd(false);
+                  setForm({ ...form, code: "", name: "" });
+                },
+              });
+            }}
+          >
+            <input
+              required
+              placeholder="VTU code (18CS51)"
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm font-mono"
+            />
+            <input
+              required
+              placeholder="Course title"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm sm:col-span-2"
+            />
+            <select
+              value={form.departmentCode}
+              onChange={(e) => setForm({ ...form, departmentCode: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+            >
+              {departments.length
+                ? departments.map((d) => (
+                    <option key={d.code} value={d.code}>{d.code}</option>
+                  ))
+                : ["CSE", "ISE", "ECE"].map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+            </select>
+            <input
+              type="number" min={1} max={8}
+              value={form.semester}
+              onChange={(e) => setForm({ ...form, semester: +e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              placeholder="Sem"
+            />
+            <input
+              type="number" min={1} max={6}
+              value={form.credits}
+              onChange={(e) => setForm({ ...form, credits: +e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              placeholder="Credits"
+            />
+            <select
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value as CourseType })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+            >
+              <option value="THEORY">Theory</option>
+              <option value="LAB">Lab</option>
+              <option value="ELECTIVE">Elective</option>
+            </select>
+            <Button
+              type="submit" size="sm" className="sm:col-span-3"
+              disabled={createCourse.isPending || !form.code || !form.name}
+            >
+              {createCourse.isPending ? "Creating…" : "Create Course"}
+            </Button>
+            {createCourse.error && (
+              <p className="sm:col-span-3 text-xs text-[#8B2F2F]">
+                {(createCourse.error as Error).message}
+              </p>
+            )}
+          </form>
+        )}
 
         <div className="overflow-x-auto rounded border border-border">
           <table className="w-full text-sm">
