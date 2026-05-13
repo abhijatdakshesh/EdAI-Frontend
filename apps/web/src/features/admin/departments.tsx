@@ -3,13 +3,21 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
-import { useDepartments, useUpdateDepartment, type Department } from "@/lib/api/academics";
+import { useCreateDepartment, useDepartments, useUpdateDepartment, type Department } from "@/lib/api/academics";
 
 export function Departments() {
   const [selected, setSelected] = useState<Department | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [form, setForm] = useState({
+    code: "",
+    name: "",
+    hodUserId: "",
+    established: new Date().getFullYear(),
+  });
 
   const { data: depts = [], isLoading, error } = useDepartments();
   const updateDept = useUpdateDepartment();
+  const createDept = useCreateDepartment();
 
   const totalEstimatedFaculty = depts.length * 25; // placeholder until analytics endpoint
   const totalEstimatedStudents = depts.length * 360;
@@ -36,9 +44,67 @@ export function Departments() {
           </div>
 
           <div className="flex gap-2">
-            <Button size="sm">+ Add Department</Button>
+            <Button size="sm" onClick={() => setShowAdd((v) => !v)}>
+              {showAdd ? "Cancel" : "+ Add Department"}
+            </Button>
             <Button size="sm" variant="outline">Export</Button>
           </div>
+
+          {showAdd && (
+            <form
+              className="rounded border border-border bg-surface p-4 grid gap-3 sm:grid-cols-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                createDept.mutate(form, {
+                  onSuccess: () => {
+                    setShowAdd(false);
+                    setForm({ ...form, code: "", name: "" });
+                  },
+                });
+              }}
+            >
+              <input
+                required
+                placeholder="Code (e.g. AIML)"
+                value={form.code}
+                onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm font-mono"
+              />
+              <input
+                required
+                placeholder="Department name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              />
+              <input
+                placeholder="HOD user id"
+                value={form.hodUserId}
+                onChange={(e) => setForm({ ...form, hodUserId: e.target.value })}
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              />
+              <input
+                type="number"
+                min={1900}
+                max={new Date().getFullYear()}
+                value={form.established}
+                onChange={(e) => setForm({ ...form, established: +e.target.value })}
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+                placeholder="Established"
+              />
+              <Button
+                type="submit" size="sm" className="sm:col-span-2"
+                disabled={createDept.isPending || !form.code || !form.name}
+              >
+                {createDept.isPending ? "Creating…" : "Create Department"}
+              </Button>
+              {createDept.error && (
+                <p className="sm:col-span-2 text-xs text-[#8B2F2F]">
+                  {(createDept.error as Error).message}
+                </p>
+              )}
+            </form>
+          )}
 
           {error && (
             <p className="rounded bg-[#F5E6E6] px-4 py-3 text-sm text-[#8B2F2F]">

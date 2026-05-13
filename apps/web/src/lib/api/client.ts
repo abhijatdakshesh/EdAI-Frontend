@@ -26,13 +26,34 @@ const BFF_PREFIXES = [
   "/api/timetable/student/",     // weekly schedule synth (backend has no route yet)
   "/api/announcements",          // announcements synth fallback
   "/api/parent/scholarship/",    // parent scholarship apply synth (no BE route)
+  "/api/recruiter/jobs",         // KAN-29 post-job synth
+  "/api/recruiter/drives",       // KAN-30 start-drive synth (no BE route)
+  "/api/recruiter/analytics",    // KAN-31 analytics synth fallback
+  "/api/parent-comms/messages",  // KAN-41 parent send-message synth
+  "/api/automation/rules",       // KAN-52 admin automation rule create
 ];
 
-function resolveRequestUrl(path: string): string {
+/**
+ * BFF endpoints that take precedence ONLY for the listed HTTP methods.
+ * Used when the backend serves GET (e.g. `GET /api/classes`) but the BFF
+ * needs to handle POST locally because the backend has no create route.
+ */
+const BFF_METHOD_PREFIXES: Array<{ path: string; methods: string[] }> = [
+  { path: "/api/classes", methods: ["POST"] },   // KAN-37 add class
+  { path: "/api/courses", methods: ["POST"] },   // KAN-32 add course
+];
+
+function resolveRequestUrl(path: string, method = "GET"): string {
   // In the browser, relative paths hit the Next BFF on the same origin.
   // SSR / Node still needs an absolute URL, so we keep API_BASE there.
-  if (typeof window !== "undefined" && BFF_PREFIXES.some((p) => path.startsWith(p))) {
-    return path; // relative → /api/... handled by Next route handlers
+  if (typeof window !== "undefined") {
+    if (BFF_PREFIXES.some((p) => path.startsWith(p))) {
+      return path;
+    }
+    const upper = method.toUpperCase();
+    if (BFF_METHOD_PREFIXES.some(({ path: p, methods }) => path.startsWith(p) && methods.includes(upper))) {
+      return path;
+    }
   }
   return `${API_BASE}${path}`;
 }
@@ -53,7 +74,7 @@ export async function apiFetch<T>(
     headers["Authorization"] = `Bearer ${accessToken}`;
   }
 
-  const requestUrl = resolveRequestUrl(path);
+  const requestUrl = resolveRequestUrl(path, init.method ?? "GET");
   let res: Response;
   try {
     res = await fetch(requestUrl, { ...init, headers });
@@ -91,7 +112,7 @@ export async function apiFetch<T>(
             ...headers,
             Authorization: `Bearer ${freshToken}`,
           };
-          const retry = await fetch(resolveRequestUrl(path), {
+          const retry = await fetch(resolveRequestUrl(path, init.method ?? "GET"), {
             ...init,
             headers: retryHeaders,
           });
@@ -164,6 +185,29 @@ export async function apiDownload(path: string, filename: string): Promise<void>
   const headers: Record<string, string> = {};
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
   const res = await fetch(`${API_BASE}${path}`, { headers });
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/** Downloads a file from an authenticated POST endpoint and triggers browser save. */
+export async function apiDownloadPost(path: string, body: unknown, filename: string): Promise<void> {
+  const session = await getSession();
+  const accessToken = session?.accessToken;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);

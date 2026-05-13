@@ -95,8 +95,9 @@ export function MyChildren() {
 
 export function ParentAttendance() {
   const { data: children = [], isLoading: loadingChildren } = useMyChildren();
-  const activeUsn = children[0]?.usn ?? "";
-  const childName = children[0]?.name ?? "";
+  const [activeIdx, setActiveIdx] = useState(0);
+  const activeUsn = children[activeIdx]?.usn ?? "";
+  const childName = children[activeIdx]?.name ?? "";
 
   const { data: rawCourses, isLoading: loadingCourses } = useChildAttendance(activeUsn);
   const courses = Array.isArray(rawCourses) ? rawCourses : [];
@@ -113,6 +114,24 @@ export function ParentAttendance() {
   return (
     <AppShell title="Attendance">
       <div className="grid gap-5 max-w-2xl">
+        {children.length > 1 && (
+          <div className="flex gap-1 border-b border-border">
+            {children.map((child, i) => (
+              <button
+                key={child.usn}
+                onClick={() => setActiveIdx(i)}
+                className={cn(
+                  "px-4 py-2 text-sm transition-colors",
+                  activeIdx === i
+                    ? "border-b-2 border-[#1C1810] font-medium"
+                    : "text-text-muted hover:text-text-primary",
+                )}
+              >
+                {child.name.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        )}
         {loadingChildren || loadingCourses ? (
           <div className="grid gap-3">
             {[1, 2, 3].map((i) => (
@@ -192,7 +211,8 @@ const gradeStyle: Record<string, string> = {
 
 export function ParentResults() {
   const { data: children = [], isLoading: loadingChildren } = useMyChildren();
-  const activeUsn = children[0]?.usn ?? "";
+  const [activeIdx, setActiveIdx] = useState(0);
+  const activeUsn = children[activeIdx]?.usn ?? "";
   const { data: results, isLoading } = useChildResults(activeUsn);
 
   const latestSem = results?.semesters[results.semesters.length - 1];
@@ -200,6 +220,24 @@ export function ParentResults() {
   return (
     <AppShell title="Results">
       <div className="grid gap-5 max-w-2xl">
+        {children.length > 1 && (
+          <div className="flex gap-1 border-b border-border">
+            {children.map((child, i) => (
+              <button
+                key={child.usn}
+                onClick={() => setActiveIdx(i)}
+                className={cn(
+                  "px-4 py-2 text-sm transition-colors",
+                  activeIdx === i
+                    ? "border-b-2 border-[#1C1810] font-medium"
+                    : "text-text-muted hover:text-text-primary",
+                )}
+              >
+                {child.name.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        )}
         {loadingChildren || isLoading ? (
           <div className="h-32 rounded border border-border bg-surface animate-pulse" />
         ) : !results ? (
@@ -375,7 +413,7 @@ export function ParentCalls() {
                         : "bg-[#F5E6E6] text-[#8B2F2F]",
                     )}
                   >
-                    {c.outcome}
+                    {c.outcome === "ANSWERED" ? "Answered" : "Missed"}
                   </span>
                 </div>
               </div>
@@ -461,6 +499,8 @@ export function ParentMessages() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const [sendMsg, setSendMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [showCompose, setShowCompose] = useState(false);
+  const [compose, setCompose] = useState({ recipientName: "", subject: "", body: "" });
 
   const selected = messages.find((m) => m.id === selectedId) ?? messages[0];
 
@@ -491,6 +531,62 @@ export function ParentMessages() {
     <AppShell title="Messages">
       <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
         <div className="grid gap-2">
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setShowCompose((v) => !v)}>
+              {showCompose ? "Cancel" : "+ Compose"}
+            </Button>
+          </div>
+          {showCompose && (
+            <form
+              className="rounded border border-border bg-surface p-4 grid gap-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendMessage.mutate(
+                  {
+                    parentId,
+                    parentName,
+                    studentUsn: childUsn,
+                    recipientId: compose.recipientName.toLowerCase().replace(/\s+/g, "-"),
+                    recipientName: compose.recipientName,
+                    subject: compose.subject,
+                    body: compose.body,
+                  },
+                  {
+                    onSuccess: () => {
+                      setShowCompose(false);
+                      setCompose({ recipientName: "", subject: "", body: "" });
+                    },
+                  },
+                );
+              }}
+            >
+              <input
+                required
+                placeholder="To (teacher / admin name)"
+                value={compose.recipientName}
+                onChange={(e) => setCompose({ ...compose, recipientName: e.target.value })}
+                className="rounded border border-border bg-background px-3 py-1.5 text-sm focus:outline-none"
+              />
+              <input
+                required
+                placeholder="Subject"
+                value={compose.subject}
+                onChange={(e) => setCompose({ ...compose, subject: e.target.value })}
+                className="rounded border border-border bg-background px-3 py-1.5 text-sm focus:outline-none"
+              />
+              <textarea
+                required
+                rows={3}
+                placeholder="Message…"
+                value={compose.body}
+                onChange={(e) => setCompose({ ...compose, body: e.target.value })}
+                className="rounded border border-border bg-background px-3 py-2 text-sm focus:outline-none"
+              />
+              <Button type="submit" size="sm" disabled={sendMessage.isPending}>
+                {sendMessage.isPending ? "Sending…" : "Send Message"}
+              </Button>
+            </form>
+          )}
           {isLoading ? (
             [1, 2, 3].map((i) => (
               <div key={i} className="h-20 rounded border border-border bg-surface animate-pulse" />

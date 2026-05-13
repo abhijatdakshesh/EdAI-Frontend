@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPatch } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import type { AiCallLog } from "@/lib/api/comms";
 
 interface AutomationRule {
@@ -55,7 +55,27 @@ const MOCK_RULES: AutomationRule[] = [
 export function AutomationRules() {
   const qc = useQueryClient();
   const [rules, setRules] = useState(MOCK_RULES);
+  const [showAdd, setShowAdd] = useState(false);
+  const [draft, setDraft] = useState({
+    name: "",
+    trigger: "Daily at 7:00 AM",
+    condition: "Student attendance < 75%",
+    actions: "Send SMS to parent, Log alert",
+  });
 
+  const createMutation = useMutation({
+    mutationFn: (payload: { name: string; trigger: string; condition: string; actions: string[]; enabled: boolean }) =>
+      apiPost<AutomationRule>("/api/automation/rules", payload),
+    onSuccess: (created) => {
+      setRules(r => [...r, { ...created, runsToday: 0 }]);
+      setShowAdd(false);
+      setDraft({ ...draft, name: "" });
+    },
+  });
+
+  // NOTE: declared AFTER createMutation so the existing automation.test.tsx
+  // mock (which captures the most recent useMutation options) still tests
+  // toggle behaviour without modification.
   const toggleMutation = useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
       apiPatch<void>(`/api/admin/automation/rules/${id}`, { enabled }),
@@ -91,8 +111,60 @@ export function AutomationRules() {
         </div>
 
         <div className="flex justify-end">
-          <Button size="sm">+ New Rule</Button>
+          <Button size="sm" onClick={() => setShowAdd((v) => !v)}>
+            {showAdd ? "Cancel" : "+ New Rule"}
+          </Button>
         </div>
+
+        {showAdd && (
+          <form
+            className="rounded border border-border bg-surface p-4 grid gap-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              createMutation.mutate({
+                name: draft.name,
+                trigger: draft.trigger,
+                condition: draft.condition,
+                actions: draft.actions.split(",").map(a => a.trim()).filter(Boolean),
+                enabled: true,
+              });
+            }}
+          >
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input
+                required
+                placeholder="Rule name"
+                value={draft.name}
+                onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              />
+              <input
+                placeholder="Trigger (e.g. Daily at 7:00 AM)"
+                value={draft.trigger}
+                onChange={(e) => setDraft({ ...draft, trigger: e.target.value })}
+                className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+              />
+            </div>
+            <input
+              placeholder="Condition (e.g. Student attendance < 75%)"
+              value={draft.condition}
+              onChange={(e) => setDraft({ ...draft, condition: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+            />
+            <input
+              placeholder="Actions (comma separated)"
+              value={draft.actions}
+              onChange={(e) => setDraft({ ...draft, actions: e.target.value })}
+              className="rounded border border-border bg-surface px-3 py-1.5 text-sm"
+            />
+            <Button type="submit" size="sm" disabled={createMutation.isPending || !draft.name}>
+              {createMutation.isPending ? "Creating…" : "Create Rule"}
+            </Button>
+            {createMutation.error && (
+              <p className="text-xs text-[#8B2F2F]">{(createMutation.error as Error).message}</p>
+            )}
+          </form>
+        )}
 
         {/* Rules */}
         <div className="grid gap-3">
