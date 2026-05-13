@@ -217,8 +217,9 @@ export function ParentResults() {
   const { data: results, isLoading } = useChildResults(activeUsn);
 
   const latestSem = results?.semesters[results.semesters.length - 1];
-  const computedCgpa = results?.semesters.length
-    ? computeVtuCgpa(results.semesters.map((s) => s.subjects))
+  const hasSemesters = (results?.semesters.length ?? 0) > 0;
+  const computedCgpa = hasSemesters
+    ? computeVtuCgpa(results!.semesters.map((s) => s.subjects))
     : (results?.cgpa ?? 0);
 
   return (
@@ -254,7 +255,7 @@ export function ParentResults() {
               <div className="rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4 col-span-2 sm:col-span-1">
                 <p className="label-track">CGPA</p>
                 <p className="text-4xl font-light mt-1">
-                  {(computedCgpa > 0 ? computedCgpa : results.cgpa).toFixed(2)}
+                  {(hasSemesters ? computedCgpa : results.cgpa).toFixed(2)}
                   <span className="text-base text-text-muted ml-1">/ 10</span>
                 </p>
               </div>
@@ -262,7 +263,7 @@ export function ParentResults() {
                 <div className="rounded border border-border bg-surface p-4">
                   <p className="label-track">Sem {latestSem.semester} SGPA</p>
                   <p className="text-2xl font-light mt-1">
-                    {(() => { const s = computeVtuSgpa(latestSem.subjects); return (s > 0 ? s : latestSem.sgpa).toFixed(2); })()}
+                    {(latestSem.subjects.length > 0 ? computeVtuSgpa(latestSem.subjects) : latestSem.sgpa).toFixed(2)}
                   </p>
                 </div>
               )}

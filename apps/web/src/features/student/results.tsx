@@ -24,7 +24,8 @@ export function ResultsPortal() {
   // r12-results — sort SEM1, SEM2, SEM3… in natural ascending order.
   // Backend sometimes returns the latest semester first; sort defensively here.
   const semesters = [...(data?.semesters ?? [])].sort((a, b) => a.semester - b.semester);
-  const computedCgpa = semesters.length
+  const hasSemesters = semesters.length > 0;
+  const computedCgpa = hasSemesters
     ? computeVtuCgpa(semesters.map((s) => s.subjects))
     : (data?.cgpa ?? 0);
   const [activeSem, setActiveSem] = useState<number | null>(null);
@@ -54,17 +55,17 @@ export function ResultsPortal() {
               <div className="col-span-2 rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4">
                 <p className="label-track">CGPA</p>
                 <p className="text-4xl font-light mt-1">
-                  {(computedCgpa > 0 ? computedCgpa : data.cgpa).toFixed(2)}
+                  {(hasSemesters ? computedCgpa : data.cgpa).toFixed(2)}
                   <span className="text-base text-text-muted ml-1">/ 10.0</span>
                 </p>
                 <p className="text-xs text-text-muted mt-0.5">Up to Semester {latestSem ?? "—"}</p>
               </div>
               {semesters.slice(-2).map((r) => {
-                const semSgpa = computeVtuSgpa(r.subjects);
+                const semSgpa = r.subjects.length > 0 ? computeVtuSgpa(r.subjects) : r.sgpa;
                 return (
                   <div key={r.semester} className="rounded border border-border bg-surface p-4">
                     <p className="label-track">Sem {r.semester} SGPA</p>
-                    <p className="text-2xl font-light mt-1">{(semSgpa > 0 ? semSgpa : r.sgpa).toFixed(2)}</p>
+                    <p className="text-2xl font-light mt-1">{semSgpa.toFixed(2)}</p>
                   </div>
                 );
               })}
