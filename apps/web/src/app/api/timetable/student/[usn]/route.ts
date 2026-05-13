@@ -40,7 +40,41 @@ const SUNDAY_FALLBACK: ClassEntry[] = [
   },
 ];
 
+const MOCK_SCHEDULE: ClassEntry[] = [
+  { day: "Monday", start: "9:00", end: "10:00", subject: "Design & Analysis of Algorithms", room: "CS-301", faculty: "Dr. Rekha Nair", type: "theory" },
+  { day: "Monday", start: "10:00", end: "11:00", subject: "Database Management Systems", room: "CS-301", faculty: "Prof. Suresh Babu", type: "theory" },
+  { day: "Monday", start: "11:00", end: "13:00", subject: "DBMS Lab", room: "CS-Lab-2", faculty: "Prof. Suresh Babu", type: "lab" },
+  { day: "Monday", start: "2:00", end: "3:00", subject: "Computer Networks", room: "CS-301", faculty: "Dr. Anitha Rao", type: "theory" },
+  { day: "Monday", start: "3:00", end: "4:00", subject: "Open Elective: ML Fundamentals", room: "CS-302", faculty: "Dr. Priya Sharma", type: "elective" },
+  { day: "Tuesday", start: "9:00", end: "10:00", subject: "Computer Networks", room: "CS-301", faculty: "Dr. Anitha Rao", type: "theory" },
+  { day: "Tuesday", start: "10:00", end: "11:00", subject: "Design & Analysis of Algorithms", room: "CS-301", faculty: "Dr. Rekha Nair", type: "theory" },
+  { day: "Tuesday", start: "11:00", end: "13:00", subject: "Algorithms Lab", room: "CS-Lab-1", faculty: "Dr. Rekha Nair", type: "lab" },
+  { day: "Tuesday", start: "2:00", end: "3:00", subject: "Database Management Systems", room: "CS-301", faculty: "Prof. Suresh Babu", type: "theory" },
+  { day: "Tuesday", start: "3:00", end: "4:00", subject: "Software Engineering", room: "CS-301", faculty: "Prof. Kavitha Menon", type: "theory" },
+  { day: "Wednesday", start: "9:00", end: "10:00", subject: "Software Engineering", room: "CS-301", faculty: "Prof. Kavitha Menon", type: "theory" },
+  { day: "Wednesday", start: "10:00", end: "11:00", subject: "Computer Networks", room: "CS-301", faculty: "Dr. Anitha Rao", type: "theory" },
+  { day: "Wednesday", start: "11:00", end: "12:00", subject: "Open Elective: ML Fundamentals", room: "CS-302", faculty: "Dr. Priya Sharma", type: "elective" },
+  { day: "Wednesday", start: "2:00", end: "3:00", subject: "Design & Analysis of Algorithms", room: "CS-301", faculty: "Dr. Rekha Nair", type: "theory" },
+  { day: "Thursday", start: "9:00", end: "10:00", subject: "Database Management Systems", room: "CS-301", faculty: "Prof. Suresh Babu", type: "theory" },
+  { day: "Thursday", start: "10:00", end: "11:00", subject: "Software Engineering", room: "CS-301", faculty: "Prof. Kavitha Menon", type: "theory" },
+  { day: "Thursday", start: "11:00", end: "13:00", subject: "Networks Lab", room: "CS-Lab-3", faculty: "Dr. Anitha Rao", type: "lab" },
+  { day: "Thursday", start: "2:00", end: "3:00", subject: "Computer Networks", room: "CS-301", faculty: "Dr. Anitha Rao", type: "theory" },
+  { day: "Thursday", start: "3:00", end: "4:00", subject: "Design & Analysis of Algorithms", room: "CS-301", faculty: "Dr. Rekha Nair", type: "theory" },
+  { day: "Friday", start: "9:00", end: "10:00", subject: "Software Engineering", room: "CS-301", faculty: "Prof. Kavitha Menon", type: "theory" },
+  { day: "Friday", start: "10:00", end: "11:00", subject: "Database Management Systems", room: "CS-301", faculty: "Prof. Suresh Babu", type: "theory" },
+  { day: "Friday", start: "11:00", end: "12:00", subject: "Open Elective: ML Fundamentals", room: "CS-302", faculty: "Dr. Priya Sharma", type: "elective" },
+  { day: "Friday", start: "2:00", end: "3:00", subject: "Computer Networks", room: "CS-301", faculty: "Dr. Anitha Rao", type: "theory" },
+  { day: "Saturday", start: "9:00", end: "10:00", subject: "Design & Analysis of Algorithms", room: "CS-301", faculty: "Dr. Rekha Nair", type: "theory" },
+  { day: "Saturday", start: "10:00", end: "11:00", subject: "Software Engineering", room: "CS-301", faculty: "Prof. Kavitha Menon", type: "theory" },
+  { day: "Saturday", start: "11:00", end: "13:00", subject: "Mini Project Lab", room: "CS-Lab-4", faculty: "Prof. Kavitha Menon", type: "lab" },
+  ...SUNDAY_FALLBACK,
+];
+
 export const GET = auth(async (req, ctx: unknown) => {
+  if (process.env.NEXT_PUBLIC_USE_MOCKS === "true") {
+    return NextResponse.json(MOCK_SCHEDULE, { status: 200 });
+  }
+
   const accessToken = req.auth?.accessToken;
   if (!accessToken) {
     return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
