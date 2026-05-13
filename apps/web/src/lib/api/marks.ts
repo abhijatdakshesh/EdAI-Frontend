@@ -76,9 +76,9 @@ const MOCK_STUDENT_RESULTS: StudentResults = {
   semesters: [
     {
       semester: 1,
-      sgpa: 8.5,
+      sgpa: 8.57,
       subjects: [
-        { code: "21MAT11", name: "Mathematics - I", credits: 4, ia: 40, exam: 80, total: 120, grade: "A" },
+        { code: "21MAT11", name: "Mathematics - I", credits: 4, ia: 40, exam: 80, total: 120, grade: "A+" },
         { code: "21PHY12", name: "Engineering Physics", credits: 3, ia: 35, exam: 75, total: 110, grade: "A" },
       ],
     },
