@@ -9,10 +9,11 @@
  */
 
 import { useState } from "react";
-import { getSession } from "next-auth/react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { apiDownloadPost } from "@/lib/api/client";
+import { useDepartments } from "@/lib/api/academics";
 
 type ExportFormat = "CSV" | "XLSX" | "PDF" | "VTU";
 type ReportType =
@@ -94,6 +95,7 @@ interface DownloadingState {
 }
 
 export function DataExports() {
+  const { data: departments = [] } = useDepartments();
   const [filters, setFilters] = useState({
     departmentCode: "",
     semester: "",
@@ -101,12 +103,16 @@ export function DataExports() {
   });
   const [downloading, setDownloading] = useState<DownloadingState | null>(null);
   const [lastExported, setLastExported] = useState<Record<string, string>>({});
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   async function handleDownload(type: ReportType, format: ExportFormat) {
     setDownloading({ type, format });
+    setDownloadError(null);
 
     try {
-      const body = {
+      const ext = format === "XLSX" ? "xlsx" : format === "PDF" ? "pdf" : format === "VTU" ? "txt" : "csv";
+      const filename = `${type.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.${ext}`;
+      await apiDownloadPost("/api/exports/download", {
         reportType: type,
         format,
         filters: {
@@ -115,36 +121,14 @@ export function DataExports() {
           academicYear: filters.academicYear,
         },
         requestedBy: "admin",
-      };
-
-      const session = await getSession();
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
-      const response = await fetch(`${baseUrl}/api/exports/download`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...((session as unknown as Record<string, unknown>)?.accessToken ? { Authorization: `Bearer ${(session as unknown as Record<string, unknown>).accessToken as string}` } : {}),
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) throw new Error("Export failed");
-
-      const blob = await response.blob();
-      const ext = format === "XLSX" ? "xlsx" : format === "PDF" ? "pdf" : format === "VTU" ? "txt" : "csv";
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${type.toLowerCase()}_${new Date().toISOString().slice(0, 10)}.${ext}`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      }, filename);
 
       setLastExported((prev) => ({
         ...prev,
         [`${type}-${format}`]: new Date().toLocaleTimeString("en-IN"),
       }));
     } catch (err) {
-      alert(`Export failed: ${(err as Error).message}`);
+      setDownloadError((err as Error).message);
     } finally {
       setDownloading(null);
     }
@@ -165,7 +149,10 @@ export function DataExports() {
                 className="rounded border border-border bg-white px-3 py-1.5 text-sm focus:outline-none"
               >
                 <option value="">All Departments</option>
-                {["CSE", "ECE", "ME", "CIVIL", "EEE", "ISE"].map((d) => (
+                {(departments.length
+                  ? departments.map((d) => d.code)
+                  : ["CSE", "ECE", "ME", "CIVIL", "EEE", "ISE"]
+                ).map((d) => (
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>
@@ -206,6 +193,12 @@ export function DataExports() {
             </p>
           )}
         </div>
+
+        {downloadError && (
+          <p className="rounded border border-[#F5E6E6] bg-[#FDF0F0] px-4 py-2 text-sm text-[#8B2F2F]">
+            Export failed: {downloadError}
+          </p>
+        )}
 
         {/* Report cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

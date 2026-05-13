@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { apiDownloadPost } from "@/lib/api/client";
 import {
   usePromotionBatches,
   useGeneratePromotion,
@@ -47,6 +48,15 @@ export function PromotionManagement() {
     studentName: string;
   } | null>(null);
   const [overrideNote, setOverrideNote] = useState("");
+  const [promoteConfirm, setPromoteConfirm] = useState<{
+    batchId: string;
+    className: string;
+    eligible: number;
+    detained: number;
+    fromSemester: number;
+    toSemester: number;
+  } | null>(null);
+  const [exportingBatchId, setExportingBatchId] = useState<string | null>(null);
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? session?.user?.email ?? "unknown";
@@ -262,25 +272,39 @@ export function PromotionManagement() {
                     <Button
                       size="sm"
                       disabled={executePromotion.isPending}
-                      onClick={() => {
-                        if (
-                          confirm(
-                            `Promote ${selectedBatch.stats.eligible + selectedBatch.stats.conditional} eligible students from ${selectedBatch.className} Sem ${selectedBatch.fromSemester} to Sem ${selectedBatch.toSemester}?\n\n${selectedBatch.stats.detained} students will be detained.`,
-                          )
-                        ) {
-                          executePromotion.mutate({
-                            batchId: selectedBatch.id,
-                            promotedBy: currentUserId,
-                          });
-                        }
-                      }}
+                      onClick={() =>
+                        setPromoteConfirm({
+                          batchId: selectedBatch.id,
+                          className: selectedBatch.className,
+                          eligible: selectedBatch.stats.eligible + selectedBatch.stats.conditional,
+                          detained: selectedBatch.stats.detained,
+                          fromSemester: selectedBatch.fromSemester,
+                          toSemester: selectedBatch.toSemester,
+                        })
+                      }
                     >
                       {executePromotion.isPending
                         ? "Processing…"
                         : `Promote ${selectedBatch.stats.eligible + selectedBatch.stats.conditional} Students`}
                     </Button>
-                    <Button size="sm" variant="outline">
-                      Export Report
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={exportingBatchId === selectedBatch.id}
+                      onClick={async () => {
+                        setExportingBatchId(selectedBatch.id);
+                        try {
+                          await apiDownloadPost(
+                            "/api/exports/download",
+                            { reportType: "PROMOTION_BATCH", format: "PDF", batchId: selectedBatch.id },
+                            `promotion_${selectedBatch.className.replace(/\s+/g, "_")}_sem${selectedBatch.fromSemester}.pdf`,
+                          );
+                        } finally {
+                          setExportingBatchId(null);
+                        }
+                      }}
+                    >
+                      {exportingBatchId === selectedBatch.id ? "Exporting…" : "Export Report"}
                     </Button>
                   </div>
                 )}
@@ -446,6 +470,48 @@ export function PromotionManagement() {
                 {(generateBatch.error as Error).message}
               </p>
             )}
+          </div>
+        )}
+
+        {/* ─── PROMOTE CONFIRM MODAL ───────────────────────────────────── */}
+        {promoteConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-sm rounded border border-border bg-surface p-6 shadow-lg grid gap-4">
+              <div>
+                <p className="font-medium text-lg">Confirm Promotion</p>
+                <p className="text-sm text-text-muted mt-1">
+                  {promoteConfirm.className} · Sem {promoteConfirm.fromSemester} → Sem {promoteConfirm.toSemester}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded border-l-4 border-l-[#3D6B4F] bg-surface p-3">
+                  <p className="label-track text-xs">Promoting</p>
+                  <p className="text-2xl font-light mt-1 text-[#3D6B4F]">{promoteConfirm.eligible}</p>
+                </div>
+                <div className="rounded border-l-4 border-l-[#8B2F2F] bg-surface p-3">
+                  <p className="label-track text-xs">Detained</p>
+                  <p className="text-2xl font-light mt-1 text-[#8B2F2F]">{promoteConfirm.detained}</p>
+                </div>
+              </div>
+              <p className="text-xs text-text-muted">This action cannot be undone. Detained students remain in their current semester.</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  disabled={executePromotion.isPending}
+                  onClick={() => {
+                    executePromotion.mutate(
+                      { batchId: promoteConfirm.batchId, promotedBy: currentUserId },
+                      { onSuccess: () => setPromoteConfirm(null) },
+                    );
+                  }}
+                >
+                  {executePromotion.isPending ? "Processing…" : "Confirm Promotion"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setPromoteConfirm(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
           </div>
         )}
 

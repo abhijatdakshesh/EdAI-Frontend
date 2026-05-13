@@ -197,6 +197,29 @@ export async function apiDownload(path: string, filename: string): Promise<void>
   URL.revokeObjectURL(url);
 }
 
+/** Downloads a file from an authenticated POST endpoint and triggers browser save. */
+export async function apiDownloadPost(path: string, body: unknown, filename: string): Promise<void> {
+  const session = await getSession();
+  const accessToken = session?.accessToken;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 /** @deprecated Use apiFetch / apiGet / apiPost directly. */
 export const apiClient = {
   get: apiGet,
