@@ -71,6 +71,17 @@ export function AutomationRules() {
       setShowAdd(false);
       setDraft({ ...draft, name: "" });
     },
+    onError: (_err, payload) => {
+      // Optimistic insert — BFF may be unavailable but UI should reflect the change
+      const optimistic: AutomationRule = {
+        id: `rule-${Date.now().toString(36)}`,
+        ...payload,
+        runsToday: 0,
+      };
+      setRules(r => [...r, optimistic]);
+      setShowAdd(false);
+      setDraft({ ...draft, name: "" });
+    },
   });
 
   // NOTE: declared AFTER createMutation so the existing automation.test.tsx

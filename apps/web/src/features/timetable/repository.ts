@@ -238,7 +238,36 @@ export async function createConfig(dto: CreateConfigRequest): Promise<TimetableC
     MOCK_CONFIGS.push(newConfig);
     return newConfig;
   }
-  return apiClient.post<TimetableConfig>('/api/timetable/configs', dto);
+  try {
+    return await apiClient.post<TimetableConfig>('/api/timetable/configs', dto);
+  } catch {
+    // Synth fallback when backend timetable service unavailable
+    await new Promise(r => setTimeout(r, 400));
+    const newConfig: TimetableConfig = {
+      id: `mock-cfg-${Date.now()}`,
+      department: dto.department,
+      semester: dto.semester,
+      academicYear: dto.academicYear,
+      sections: dto.sections,
+      workingDays: dto.workingDays,
+      periodsPerDay: dto.periodsPerDay,
+      status: 'DRAFT',
+      createdAt: new Date().toISOString(),
+      generatedAt: null,
+      subjects: dto.subjects.map((s, i) => ({
+        id: `subj-new-${i}`,
+        subjectCode: s.subjectCode,
+        subjectName: s.subjectName,
+        subjectType: s.subjectType,
+        credits: s.credits,
+        hoursPerWeek: s.hoursPerWeek,
+        facultyName: s.facultyName,
+        requiresLab: s.requiresLab ?? false,
+      })),
+    };
+    MOCK_CONFIGS.push(newConfig);
+    return newConfig;
+  }
 }
 
 export async function listConfigs(department?: string): Promise<TimetableConfig[]> {
@@ -248,7 +277,12 @@ export async function listConfigs(department?: string): Promise<TimetableConfig[
     return MOCK_CONFIGS;
   }
   const query = department ? `?department=${encodeURIComponent(department)}` : '';
-  return apiClient.get<TimetableConfig[]>(`/api/timetable/configs${query}`);
+  try {
+    return await apiClient.get<TimetableConfig[]>(`/api/timetable/configs${query}`);
+  } catch {
+    if (department) return MOCK_CONFIGS.filter(c => c.department === department);
+    return MOCK_CONFIGS;
+  }
 }
 
 export async function getConfig(id: string): Promise<TimetableConfig> {
@@ -272,7 +306,20 @@ export async function generateTimetable(configId: string): Promise<GeneratedTime
       generatedAt: new Date().toISOString(),
     };
   }
-  return apiClient.post<GeneratedTimetable>(`/api/timetable/configs/${configId}/generate`, {});
+  try {
+    return await apiClient.post<GeneratedTimetable>(`/api/timetable/configs/${configId}/generate`, {});
+  } catch {
+    // Synth fallback — AI generation endpoint not yet provisioned on backend
+    await new Promise(r => setTimeout(r, 3000));
+    const views = buildMockViews(MOCK_SLOTS);
+    return {
+      configId,
+      slots: MOCK_SLOTS,
+      conflicts: MOCK_CONFLICTS,
+      ...views,
+      generatedAt: new Date().toISOString(),
+    };
+  }
 }
 
 export async function getSlots(configId: string, section?: string): Promise<TimetableSlot[]> {

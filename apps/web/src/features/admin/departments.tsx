@@ -4,6 +4,18 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { useCreateDepartment, useDepartments, useUpdateDepartment, type Department } from "@/lib/api/academics";
+import { useQuery } from "@tanstack/react-query";
+import { apiGet } from "@/lib/api/client";
+
+interface FacultyMember { id: string; name: string; designation: string; email: string }
+
+function useFacultyByDept(deptCode: string) {
+  return useQuery<FacultyMember[]>({
+    queryKey: ["faculty", "by-dept", deptCode],
+    queryFn: () => apiGet<FacultyMember[]>(`/api/departments/${deptCode}/faculty`),
+    enabled: !!deptCode,
+  });
+}
 
 export function Departments() {
   const [selected, setSelected] = useState<Department | null>(null);
@@ -15,9 +27,13 @@ export function Departments() {
     established: new Date().getFullYear(),
   });
 
+  const [showFaculty, setShowFaculty] = useState(false);
   const { data: depts = [], isLoading, error } = useDepartments();
   const updateDept = useUpdateDepartment();
   const createDept = useCreateDepartment();
+  const { data: faculty = [], isLoading: loadingFaculty } = useFacultyByDept(
+    showFaculty && selected ? selected.code : "",
+  );
 
   const totalEstimatedFaculty = depts.length * 25; // placeholder until analytics endpoint
   const totalEstimatedStudents = depts.length * 360;
@@ -123,9 +139,10 @@ export function Departments() {
               : depts.map((dept) => (
                   <button
                     key={dept.code}
-                    onClick={() =>
-                      setSelected(selected?.code === dept.code ? null : dept)
-                    }
+                    onClick={() => {
+                      setSelected(selected?.code === dept.code ? null : dept);
+                      setShowFaculty(false);
+                    }}
                     className={`rounded border p-4 text-left transition-colors hover:border-[#1C1810] ${
                       selected?.code === dept.code
                         ? "border-[#1C1810] bg-cream-100"
@@ -195,10 +212,30 @@ export function Departments() {
               >
                 {selected.active ? "Deactivate" : "Activate"}
               </Button>
-              <Button size="sm" variant="outline" className="flex-1">
-                View Faculty
+              <Button size="sm" variant="outline" className="flex-1"
+                onClick={() => setShowFaculty(v => !v)}>
+                {showFaculty ? "Hide Faculty" : "View Faculty"}
               </Button>
             </div>
+            {showFaculty && (
+              <div className="mt-4 border-t border-border pt-4">
+                <p className="label-track mb-2">Faculty — {selected.code}</p>
+                {loadingFaculty ? (
+                  <p className="text-xs text-text-muted">Loading…</p>
+                ) : faculty.length === 0 ? (
+                  <p className="text-xs text-text-muted">No faculty records found.</p>
+                ) : (
+                  <div className="grid gap-2">
+                    {faculty.map(f => (
+                      <div key={f.id} className="text-sm">
+                        <p className="font-medium">{f.name}</p>
+                        <p className="text-xs text-text-muted">{f.designation} · {f.email}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="rounded border border-dashed border-border p-8 text-center text-sm text-text-muted self-start">

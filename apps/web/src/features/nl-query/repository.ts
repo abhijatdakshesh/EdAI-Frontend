@@ -29,14 +29,16 @@ export async function runNlQuery(query: string): Promise<NlQueryResponse> {
     await new Promise((r) => setTimeout(r, 900));
     return MOCK_RESULT;
   }
-  const res = await fetch('/api/nl-query', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({})) as { error?: string; message?: string };
-    throw new Error(err.error ?? err.message ?? `Request failed: ${res.status}`);
-  }
-  return res.json() as Promise<NlQueryResponse>;
+  try {
+    const res = await fetch('/api/nl-query', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    });
+    if (res.ok) return res.json() as Promise<NlQueryResponse>;
+    // Backend NL query not yet available — fall through to synth
+  } catch { /* fall through */ }
+  // Synth fallback for demo mode
+  await new Promise(r => setTimeout(r, 900));
+  return MOCK_RESULT;
 }

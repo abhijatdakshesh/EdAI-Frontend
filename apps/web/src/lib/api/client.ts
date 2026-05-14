@@ -31,6 +31,9 @@ const BFF_PREFIXES = [
   "/api/recruiter/analytics",    // KAN-31 analytics synth fallback
   "/api/parent-comms/messages",  // KAN-41 parent send-message synth
   "/api/automation/rules",       // KAN-52 admin automation rule create
+  "/api/courses",                // KAN-59 courses GET+POST+DELETE through BFF
+  "/api/classes",                // KAN-56 classes GET+POST through BFF
+  "/api/departments",            // KAN-57/58 departments GET/POST + faculty panel
 ];
 
 /**
@@ -39,8 +42,9 @@ const BFF_PREFIXES = [
  * needs to handle POST locally because the backend has no create route.
  */
 const BFF_METHOD_PREFIXES: Array<{ path: string; methods: string[] }> = [
-  { path: "/api/classes", methods: ["POST"] },   // KAN-37 add class
-  { path: "/api/courses", methods: ["POST"] },   // KAN-32 add course
+  { path: "/api/classes", methods: ["POST"] },           // KAN-37 add class
+  { path: "/api/courses", methods: ["POST"] },           // KAN-32 add course
+  { path: "/api/ia/submissions/", methods: ["POST"] },   // KAN-63 IA remind synth
 ];
 
 function resolveRequestUrl(path: string, method = "GET"): string {
