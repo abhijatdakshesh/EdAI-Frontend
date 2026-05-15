@@ -54,7 +54,7 @@ export default function HomePage() {
       <nav className="border-b border-border bg-surface/60 backdrop-blur-sm sticky top-0 z-10">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
           <div className="flex items-center gap-3">
-            <Image src="/rv-logo.png" alt="RV Trust" width={36} height={36} className="object-contain invert" />
+            <Image src="/raycraft-logo.png" alt="Raycraft Technologies" width={36} height={36} className="object-contain invert" />
             <div>
               <p className="font-semibold text-sm leading-tight tracking-tight">ED8AI For RV & RSST Institutions</p>
               <p className="text-[10px] text-text-muted leading-tight">RV Educational Institutions </p>
@@ -69,7 +69,7 @@ export default function HomePage() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
         <div className="flex justify-center mb-6">
-          <Image src="/rv-logo.png" alt="RV Trust" width={72} height={72} className="object-contain invert" />
+          <Image src="/raycraft-logo.png" alt="Raycraft Technologies" width={72} height={72} className="object-contain invert" />
         </div>
         <p className="label-track mb-4 text-text-secondary">RV Educational Institutions· Powered by Ed8AI</p>
         <h1 className="display text-5xl sm:text-6xl lg:text-7xl leading-tight mx-auto max-w-3xl">
@@ -78,7 +78,7 @@ export default function HomePage() {
         </h1>
         <span className="ray-rule mx-auto" />
         <p className="mt-4 max-w-xl mx-auto text-text-secondary text-base leading-relaxed">
-          A unified AI-powered ERP for RV Trust institutions — connecting students,
+          A unified AI-powered ERP for Raycraft Technologies institutions — connecting students,
           faculty, administrators, and parents in a single intelligent workspace.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3 flex-wrap">
@@ -164,7 +164,7 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-6 py-12">
         <div className="rounded-xl bg-[#1C1810] text-[#F2EFE9] p-10 text-center">
           <div className="flex justify-center mb-4">
-            <Image src="/rv-logo.png" alt="RV Trust" width={44} height={44} className="object-contain brightness-200" />
+            <Image src="/raycraft-logo.png" alt="Raycraft Technologies" width={44} height={44} className="object-contain brightness-200" />
           </div>
           <p className="label-track mb-3 text-[#F2EFE9]/60">Ready to begin?</p>
           <h2 className="text-3xl font-light mb-2">Sign in to your portal</h2>
@@ -183,12 +183,12 @@ export default function HomePage() {
       <footer className="border-t border-border bg-surface mt-8">
         <div className="mx-auto max-w-6xl px-6 py-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-            {/* RV Trust */}
+            {/* Raycraft Technologies */}
             <div className="flex items-center gap-3">
-              <Image src="/rv-logo.png" alt="RV Trust" width={32} height={32} className="object-contain invert" />
+              <Image src="/raycraft-logo.png" alt="Raycraft Technologies" width={32} height={32} className="object-contain invert" />
               <div>
-                <p className="text-sm font-medium leading-tight">RV Trust AI ERP</p>
-                <p className="text-xs text-text-muted">RV College of Engineering, Bengaluru</p>
+                <p className="text-sm font-medium leading-tight">Raycraft AI ERP</p>
+                <p className="text-xs text-text-muted">Raycraft Technologies, Bengaluru</p>
               </div>
             </div>
 
@@ -204,7 +204,7 @@ export default function HomePage() {
           {/* Raycraft credit */}
           <div className="mt-6 pt-5 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
             <p className="text-xs text-text-muted">
-              © {new Date().getFullYear()} RV Trust. All rights reserved.
+              © {new Date().getFullYear()} Raycraft Technologies. All rights reserved.
             </p>
             <div className="flex items-center gap-2">
               <span className="text-xs text-text-muted">Designed &amp; developed by</span>

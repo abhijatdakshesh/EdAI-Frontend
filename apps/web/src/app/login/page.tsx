@@ -57,7 +57,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background p-6">
       <section className="w-full max-w-md rounded-lg border border-border bg-surface p-8 shadow">
-        <p className="label-track">Ed8AI · RV Trust</p>
+        <p className="label-track">Ed8AI · Raycraft Technologies</p>
         <h1 className="text-4xl">Sign In</h1>
         <span className="ray-rule ml-0" />
 

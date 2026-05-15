@@ -29,7 +29,7 @@ export const POST = auth(async (req) => {
         parentPhone: body.parentPhone,
         language: body.language ?? 'en',
         callType: body.callType ?? 'ABSENT_CALL',
-        institutionId: body.institutionId ?? 'RVCE',
+        institutionId: body.institutionId ?? 'Raycraft',
         studentContext: body.studentContext ?? { name: body.studentId },
       }),
     });

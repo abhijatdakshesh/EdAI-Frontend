@@ -66,7 +66,7 @@ export function ParentFees() {
           amount: result.amount * 100,
           currency: result.currency,
           order_id: result.orderId,
-          name: "RV Trust ERP",
+          name: "Raycraft Technologies ERP",
           description: `Fee Payment — ${children.find((c) => c.usn === activeUsn)?.name ?? activeUsn}`,
           prefill: { email: session?.user?.email ?? "" },
           handler: async (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {

@@ -50,7 +50,7 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 md:grid-cols-[240px_1fr]">
         <aside className="border-r border-border bg-surface px-4 py-6 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
           <Link href={homeRoute} className="block">
-            <p className="label-track">RV Trust</p>
+            <p className="label-track">Raycraft Technologies</p>
             <h2 className="mt-2 text-3xl">{portalName}</h2>
           </Link>
           <span className="ray-rule ml-0" />

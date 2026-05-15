@@ -68,7 +68,7 @@ export const GET = auth(async (req) => {
       { stage: 'Joined',     count: totalJoined,       conversionRate: Math.round((totalJoined * 100) / totalApplied) },
     ],
     sourceRoi: [
-      { college: 'RVCE',          hires: Math.max(6, Math.round(totalJoined * 0.5)),  qualityScore: 88, costPerHire: 12_000 },
+      { college: 'Raycraft',          hires: Math.max(6, Math.round(totalJoined * 0.5)),  qualityScore: 88, costPerHire: 12_000 },
       { college: 'MSRIT',         hires: Math.max(2, Math.round(totalJoined * 0.18)), qualityScore: 91, costPerHire: 14_000 },
       { college: 'BMS',           hires: Math.max(1, Math.round(totalJoined * 0.12)), qualityScore: 82, costPerHire: 9_500  },
       { college: 'BIT Bengaluru', hires: Math.max(1, Math.round(totalJoined * 0.08)), qualityScore: 79, costPerHire: 8_000  },
@@ -77,7 +77,7 @@ export const GET = auth(async (req) => {
     aiInsights: [
       `${myJobs.length || 4} active job postings · ${totalApplied} total applicants this quarter.`,
       `Offer-to-join rate is ${Math.round((totalJoined * 100) / Math.max(1, totalOffered))}% — ${totalJoined > totalOffered * 0.7 ? 'on benchmark' : 'consider higher CTC for top picks'}.`,
-      'RVCE delivers the best quality-per-hire — prioritise it for next quarter.',
+      'Raycraft delivers the best quality-per-hire — prioritise it for next quarter.',
       'ML/AI and Go are critically scarce. Consider adjacency hiring (e.g. Python → ML).',
     ],
     period: 'Current Placement Season',

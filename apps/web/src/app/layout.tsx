@@ -6,8 +6,8 @@ import { auth } from "@/auth";
 import ChatbotWidget from "@/features/chatbot/chatbot-widget";
 
 export const metadata: Metadata = {
-  title: "RV Trust AI ERP",
-  description: "Faculty and admin workspace for RV Trust AI ERP"
+  title: "Raycraft AI ERP",
+  description: "Faculty and admin workspace for Raycraft AI ERP"
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {

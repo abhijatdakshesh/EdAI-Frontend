@@ -128,7 +128,7 @@ export function initRecruiterDrivesForUser(recruiterId: string): void {
       jobTitle: 'Software Engineer',
       driveTier: 'DREAM',
       targetColleges: [
-        { collegeId: 'rvce',  collegeName: 'RVCE',  city: 'Bengaluru', tier: 1, tpoName: 'Dr. Suresh Kumar',  tpoEmail: 'tpo@rvce.edu',     eligibleStudentCount: 142, slotDate: '2026-07-15', slotConfirmed: true  },
+        { collegeId: 'rvce',  collegeName: 'Raycraft',  city: 'Bengaluru', tier: 1, tpoName: 'Dr. Suresh Kumar',  tpoEmail: 'tpo@rvce.edu',     eligibleStudentCount: 142, slotDate: '2026-07-15', slotConfirmed: true  },
         { collegeId: 'msrit', collegeName: 'MSRIT', city: 'Bengaluru', tier: 1, tpoName: 'Prof. Anitha Rao',  tpoEmail: 'placement@msrit.edu', eligibleStudentCount: 98,  slotDate: '2026-07-16', slotConfirmed: false },
       ],
       driveDate: '2026-07-15',

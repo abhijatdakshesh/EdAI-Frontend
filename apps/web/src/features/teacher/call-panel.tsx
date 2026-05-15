@@ -33,7 +33,7 @@ export function ManualCallPanel() {
         studentUsn: student.usn,
         parentPhone: student.parentPhone,
         reason: "LOW_ATTENDANCE",
-        language: "kn", // default Kannada for RV Trust
+        language: "kn", // default Kannada for Raycraft Technologies
       },
       { onSettled: () => setTriggering(null) },
     );
@@ -42,7 +42,7 @@ export function ManualCallPanel() {
   function handleSms(student: { usn: string; name: string; parentPhone: string; pct: number }) {
     sendSms.mutate({
       to: student.parentPhone,
-      message: `Dear Parent, ${student.name}'s attendance has dropped to ${student.pct}%. Please ensure regular attendance. Minimum 75% required. — RV College`,
+      message: `Dear Parent, ${student.name}'s attendance has dropped to ${student.pct}%. Please ensure regular attendance. Minimum 75% required. — Raycraft`,
       studentUsn: student.usn,
     });
   }

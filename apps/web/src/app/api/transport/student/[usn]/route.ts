@@ -12,12 +12,12 @@ export const GET = auth(async (req) => {
   // allocation found." despite a 200 response.
   return NextResponse.json({
     studentUsn: usn,
-    routeName: 'Mysuru Road – Banashankari – RVCE',
+    routeName: 'Mysuru Road – Banashankari – Raycraft',
     busNumber: 'KA-04-MA-1428',
     driver: 'Mr. Lokesh',
     driverContact: '+91 98800 11223',
     morningPickup: 'Banashankari Bus Stand · 07:45 AM',
-    eveningDrop: 'RVCE Main Gate · 04:30 PM',
+    eveningDrop: 'Raycraft Main Gate · 04:30 PM',
     feesStatus: 'PAID',
   });
 });

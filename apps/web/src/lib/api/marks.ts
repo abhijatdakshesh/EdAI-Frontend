@@ -70,7 +70,7 @@ export const marksKeys = {
 // ─── Mock data (USE_MOCKS=true) ───────────────────────────────────────────────
 
 const MOCK_STUDENT_RESULTS: StudentResults = {
-  usn: "1RVCE01",
+  usn: "1RC21CS001",
   name: "Arjun Sharma",
   cgpa: 8.42,
   semesters: [

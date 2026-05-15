@@ -21,7 +21,7 @@ export const mockAttendanceDashboard: AttendanceDashboardResponse = {
   campuses: [
     {
       campusId: "rvce-main",
-      campusName: "RVCE Main Campus",
+      campusName: "Raycraft HQ Campus",
       date: "2026-04-18",
       totalStudents: 4210,
       presentCount: 3912,
@@ -44,7 +44,7 @@ export const mockAttendanceDashboard: AttendanceDashboardResponse = {
     {
       studentId: "STU1044",
       studentName: "A. Nair",
-      campusName: "RVCE Main Campus",
+      campusName: "Raycraft HQ Campus",
       streakAbsentDays: 4,
       guardianNotified: true
     },

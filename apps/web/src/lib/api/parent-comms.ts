@@ -78,7 +78,7 @@ export const parentCommsKeys = {
 const MOCK_CALLS: AiCallRecord[] = [
   {
     id: "mock-call-1",
-    studentUsn: "1RVCE01",
+    studentUsn: "1RC21CS001",
     studentName: "Arjun Sharma",
     parentPhone: "+919876543210",
     parentId: "dev-parent",

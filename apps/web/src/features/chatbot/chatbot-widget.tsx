@@ -286,7 +286,7 @@ export default function ChatbotWidget() {
     setState(s => {
       if (s.messages.length === 0) {
         const greeting = !session
-          ? "Welcome to RV College of Engineering! I can help with general college info — programs, departments, admissions, placements, and campus life. Log in for personal academic data."
+          ? "Welcome to Raycraft Technologies! I can help with general college info — programs, departments, admissions, placements, and campus life. Log in for personal academic data."
           : role === 'TEACHER' || role === 'FACULTY'
           ? "Hello! I'm your Ed8AI assistant. Ask me about your schedule, at-risk students, or attendance data."
           : role === 'PARENT'

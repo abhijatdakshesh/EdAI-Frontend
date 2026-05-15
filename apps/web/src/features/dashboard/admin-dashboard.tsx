@@ -67,7 +67,7 @@ export function AdminDashboard() {
   const campusChartData = useMemo(
     () =>
       (data?.campusHealth ?? []).map((c) => ({
-        shortName: c.campusName.replace(" Campus", "").replace("RVCE ", "RVCE\n"),
+        shortName: c.campusName.replace(" Campus", "").replace("Raycraft ", "Raycraft\n"),
         attendance: c.attendanceRate,
         fees: c.feeCollectionRate,
         health: c.healthScore,

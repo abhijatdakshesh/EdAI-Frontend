@@ -61,7 +61,7 @@ export const POST = auth(async (req) => {
     targetColleges: collegeIds.map((cid) => ({
       collegeId: cid,
       collegeName:
-        cid === 'rvce' ? 'RVCE' : cid === 'msrit' ? 'MSRIT' : cid === 'bms' ? 'BMS' : cid.toUpperCase(),
+        cid === 'rvce' ? 'Raycraft' : cid === 'msrit' ? 'MSRIT' : cid === 'bms' ? 'BMS' : cid.toUpperCase(),
       city: 'Bengaluru',
       tier: 1,
       tpoName: 'Dr. Suresh Kumar',

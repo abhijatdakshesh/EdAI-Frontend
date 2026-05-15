@@ -249,16 +249,16 @@ const MOCK_JOBS: RecruiterJob[] = [
 ];
 
 const MOCK_APPLICANTS: Applicant[] = [
-  { applicationId: "app-1", studentUsn: "1RV21CS001", name: "Arjun Sharma", department: "CSE", semester: 8, cgpa: 8.9, skills: ["Java", "Spring"], placementScore: 82, percentile: 91, status: "APPLIED", appliedAt: "2026-05-02", collegeId: "rvce", collegeName: "RVCE", activeBacklogs: 0, historicalBacklogs: 0 },
-  { applicationId: "app-2", studentUsn: "1RV21CS047", name: "Priya Patel", department: "CSE", semester: 8, cgpa: 9.2, skills: ["Java", "Python", "SQL"], placementScore: 91, percentile: 97, status: "SHORTLISTED", appliedAt: "2026-05-01", collegeId: "rvce", collegeName: "RVCE", activeBacklogs: 0, historicalBacklogs: 0 },
-  { applicationId: "app-3", studentUsn: "1RV21IS012", name: "Rohit Kumar", department: "ISE", semester: 8, cgpa: 7.8, skills: ["Java", "React"], placementScore: 74, percentile: 82, status: "APPLIED", appliedAt: "2026-05-03", collegeId: "rvce", collegeName: "RVCE", activeBacklogs: 0, historicalBacklogs: 1 },
+  { applicationId: "app-1", studentUsn: "1RV21CS001", name: "Arjun Sharma", department: "CSE", semester: 8, cgpa: 8.9, skills: ["Java", "Spring"], placementScore: 82, percentile: 91, status: "APPLIED", appliedAt: "2026-05-02", collegeId: "rvce", collegeName: "Raycraft", activeBacklogs: 0, historicalBacklogs: 0 },
+  { applicationId: "app-2", studentUsn: "1RV21CS047", name: "Priya Patel", department: "CSE", semester: 8, cgpa: 9.2, skills: ["Java", "Python", "SQL"], placementScore: 91, percentile: 97, status: "SHORTLISTED", appliedAt: "2026-05-01", collegeId: "rvce", collegeName: "Raycraft", activeBacklogs: 0, historicalBacklogs: 0 },
+  { applicationId: "app-3", studentUsn: "1RV21IS012", name: "Rohit Kumar", department: "ISE", semester: 8, cgpa: 7.8, skills: ["Java", "React"], placementScore: 74, percentile: 82, status: "APPLIED", appliedAt: "2026-05-03", collegeId: "rvce", collegeName: "Raycraft", activeBacklogs: 0, historicalBacklogs: 1 },
 ];
 
 const MOCK_CANDIDATES: Candidate[] = [
-  { studentId: "1RV21CS001", name: "Arjun Sharma", email: "candidate1@example.com", department: "CSE", semester: 8, cgpa: 8.9, skills: ["Java", "Python", "React"], placementScore: 82, percentile: 91, companyMatches: 4, collegeId: "rvce", collegeName: "RVCE", consentedToRecruiterDiscovery: true, consentTimestamp: "2026-01-15T10:00:00Z" },
-  { studentId: "1RV21CS047", name: "Priya Patel", email: "candidate2@example.com", department: "CSE", semester: 8, cgpa: 9.2, skills: ["Java", "ML", "SQL"], placementScore: 91, percentile: 97, companyMatches: 7, collegeId: "rvce", collegeName: "RVCE", consentedToRecruiterDiscovery: true, consentTimestamp: "2026-01-15T10:00:00Z" },
-  { studentId: "1RV21IS012", name: "Rohit Kumar", email: "candidate3@example.com", department: "ISE", semester: 8, cgpa: 7.8, skills: ["Java", "Spring", "React"], placementScore: 74, percentile: 82, companyMatches: 3, collegeId: "rvce", collegeName: "RVCE", consentedToRecruiterDiscovery: true, consentTimestamp: "2026-01-15T10:00:00Z" },
-  { studentId: "1RV21ECE024", name: "Sneha Reddy", email: "candidate4@example.com", department: "ECE", semester: 8, cgpa: 8.4, skills: ["Embedded C", "Python", "VLSI"], placementScore: 78, percentile: 87, companyMatches: 2, collegeId: "rvce", collegeName: "RVCE", consentedToRecruiterDiscovery: false },
+  { studentId: "1RV21CS001", name: "Arjun Sharma", email: "candidate1@example.com", department: "CSE", semester: 8, cgpa: 8.9, skills: ["Java", "Python", "React"], placementScore: 82, percentile: 91, companyMatches: 4, collegeId: "rvce", collegeName: "Raycraft", consentedToRecruiterDiscovery: true, consentTimestamp: "2026-01-15T10:00:00Z" },
+  { studentId: "1RV21CS047", name: "Priya Patel", email: "candidate2@example.com", department: "CSE", semester: 8, cgpa: 9.2, skills: ["Java", "ML", "SQL"], placementScore: 91, percentile: 97, companyMatches: 7, collegeId: "rvce", collegeName: "Raycraft", consentedToRecruiterDiscovery: true, consentTimestamp: "2026-01-15T10:00:00Z" },
+  { studentId: "1RV21IS012", name: "Rohit Kumar", email: "candidate3@example.com", department: "ISE", semester: 8, cgpa: 7.8, skills: ["Java", "Spring", "React"], placementScore: 74, percentile: 82, companyMatches: 3, collegeId: "rvce", collegeName: "Raycraft", consentedToRecruiterDiscovery: true, consentTimestamp: "2026-01-15T10:00:00Z" },
+  { studentId: "1RV21ECE024", name: "Sneha Reddy", email: "candidate4@example.com", department: "ECE", semester: 8, cgpa: 8.4, skills: ["Embedded C", "Python", "VLSI"], placementScore: 78, percentile: 87, companyMatches: 2, collegeId: "rvce", collegeName: "Raycraft", consentedToRecruiterDiscovery: false },
 ];
 
 const MOCK_OFFER_PREDICTIONS: OfferPrediction[] = [
@@ -278,7 +278,7 @@ const MOCK_ANALYTICS: RecruiterAnalytics = {
     { stage: "Joined", count: 12, conversionRate: 4 },
   ],
   sourceRoi: [
-    { college: "RVCE", hires: 6, qualityScore: 88, costPerHire: 12000 },
+    { college: "Raycraft", hires: 6, qualityScore: 88, costPerHire: 12000 },
     { college: "RVPU", hires: 3, qualityScore: 82, costPerHire: 9500 },
     { college: "BIT Bengaluru", hires: 2, qualityScore: 79, costPerHire: 8000 },
     { college: "MSRIT", hires: 1, qualityScore: 91, costPerHire: 14000 },
@@ -295,7 +295,7 @@ const MOCK_ANALYTICS: RecruiterAnalytics = {
   ],
   aiInsights: [
     "Your offer-to-join rate (67%) is 12% below market — consider increasing CTC by ₹1–2 LPA.",
-    "RVCE delivers the highest quality-per-hire. Prioritise it for next quarter's drives.",
+    "Raycraft delivers the highest quality-per-hire. Prioritise it for next quarter's drives.",
     "ML/AI, Go, and Rust are critically scarce. Consider adjacency hiring for these roles.",
     "Your time-to-fill averages 28 days — 4 days above benchmark. Parallel shortlisting would help.",
   ],
@@ -726,7 +726,7 @@ const MOCK_DRIVES: CampusDrive[] = [
   {
     id: "drive-1", jobId: "job-1", jobTitle: "Software Engineer", driveTier: "DREAM",
     targetColleges: [
-      { collegeId: "rvce", collegeName: "RVCE", city: "Bengaluru", tier: 1, tpoName: "Dr. Suresh Kumar", tpoEmail: "tpo@rvce.edu", eligibleStudentCount: 142, slotDate: "2026-07-15", slotConfirmed: true },
+      { collegeId: "rvce", collegeName: "Raycraft", city: "Bengaluru", tier: 1, tpoName: "Dr. Suresh Kumar", tpoEmail: "tpo@rvce.edu", eligibleStudentCount: 142, slotDate: "2026-07-15", slotConfirmed: true },
       { collegeId: "msrit", collegeName: "MSRIT", city: "Bengaluru", tier: 1, tpoName: "Prof. Anitha Rao", tpoEmail: "placement@msrit.edu", eligibleStudentCount: 98, slotDate: "2026-07-16", slotConfirmed: false },
     ],
     driveDate: "2026-07-15", status: "CONFIRMED",
@@ -736,7 +736,7 @@ const MOCK_DRIVES: CampusDrive[] = [
   {
     id: "drive-2", jobId: "job-2", jobTitle: "Frontend Developer", driveTier: "SUPER_DREAM",
     targetColleges: [
-      { collegeId: "rvce", collegeName: "RVCE", city: "Bengaluru", tier: 1, tpoName: "Dr. Suresh Kumar", tpoEmail: "tpo@rvce.edu", eligibleStudentCount: 54, slotConfirmed: true },
+      { collegeId: "rvce", collegeName: "Raycraft", city: "Bengaluru", tier: 1, tpoName: "Dr. Suresh Kumar", tpoEmail: "tpo@rvce.edu", eligibleStudentCount: 54, slotConfirmed: true },
     ],
     status: "DRAFT",
     totalEligible: 54, totalRegistered: 0, totalOffered: 0,
@@ -745,14 +745,14 @@ const MOCK_DRIVES: CampusDrive[] = [
 ];
 
 const MOCK_PRE_JOIN: PreJoinCandidate[] = [
-  { usn: "1RV21CS001", name: "Arjun Sharma", college: "RVCE", branch: "CSE", offerCTC: 8.5, joiningDate: "2026-08-01", joiningProbability: 78, riskLevel: "LOW", riskReasons: [], lastEngagedAt: "2026-04-28", daysSinceLastContact: 3, skillBridgeEnrolled: true, documentsComplete: true, buddyAssigned: true, parentCommunicationSent: true },
-  { usn: "1RV21CS047", name: "Priya Patel", college: "RVCE", branch: "CSE", offerCTC: 12, joiningDate: "2026-08-01", joiningProbability: 42, riskLevel: "HIGH", riskReasons: ["Competing offer detected at ₹15 LPA", "No response in 12 days", "LinkedIn shows active job searching"], lastEngagedAt: "2026-04-19", daysSinceLastContact: 12, skillBridgeEnrolled: false, documentsComplete: false, buddyAssigned: false, parentCommunicationSent: false },
-  { usn: "1RV21IS012", name: "Rohit Kumar", college: "RVCE", branch: "ISE", offerCTC: 6.5, joiningDate: "2026-07-15", joiningProbability: 91, riskLevel: "LOW", riskReasons: [], lastEngagedAt: "2026-05-01", daysSinceLastContact: 0, skillBridgeEnrolled: true, documentsComplete: true, buddyAssigned: true, parentCommunicationSent: true },
-  { usn: "1RV21ECE024", name: "Sneha Reddy", college: "RVCE", branch: "ECE", offerCTC: 7.5, joiningDate: "2026-08-01", joiningProbability: 58, riskLevel: "MEDIUM", riskReasons: ["Family pressure to pursue higher studies", "Not enrolled in skill bridge"], lastEngagedAt: "2026-04-22", daysSinceLastContact: 9, skillBridgeEnrolled: false, documentsComplete: true, buddyAssigned: false, parentCommunicationSent: false },
+  { usn: "1RV21CS001", name: "Arjun Sharma", college: "Raycraft", branch: "CSE", offerCTC: 8.5, joiningDate: "2026-08-01", joiningProbability: 78, riskLevel: "LOW", riskReasons: [], lastEngagedAt: "2026-04-28", daysSinceLastContact: 3, skillBridgeEnrolled: true, documentsComplete: true, buddyAssigned: true, parentCommunicationSent: true },
+  { usn: "1RV21CS047", name: "Priya Patel", college: "Raycraft", branch: "CSE", offerCTC: 12, joiningDate: "2026-08-01", joiningProbability: 42, riskLevel: "HIGH", riskReasons: ["Competing offer detected at ₹15 LPA", "No response in 12 days", "LinkedIn shows active job searching"], lastEngagedAt: "2026-04-19", daysSinceLastContact: 12, skillBridgeEnrolled: false, documentsComplete: false, buddyAssigned: false, parentCommunicationSent: false },
+  { usn: "1RV21IS012", name: "Rohit Kumar", college: "Raycraft", branch: "ISE", offerCTC: 6.5, joiningDate: "2026-07-15", joiningProbability: 91, riskLevel: "LOW", riskReasons: [], lastEngagedAt: "2026-05-01", daysSinceLastContact: 0, skillBridgeEnrolled: true, documentsComplete: true, buddyAssigned: true, parentCommunicationSent: true },
+  { usn: "1RV21ECE024", name: "Sneha Reddy", college: "Raycraft", branch: "ECE", offerCTC: 7.5, joiningDate: "2026-08-01", joiningProbability: 58, riskLevel: "MEDIUM", riskReasons: ["Family pressure to pursue higher studies", "Not enrolled in skill bridge"], lastEngagedAt: "2026-04-22", daysSinceLastContact: 9, skillBridgeEnrolled: false, documentsComplete: true, buddyAssigned: false, parentCommunicationSent: false },
 ];
 
 const MOCK_TPO_APPROVALS: TpoCoApproval[] = [
-  { driveId: "drive-1", collegeId: "rvce", collegeName: "RVCE", tpoName: "Dr. Suresh Kumar", shortlistCount: 22, approvalStatus: "APPROVED", eligibilityFlags: [], tpoNotes: "All candidates verified — no active backlogs, attendance above 75%.", updatedAt: "2026-05-01" },
+  { driveId: "drive-1", collegeId: "rvce", collegeName: "Raycraft", tpoName: "Dr. Suresh Kumar", shortlistCount: 22, approvalStatus: "APPROVED", eligibilityFlags: [], tpoNotes: "All candidates verified — no active backlogs, attendance above 75%.", updatedAt: "2026-05-01" },
   { driveId: "drive-1", collegeId: "msrit", collegeName: "MSRIT", tpoName: "Prof. Anitha Rao", shortlistCount: 14, approvalStatus: "PENDING", eligibilityFlags: ["2 candidates have year-down history — needs manual review"], updatedAt: "2026-04-30" },
 ];
 
@@ -803,7 +803,7 @@ export function useCollegePlacementPolicy(collegeId: string) {
   return useQuery({
     queryKey: ["recruiter", "colleges", collegeId, "policy"],
     queryFn: () => USE_MOCKS
-      ? Promise.resolve({ collegeId, collegeName: "RVCE", poolCTCCap: 6, dreamCTCMin: 6, superDreamCTCMin: 10, maxBacklogsAllowed: 0, activeBacklogsAllowed: false, oneOfferPerStudent: true, tierLockingEnabled: true } as CollegePlacementPolicy)
+      ? Promise.resolve({ collegeId, collegeName: "Raycraft", poolCTCCap: 6, dreamCTCMin: 6, superDreamCTCMin: 10, maxBacklogsAllowed: 0, activeBacklogsAllowed: false, oneOfferPerStudent: true, tierLockingEnabled: true } as CollegePlacementPolicy)
       : apiGet<CollegePlacementPolicy>(`/api/recruiter/colleges/${collegeId}/placement-policy`),
     enabled: !!collegeId,
   });

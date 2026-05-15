@@ -67,7 +67,7 @@ const SAMPLE_STUDENTS: Student[] = [
  * Teacher report generation — BFF (KAN-74).
  * Produces per-student parent letters in the Report-Generator format
  * (https://github.com/abhijatdakshesh/Report-Generator) using pdf-lib.
- * Layout: RVCE header, branch + test heading, date, "To Mr/Mrs <father>",
+ * Layout: Raycraft header, branch + test heading, date, "To Mr/Mrs <father>",
  * body paragraph, table of subjects with classes/marks, signature line.
  */
 export const POST = auth(async (req) => {
@@ -191,9 +191,9 @@ function drawStudentPage(
   const { width } = page.getSize();
   let y = 760;
 
-  // RVCE header strip (since we don't have the PNG, draw a styled header band)
+  // Raycraft header strip (since we don't have the PNG, draw a styled header band)
   page.drawRectangle({ x: 0, y: 700, width, height: 60, color: rgb(0.11, 0.09, 0.06) });
-  page.drawText('RV COLLEGE OF ENGINEERING', { x: 50, y: 735, size: 18, font: timesBold, color: rgb(1, 0.96, 0.86) });
+  page.drawText('RAYCRAFT TECHNOLOGIES', { x: 50, y: 735, size: 18, font: timesBold, color: rgb(1, 0.96, 0.86) });
   page.drawText('Autonomous Institution affiliated to VTU, Approved by AICTE', { x: 50, y: 718, size: 9, font: times, color: rgb(0.95, 0.92, 0.83) });
   page.drawText('Mysuru Road, Bengaluru — 560059', { x: 50, y: 706, size: 9, font: times, color: rgb(0.95, 0.92, 0.83) });
 
@@ -261,8 +261,8 @@ function drawStudentPage(
   page.drawText('Counsellor / HOD', { x: 50, y, size: 10, font: timesBold });
   page.drawText('Principal', { x: width - 130, y, size: 10, font: timesBold });
   y -= 14;
-  page.drawText('Dept. of CSE, RVCE', { x: 50, y, size: 9, font: times });
-  page.drawText('RV College of Engineering', { x: width - 130, y, size: 9, font: times });
+  page.drawText('Dept. of CSE, Raycraft', { x: 50, y, size: 9, font: times });
+  page.drawText('Raycraft Technologies', { x: width - 130, y, size: 9, font: times });
 }
 
 function drawCentered(

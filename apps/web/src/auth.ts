@@ -1,5 +1,5 @@
 /**
- * NextAuth v5 configuration for Ed8AI / RV Trust.
+ * NextAuth v5 configuration for Ed8AI / Raycraft Technologies.
  *
  * Authentication flow:
  *   1. User submits email + password on /login.

@@ -65,7 +65,7 @@ export const mockDashboard: DashboardResponse = {
   campusHealth: [
     {
       campusId: "rvce-main",
-      campusName: "RVCE Main Campus",
+      campusName: "Raycraft HQ Campus",
       attendanceRate: 92.9,
       feeCollectionRate: 88.4,
       atRiskStudents: 41,

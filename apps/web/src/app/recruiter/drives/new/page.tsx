@@ -19,7 +19,7 @@ const TIERS: { id: DriveTier; label: string; desc: string; ctcRange: string }[] 
 
 // Static college list for demo — in production, fetched from /recruiter/colleges
 const AVAILABLE_COLLEGES = [
-  { id: "rvce", name: "RVCE", city: "Bengaluru", tier: 1, eligible: 142 },
+  { id: "rvce", name: "Raycraft", city: "Bengaluru", tier: 1, eligible: 142 },
   { id: "msrit", name: "MSRIT", city: "Bengaluru", tier: 1, eligible: 98 },
   { id: "bit_bengaluru", name: "BIT Bengaluru", city: "Bengaluru", tier: 2, eligible: 87 },
   { id: "rvpu", name: "RV Polytechnic", city: "Bengaluru", tier: 2, eligible: 64 },
