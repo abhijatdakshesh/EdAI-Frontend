@@ -8,32 +8,76 @@ const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localho
 interface ReportRequest {
   reportType: string;
   format: 'pdf' | 'excel';
+  branch?: string;
+  test?: string;
+  semester?: string;
   classId?: string;
   period?: string;
 }
 
-const SAMPLE_ROWS: Array<Record<string, string | number>> = [
-  { USN: '1RV21CS001', Name: 'Arjun Kumar', Attendance: 82, IA1: 24, IA2: 22, Total: 46 },
-  { USN: '1RV21CS002', Name: 'Riya Patel', Attendance: 76, IA1: 20, IA2: 19, Total: 39 },
-  { USN: '1RV21CS003', Name: 'Priya Sharma', Attendance: 91, IA1: 27, IA2: 26, Total: 53 },
-  { USN: '1RV21CS004', Name: 'Rahul Verma', Attendance: 68, IA1: 18, IA2: 17, Total: 35 },
-  { USN: '1RV21CS005', Name: 'Anjali Reddy', Attendance: 85, IA1: 25, IA2: 24, Total: 49 },
+interface Subject {
+  name: string;
+  classesHeld: number;
+  classesAttended: number;
+  testMarks: number;
+  assignment: number;
+}
+
+interface Student {
+  name: string;
+  usn: string;
+  father: string;
+  subjects: Subject[];
+}
+
+const SAMPLE_STUDENTS: Student[] = [
+  {
+    name: 'Arjun Kumar', usn: '1RV21CS001', father: 'Ramesh Kumar',
+    subjects: [
+      { name: 'Database Management Systems', classesHeld: 42, classesAttended: 38, testMarks: 24, assignment: 9 },
+      { name: 'Operating Systems', classesHeld: 40, classesAttended: 30, testMarks: 22, assignment: 8 },
+      { name: 'Computer Networks', classesHeld: 38, classesAttended: 35, testMarks: 26, assignment: 10 },
+      { name: 'Software Engineering', classesHeld: 36, classesAttended: 33, testMarks: 25, assignment: 9 },
+      { name: 'Theory of Computation', classesHeld: 40, classesAttended: 27, testMarks: 18, assignment: 7 },
+    ],
+  },
+  {
+    name: 'Riya Patel', usn: '1RV21CS002', father: 'Suresh Patel',
+    subjects: [
+      { name: 'Database Management Systems', classesHeld: 42, classesAttended: 32, testMarks: 20, assignment: 8 },
+      { name: 'Operating Systems', classesHeld: 40, classesAttended: 28, testMarks: 19, assignment: 7 },
+      { name: 'Computer Networks', classesHeld: 38, classesAttended: 30, testMarks: 22, assignment: 9 },
+      { name: 'Software Engineering', classesHeld: 36, classesAttended: 30, testMarks: 21, assignment: 8 },
+      { name: 'Theory of Computation', classesHeld: 40, classesAttended: 25, testMarks: 17, assignment: 6 },
+    ],
+  },
+  {
+    name: 'Priya Sharma', usn: '1RV21CS003', father: 'Anil Sharma',
+    subjects: [
+      { name: 'Database Management Systems', classesHeld: 42, classesAttended: 40, testMarks: 27, assignment: 10 },
+      { name: 'Operating Systems', classesHeld: 40, classesAttended: 38, testMarks: 26, assignment: 10 },
+      { name: 'Computer Networks', classesHeld: 38, classesAttended: 36, testMarks: 28, assignment: 10 },
+      { name: 'Software Engineering', classesHeld: 36, classesAttended: 35, testMarks: 27, assignment: 9 },
+      { name: 'Theory of Computation', classesHeld: 40, classesAttended: 36, testMarks: 25, assignment: 9 },
+    ],
+  },
 ];
 
 /**
  * Teacher report generation — BFF (KAN-74).
- * Tries backend first; on failure returns a proper PDF (pdf-lib) or XLSX
- * (xlsx package) so the demo flow yields a real, well-formed file that
- * opens cleanly in Adobe / Preview / Excel.
+ * Produces per-student parent letters in the Report-Generator format
+ * (https://github.com/abhijatdakshesh/Report-Generator) using pdf-lib.
+ * Layout: RVCE header, branch + test heading, date, "To Mr/Mrs <father>",
+ * body paragraph, table of subjects with classes/marks, signature line.
  */
 export const POST = auth(async (req) => {
   if (!req.auth?.accessToken) {
     return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
   }
-  let body: ReportRequest = { reportType: 'Report', format: 'pdf' };
+  let body: ReportRequest = { reportType: 'Attendance Report', format: 'pdf' };
   try { body = { ...body, ...(await req.json()) }; } catch { /* ignore */ }
 
-  // Try backend first
+  // Try backend report engine first
   try {
     const url = new URL(req.url);
     const res = await fetch(`${IDENTITY_SERVICE_URL}${url.pathname}`, {
@@ -56,19 +100,8 @@ export const POST = auth(async (req) => {
     }
   } catch { /* fall through to synth */ }
 
-  // Synth fallback — proper PDF or XLSX
   if (body.format === 'excel') {
-    const wb = XLSX.utils.book_new();
-    const headerSheet = XLSX.utils.aoa_to_sheet([
-      [body.reportType],
-      [`Generated: ${new Date().toLocaleString('en-IN')}`],
-      [`Class: ${body.classId ?? 'All'}`],
-      [`Period: ${body.period ?? 'Current'}`],
-      [],
-    ]);
-    XLSX.utils.sheet_add_json(headerSheet, SAMPLE_ROWS, { origin: 'A6' });
-    XLSX.utils.book_append_sheet(wb, headerSheet, 'Report');
-    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+    const buf = buildExcel(body);
     return new NextResponse(new Uint8Array(buf), {
       status: 200,
       headers: {
@@ -100,36 +133,203 @@ function filenameFor(body: ReportRequest): string {
   return `${slug}-${new Date().toISOString().slice(0, 10)}.${ext}`;
 }
 
+function buildExcel(body: ReportRequest): Buffer {
+  const wb = XLSX.utils.book_new();
+  const header: (string | number)[] = ['Student Name', 'USN', 'Father Name', 'Parent Email', 'Counsellor Email', 'Remarks'];
+  // Add subject column trio per subject (max 5)
+  const maxSubs = 5;
+  for (let i = 0; i < maxSubs; i++) {
+    header.push(`Subject ${i + 1}`, 'Test Marks (Max 30)', 'Assignment (Max 10)', 'Classes Held', 'Classes Attended');
+  }
+  const headerRows: (string | number)[][] = [header];
+  for (const s of SAMPLE_STUDENTS) {
+    const row: (string | number)[] = [s.name, s.usn, s.father, `${s.usn.toLowerCase()}@parent.rvce.edu`, 'counsellor@rvce.edu', ''];
+    for (let i = 0; i < maxSubs; i++) {
+      const sub = s.subjects[i];
+      if (sub) row.push(sub.name, sub.testMarks, sub.assignment, sub.classesHeld, sub.classesAttended);
+      else row.push('', '', '', '', '');
+    }
+    headerRows.push(row);
+  }
+  const sheet = XLSX.utils.aoa_to_sheet(headerRows);
+  XLSX.utils.book_append_sheet(wb, sheet, 'Attendance');
+  return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }) as Buffer;
+}
+
 async function buildPdf(body: ReportRequest): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([595, 842]); // A4
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  const timesBold = await doc.embedFont(StandardFonts.TimesRomanBold);
+  const times = await doc.embedFont(StandardFonts.TimesRoman);
+  const helv = await doc.embedFont(StandardFonts.Helvetica);
 
-  let y = 800;
-  page.drawText(body.reportType, { x: 50, y, size: 20, font: bold, color: rgb(0.11, 0.09, 0.06) });
-  y -= 24;
-  page.drawText(`Generated: ${new Date().toLocaleString('en-IN')}`, { x: 50, y, size: 10, font, color: rgb(0.42, 0.39, 0.35) });
-  y -= 14;
-  page.drawText(`Class: ${body.classId ?? 'All'}    Period: ${body.period ?? 'Current'}`, { x: 50, y, size: 10, font, color: rgb(0.42, 0.39, 0.35) });
-  y -= 30;
+  const branch = body.branch ?? 'COMPUTER SCIENCE & ENGINEERING';
+  const test = body.test ?? body.reportType.toUpperCase();
+  const semester = body.semester ?? 'V SEM';
+  const today = new Date();
+  const day = today.getDate();
+  const suffix = (day >= 11 && day <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[day % 10] ?? 'th';
+  const dateStr = `${day}${suffix} ${today.toLocaleString('en', { month: 'short' })}, ${today.getFullYear()}`;
 
-  // Header row
-  const cols = ['USN', 'Name', 'Attendance', 'IA1', 'IA2', 'Total'];
-  const colXs = [50, 140, 260, 340, 390, 440];
-  cols.forEach((c, i) => page.drawText(c, { x: colXs[i]!, y, size: 11, font: bold }));
-  y -= 4;
-  page.drawLine({ start: { x: 50, y }, end: { x: 545, y }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) });
-  y -= 16;
-
-  for (const row of SAMPLE_ROWS) {
-    const vals = [row.USN, row.Name, `${row.Attendance}%`, row.IA1, row.IA2, row.Total];
-    vals.forEach((v, i) => page.drawText(String(v), { x: colXs[i]!, y, size: 10, font }));
-    y -= 18;
+  for (const student of SAMPLE_STUDENTS) {
+    drawStudentPage(doc, student, branch, test, semester, dateStr, { timesBold, times, helv });
   }
 
-  y -= 20;
-  page.drawText('— Ed8AI Synth Report —', { x: 50, y, size: 8, font, color: rgb(0.7, 0.7, 0.7) });
-
   return doc.save();
+}
+
+function drawStudentPage(
+  doc: PDFDocument,
+  s: Student,
+  branch: string,
+  test: string,
+  semester: string,
+  dateStr: string,
+  fonts: { timesBold: any; times: any; helv: any }, // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
+  const { timesBold, times } = fonts;
+  const page = doc.addPage([612, 792]); // US Letter
+  const { width } = page.getSize();
+  let y = 760;
+
+  // RVCE header strip (since we don't have the PNG, draw a styled header band)
+  page.drawRectangle({ x: 0, y: 700, width, height: 60, color: rgb(0.11, 0.09, 0.06) });
+  page.drawText('RV COLLEGE OF ENGINEERING', { x: 50, y: 735, size: 18, font: timesBold, color: rgb(1, 0.96, 0.86) });
+  page.drawText('Autonomous Institution affiliated to VTU, Approved by AICTE', { x: 50, y: 718, size: 9, font: times, color: rgb(0.95, 0.92, 0.83) });
+  page.drawText('Mysuru Road, Bengaluru — 560059', { x: 50, y: 706, size: 9, font: times, color: rgb(0.95, 0.92, 0.83) });
+
+  y = 680;
+  drawCentered(page, branch, y, 12, timesBold, width, true);
+  y -= 18;
+  drawCentered(page, test, y, 12, timesBold, width, true);
+  y -= 22;
+  page.drawText(dateStr, { x: 50, y, size: 10, font: times });
+  y -= 22;
+
+  page.drawText('To,', { x: 50, y, size: 10, font: times });
+  y -= 14;
+  page.drawText(`     Mr/Mrs  ${s.father},`, { x: 50, y, size: 10, font: timesBold });
+  y -= 20;
+
+  const bodyText = `           The Attendance report of your ward ${s.name}, ${s.usn} studying in ${semester} is given below :`;
+  wrapText(page, bodyText, 50, y, 10, times, width - 100, 13).forEach(() => { /* drawn by wrapText */ });
+  y -= 26;
+
+  // Table
+  const cols = [
+    { label: 'Sl.', x: 50, w: 30, align: 'center' as const },
+    { label: 'Subject Name', x: 80, w: 200, align: 'left' as const },
+    { label: 'Classes\nHeld', x: 280, w: 50, align: 'center' as const },
+    { label: 'Classes\nAttended', x: 330, w: 60, align: 'center' as const },
+    { label: 'Attendance\n%', x: 390, w: 60, align: 'center' as const },
+    { label: 'Test\nMarks', x: 450, w: 50, align: 'center' as const },
+    { label: 'Assign-\nment', x: 500, w: 50, align: 'center' as const },
+  ];
+
+  // Header row
+  const headerH = 26;
+  page.drawRectangle({ x: 50, y: y - headerH, width: 500, height: headerH, color: rgb(0.95, 0.92, 0.83), borderColor: rgb(0.2, 0.2, 0.2), borderWidth: 0.5 });
+  for (const c of cols) {
+    const lines = c.label.split('\n');
+    let ly = y - 10;
+    for (const line of lines) {
+      drawColText(page, line, c, ly, 9, timesBold);
+      ly -= 10;
+    }
+  }
+  y -= headerH;
+
+  // Rows
+  const rowH = 22;
+  s.subjects.forEach((sub, i) => {
+    page.drawRectangle({ x: 50, y: y - rowH, width: 500, height: rowH, borderColor: rgb(0.6, 0.6, 0.6), borderWidth: 0.4 });
+    const pct = sub.classesHeld > 0 ? Math.round((sub.classesAttended / sub.classesHeld) * 100) : 0;
+    const values = [
+      `${i + 1}`,
+      sub.name,
+      `${sub.classesHeld}`,
+      `${sub.classesAttended}`,
+      `${pct}%`,
+      `${sub.testMarks}`,
+      `${sub.assignment}`,
+    ];
+    cols.forEach((c, idx) => drawColText(page, values[idx] ?? '', c, y - 14, 9, times));
+    y -= rowH;
+  });
+
+  // Signature block
+  y -= 40;
+  page.drawText('Counsellor / HOD', { x: 50, y, size: 10, font: timesBold });
+  page.drawText('Principal', { x: width - 130, y, size: 10, font: timesBold });
+  y -= 14;
+  page.drawText('Dept. of CSE, RVCE', { x: 50, y, size: 9, font: times });
+  page.drawText('RV College of Engineering', { x: width - 130, y, size: 9, font: times });
+}
+
+function drawCentered(
+  page: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  text: string,
+  y: number,
+  size: number,
+  font: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  pageWidth: number,
+  underline = false,
+) {
+  const tw = font.widthOfTextAtSize(text, size);
+  const x = (pageWidth - tw) / 2;
+  page.drawText(text, { x, y, size, font });
+  if (underline) {
+    page.drawLine({ start: { x, y: y - 2 }, end: { x: x + tw, y: y - 2 }, thickness: 0.7 });
+  }
+}
+
+function drawColText(
+  page: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  text: string,
+  col: { x: number; w: number; align: 'left' | 'center' },
+  y: number,
+  size: number,
+  font: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+) {
+  let x = col.x + 4;
+  if (col.align === 'center') {
+    const tw = font.widthOfTextAtSize(text, size);
+    x = col.x + (col.w - tw) / 2;
+  }
+  // Truncate if too wide for the column
+  let drawText = text;
+  const maxW = col.w - 6;
+  if (font.widthOfTextAtSize(drawText, size) > maxW) {
+    while (drawText.length > 1 && font.widthOfTextAtSize(drawText + '…', size) > maxW) {
+      drawText = drawText.slice(0, -1);
+    }
+    drawText += '…';
+  }
+  page.drawText(drawText, { x, y, size, font });
+}
+
+function wrapText(
+  page: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  text: string,
+  x: number,
+  startY: number,
+  size: number,
+  font: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  maxWidth: number,
+  lineH: number,
+): null[] {
+  const words = text.split(' ');
+  let line = '';
+  let y = startY;
+  for (const word of words) {
+    const test = line ? `${line} ${word}` : word;
+    if (font.widthOfTextAtSize(test, size) > maxWidth) {
+      page.drawText(line, { x, y, size, font });
+      y -= lineH;
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) page.drawText(line, { x, y, size, font });
+  return [];
 }
