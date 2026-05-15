@@ -8,7 +8,7 @@ const USE_MOCK = (process.env.NEXT_PUBLIC_USE_MOCKS ?? "true") === "true";
 export async function getMentorshipDashboard(): Promise<MentorshipDashboardResponse> {
   if (USE_MOCK) return mockMentorshipDashboard;
   try {
-    return await apiClient.get<MentorshipDashboardResponse>("/mentorship/dashboard");
+    return await apiClient.get<MentorshipDashboardResponse>("/api/mentorship/dashboard");
   } catch {
     return mockMentorshipDashboard;
   }
@@ -17,7 +17,7 @@ export async function getMentorshipDashboard(): Promise<MentorshipDashboardRespo
 export async function logFollowUp(studentId: string, note: string): Promise<void> {
   if (USE_MOCK) return;
   try {
-    await apiClient.post("/mentorship/followup", { studentId, note });
+    await apiClient.post("/api/mentorship/followup", { studentId, note });
   } catch {
     // no-op if endpoint not yet implemented
   }
