@@ -126,6 +126,7 @@ export const navItems: NavItem[] = [
 
   // ── TEACHER CHATBOT ────────────────────────────────────────────────────────
   { key: "tea-chatbot",       title: "Ask Ed8AI",                route: "/teacher/chatbot",        allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
+  { key: "tea-authoring",     title: "Module Authoring (AI)",   route: "/teacher/authoring/CS501",allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
 
   // ── ADMIN CHATBOT SESSIONS ────────────────────────────────────────────────
   { key: "admin-chatbot",     title: "Chat Sessions",           route: "/admin/chatbot",          allowedRoles: ["ADMIN","PRINCIPAL"],                            group: "Admin" },
