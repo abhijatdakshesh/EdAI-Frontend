@@ -31,6 +31,11 @@ const BFF_PREFIXES = [
   "/api/recruiter/analytics",    // KAN-31 analytics synth fallback
   "/api/parent-comms/messages",  // KAN-41 parent send-message synth
   "/api/automation/rules",       // KAN-52 admin automation rule create
+  "/api/admin/comms/test-send",  // KAN-62 admin comms test message
+  "/api/ia/submissions/",        // KAN-63 IA remind/confirm synth
+  "/api/ia/teacher/marks",       // KAN-73 teacher marks save/submit synth
+  "/api/teacher/reports/generate", // KAN-74 teacher report download synth
+  "/api/fees/payment/initiate",  // KAN-78 fee payment initiate synth
 ];
 
 /**
@@ -184,7 +189,7 @@ export async function apiDownload(path: string, filename: string): Promise<void>
   const accessToken = session?.accessToken;
   const headers: Record<string, string> = {};
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-  const res = await fetch(`${API_BASE}${path}`, { headers });
+  const res = await fetch(resolveRequestUrl(path, "GET"), { headers });
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -203,7 +208,7 @@ export async function apiDownloadPost(path: string, body: unknown, filename: str
   const accessToken = session?.accessToken;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(resolveRequestUrl(path, "POST"), {
     method: "POST",
     headers,
     body: JSON.stringify(body),
