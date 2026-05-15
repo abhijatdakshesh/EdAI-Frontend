@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost, apiDownloadPost } from "@/lib/api/client";
 import { useClasses } from "@/lib/api/academics";
 import { useClassAttendanceSummary, useAtRiskStudents } from "@/lib/api/attendance";
 import { useTeacherIAMarks, type IAMarksRow } from "@/lib/api/vtu";
@@ -706,54 +706,71 @@ export function TeacherProfile() {
 
 // ─── Generate Reports ─────────────────────────────────────────────────────────
 
+const REPORT_TYPES = [
+  { title: "Attendance Report", desc: "Class-wise / student-wise attendance for selected period", icon: "📊" },
+  { title: "IA Marks Report", desc: "Internal assessment marks with statistics and analytics", icon: "📝" },
+  { title: "At-Risk Students", desc: "Students below attendance/marks threshold", icon: "⚠️" },
+  { title: "Assignment Completion", desc: "Submission rates and grading statistics", icon: "📋" },
+  { title: "Syllabus Coverage", desc: "Topics covered vs pending for each course", icon: "📚" },
+  { title: "Performance Comparison", desc: "Batch comparison across semesters", icon: "📈" },
+] as const;
+
 export function GenerateReports() {
+  // KAN-74 — previously the PDF/Excel buttons had no onClick handler so
+  // nothing happened on click. Wire each button to POST the report type +
+  // requested format to the BFF and trigger a browser download.
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDownload = async (reportType: string, format: "pdf" | "excel") => {
+    const key = `${reportType}:${format}`;
+    setBusyKey(key);
+    setError(null);
+    try {
+      const ext = format === "excel" ? "csv" : "pdf";
+      const slug = reportType.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const filename = `${slug}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+      await apiDownloadPost("/api/teacher/reports/generate", { reportType, format }, filename);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to generate report");
+    } finally {
+      setBusyKey(null);
+    }
+  };
+
   return (
     <AppShell title="Generate Reports">
       <div className="grid gap-5 max-w-3xl">
+        {error && (
+          <div className="rounded bg-[#F5E6E6] px-4 py-3 text-sm text-[#8B2F2F]">
+            {error}
+          </div>
+        )}
         <div className="grid gap-3 sm:grid-cols-2">
-          {[
-            {
-              title: "Attendance Report",
-              desc: "Class-wise / student-wise attendance for selected period",
-              icon: "📊",
-            },
-            {
-              title: "IA Marks Report",
-              desc: "Internal assessment marks with statistics and analytics",
-              icon: "📝",
-            },
-            {
-              title: "At-Risk Students",
-              desc: "Students below attendance/marks threshold",
-              icon: "⚠️",
-            },
-            {
-              title: "Assignment Completion",
-              desc: "Submission rates and grading statistics",
-              icon: "📋",
-            },
-            {
-              title: "Syllabus Coverage",
-              desc: "Topics covered vs pending for each course",
-              icon: "📚",
-            },
-            {
-              title: "Performance Comparison",
-              desc: "Batch comparison across semesters",
-              icon: "📈",
-            },
-          ].map((r) => (
+          {REPORT_TYPES.map((r) => (
             <div key={r.title} className="rounded border border-border bg-surface p-4 flex gap-3">
               <span className="text-2xl shrink-0">{r.icon}</span>
               <div className="flex-1">
                 <p className="font-medium text-sm">{r.title}</p>
                 <p className="text-xs text-text-muted mt-0.5">{r.desc}</p>
                 <div className="flex gap-2 mt-3">
-                  <Button size="sm" variant="outline" className="text-xs">
-                    PDF
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => void handleDownload(r.title, "pdf")}
+                    disabled={busyKey === `${r.title}:pdf`}
+                  >
+                    {busyKey === `${r.title}:pdf` ? "…" : "PDF"}
                   </Button>
-                  <Button size="sm" variant="outline" className="text-xs">
-                    Excel
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs"
+                    onClick={() => void handleDownload(r.title, "excel")}
+                    disabled={busyKey === `${r.title}:excel`}
+                  >
+                    {busyKey === `${r.title}:excel` ? "…" : "Excel"}
                   </Button>
                 </div>
               </div>
