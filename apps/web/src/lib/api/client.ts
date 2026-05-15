@@ -31,6 +31,7 @@ const BFF_PREFIXES = [
   "/api/recruiter/analytics",    // KAN-31 analytics synth fallback
   "/api/parent-comms/messages",  // KAN-41 parent send-message synth
   "/api/automation/rules",       // KAN-52 admin automation rule create
+  "/api/lms/",                   // LMS: modules, lessons, progress, mastery, eli5, narrate, authoring
 ];
 
 /**
