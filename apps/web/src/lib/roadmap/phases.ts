@@ -91,6 +91,7 @@ export const navItems: NavItem[] = [
 
   { key: "stu-dashboard",     title: "Dashboard",               route: "/student/dashboard",      allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-courses",       title: "Courses",                 route: "/student/courses",        allowedRoles: ["STUDENT"],                                      group: "Student" },
+  { key: "stu-learn",         title: "Learn (LMS)",             route: "/student/learn/CS501",    allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-schedule",      title: "Schedule",                route: "/student/schedule",       allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-results",       title: "Results Portal",          route: "/student/results",        allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-attendance",    title: "Attendance",              route: "/student/attendance",     allowedRoles: ["STUDENT"],                                      group: "Student" },
