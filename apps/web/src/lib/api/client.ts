@@ -36,6 +36,7 @@ const BFF_PREFIXES = [
   "/api/ia/teacher/marks",       // KAN-73 teacher marks save/submit synth
   "/api/teacher/reports/generate", // KAN-74 teacher report download synth
   "/api/fees/payment/initiate",  // KAN-78 fee payment initiate synth
+  "/api/vtu/teacher/",           // VTU eligibility + submit synth
 ];
 
 /**
