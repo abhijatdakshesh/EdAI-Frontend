@@ -2,6 +2,34 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { classesStore, type StoredClass } from '@/lib/synth/admin-store';
 
+const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
+
+/**
+ * Class list — merges backend response with synth-stored classes (KAN-72).
+ * Newly added classes (POST below) live in-memory only; without merging
+ * here, they never appear in the UI list.
+ */
+export const GET = auth(async (req) => {
+  if (!req.auth?.accessToken) {
+    return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
+  }
+  let backendList: unknown[] = [];
+  try {
+    const url = new URL(req.url);
+    const res = await fetch(`${IDENTITY_SERVICE_URL}${url.pathname}${url.search}`, {
+      headers: { Authorization: `Bearer ${req.auth.accessToken}` },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) backendList = data;
+      else if (Array.isArray((data as { items?: unknown[] })?.items)) backendList = (data as { items: unknown[] }).items;
+    }
+  } catch {
+    /* fall through with empty backendList — still return synth items */
+  }
+  return NextResponse.json([...backendList, ...classesStore]);
+});
+
 /**
  * Class create — BFF synth (KAN-37).
  *

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
-import { apiPatch } from "@/lib/api/client";
+import { apiPatch, apiPost } from "@/lib/api/client";
 
 interface Channel { key: string; label: string; enabled: boolean; description: string }
 interface Template { id: string; name: string; channel: string; trigger: string; language: string; lastEdited: string }
@@ -27,6 +27,10 @@ const TEMPLATES: Template[] = [
 
 export function CommsSettings() {
   const [channels, setChannels] = useState(CHANNELS);
+  const [templates, setTemplates] = useState(TEMPLATES);
+  const [testRecipient, setTestRecipient] = useState("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(TEMPLATES[0]?.id ?? "");
+  const [testStatus, setTestStatus] = useState<string | null>(null);
 
   const toggleMutation = useMutation({
     mutationFn: ({ key, enabled }: { key: string; enabled: boolean }) =>
@@ -38,11 +42,34 @@ export function CommsSettings() {
     },
   });
 
+  const testSendMutation = useMutation({
+    mutationFn: (payload: { recipient: string; templateId: string }) =>
+      apiPost<{ messageId: string }>("/api/admin/comms/test-send", payload),
+    onSuccess: (data) => setTestStatus(`Sent (ID: ${data.messageId})`),
+    onError: (err) => setTestStatus(`Failed: ${(err as Error).message}`),
+  });
+
   const toggle = (key: string) => {
     const ch = channels.find(c => c.key === key);
     if (!ch) return;
     setChannels(prev => prev.map(c => c.key === key ? { ...c, enabled: !c.enabled } : c));
     toggleMutation.mutate({ key, enabled: !ch.enabled });
+  };
+
+  const handleSendTest = () => {
+    if (!testRecipient.trim()) { setTestStatus("Enter recipient"); return; }
+    setTestStatus(null);
+    testSendMutation.mutate({ recipient: testRecipient.trim(), templateId: selectedTemplateId });
+  };
+
+  const handleNewTemplate = () => {
+    const name = prompt("Template name?");
+    if (!name) return;
+    const id = `t-${Date.now().toString(36)}`;
+    setTemplates(prev => [...prev, {
+      id, name, channel: "SMS", trigger: "Manual",
+      language: "English", lastEdited: new Date().toISOString().slice(0, 10),
+    }]);
   };
 
   return (
@@ -71,7 +98,7 @@ export function CommsSettings() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <p className="label-track">Message Templates</p>
-            <Button size="sm">+ New Template</Button>
+            <Button size="sm" onClick={handleNewTemplate}>+ New Template</Button>
           </div>
           <div className="overflow-x-auto rounded border border-border">
             <table className="w-full text-sm">
@@ -83,7 +110,7 @@ export function CommsSettings() {
                 </tr>
               </thead>
               <tbody>
-                {TEMPLATES.map(t=>(
+                {templates.map(t=>(
                   <tr key={t.id} className="border-t border-border even:bg-cream-50">
                     <td className="px-4 py-2 font-medium">{t.name}</td>
                     <td className="px-4 py-2 text-text-muted">{t.channel}</td>
@@ -107,13 +134,25 @@ export function CommsSettings() {
         <div className="rounded border border-border bg-surface p-5">
           <p className="label-track mb-3">Send Test Message</p>
           <div className="flex flex-wrap gap-3">
-            <input type="email" placeholder="Recipient email or phone"
-              className="rounded border border-border bg-background px-3 py-1.5 text-sm flex-1 min-w-[200px] focus:outline-none" />
-            <select className="rounded border border-border bg-background px-3 py-1.5 text-sm focus:outline-none">
-              {TEMPLATES.map(t=><option key={t.id}>{t.name}</option>)}
+            <input
+              type="text"
+              value={testRecipient}
+              onChange={(e) => setTestRecipient(e.target.value)}
+              placeholder="Recipient email or phone"
+              className="rounded border border-border bg-background px-3 py-1.5 text-sm flex-1 min-w-[200px] focus:outline-none"
+            />
+            <select
+              value={selectedTemplateId}
+              onChange={(e) => setSelectedTemplateId(e.target.value)}
+              className="rounded border border-border bg-background px-3 py-1.5 text-sm focus:outline-none"
+            >
+              {templates.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
-            <Button size="sm">Send Test</Button>
+            <Button size="sm" onClick={handleSendTest} disabled={testSendMutation.isPending}>
+              {testSendMutation.isPending ? "Sending…" : "Send Test"}
+            </Button>
           </div>
+          {testStatus && <p className="mt-2 text-xs text-text-muted">{testStatus}</p>}
         </div>
       </div>
     </AppShell>

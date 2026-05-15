@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { coursesStore, type StoredCourse } from '@/lib/synth/admin-store';
+import { departmentsStore, type StoredDepartment } from '@/lib/synth/admin-store';
 
 const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
 
-/** Course list — merges backend with synth store so added courses appear (KAN-72 sibling). */
+/** Department list — merges backend with synth store (KAN-72/KAN-57 sibling). */
 export const GET = auth(async (req) => {
   if (!req.auth?.accessToken) {
     return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
@@ -21,42 +21,32 @@ export const GET = auth(async (req) => {
       else if (Array.isArray((data as { items?: unknown[] })?.items)) backendList = (data as { items: unknown[] }).items;
     }
   } catch { /* fall through */ }
-  return NextResponse.json([...backendList, ...coursesStore]);
+  return NextResponse.json([...backendList, ...departmentsStore]);
 });
 
 /**
- * Course create — BFF synth (KAN-32). Backend `/api/courses` only exposes
- * GET + enrollment endpoints; admin "Add Course" needs a POST. SYNTH_OK.
+ * Department create — BFF synth (KAN-57). Backend `/api/departments` may
+ * only expose GET in some envs; admin "Add Department" needs a POST.
  */
 export const POST = auth(async (req) => {
   if (!req.auth?.accessToken) {
     return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
   }
-  let body: Partial<StoredCourse> = {};
+  let body: Partial<StoredDepartment> = {};
   try {
-    body = (await req.json()) as Partial<StoredCourse>;
-  } catch {
-    /* ignore */
-  }
+    body = (await req.json()) as Partial<StoredDepartment>;
+  } catch { /* ignore */ }
   if (!body.code || !body.name) {
-    return NextResponse.json(
-      { error: 'code and name are required' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'code and name are required' }, { status: 400 });
   }
-  const id = `crs-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  const created: StoredCourse = {
-    id,
+  const created: StoredDepartment = {
     code: body.code,
     name: body.name,
-    departmentCode: body.departmentCode ?? 'CSE',
-    semester: body.semester ?? 1,
-    credits: body.credits ?? 3,
-    type: body.type ?? 'THEORY',
-    ...(body.syllabusUrl ? { syllabusUrl: body.syllabusUrl } : {}),
-    active: true,
+    hodUserId: body.hodUserId ?? '',
+    established: body.established ?? new Date().getFullYear(),
+    active: body.active ?? true,
     createdAt: new Date().toISOString(),
   };
-  coursesStore.push(created);
+  departmentsStore.push(created);
   return NextResponse.json(created, { status: 201 });
 });
