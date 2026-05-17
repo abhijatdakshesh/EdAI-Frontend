@@ -94,11 +94,12 @@ export function ModuleAuthoring({ courseId }: Props) {
               </p>
             </div>
             <textarea
-              rows={12}
+              rows={8}
               value={syllabus}
               onChange={(e) => setSyllabus(e.target.value)}
               placeholder={"e.g.\nModule 2: Process Scheduling\n- FCFS\n- SJF (preemptive + non-preemptive)\n- Round-robin\n- Priority\n- Multilevel queue"}
-              className="w-full rounded border border-border bg-background px-3 py-2 text-sm font-mono focus:outline-none"
+              className="w-full rounded border border-border bg-background px-3 py-2 text-sm font-mono focus:outline-none md:[--syllabus-rows:12]"
+              style={{ minHeight: "12rem" }}
             />
             <div className="flex items-center gap-3">
               <Button onClick={onDraft} disabled={draftMutation.isPending || !syllabus.trim()}>
@@ -140,7 +141,31 @@ export function ModuleAuthoring({ courseId }: Props) {
             </div>
 
             <div className="grid gap-3 lg:grid-cols-[200px_1fr]">
-              <aside className="rounded border border-border bg-surface p-2">
+              {/* Mobile: horizontal scrollable lesson strip */}
+              <div className="lg:hidden -mx-1 px-1 overflow-x-auto">
+                <ul className="flex gap-1 whitespace-nowrap pb-2">
+                  {draft.lessons.map((l, i) => (
+                    <li key={i}>
+                      <button
+                        onClick={() => setActiveLesson(i)}
+                        className={`rounded border px-3 py-1.5 text-xs shrink-0 ${
+                          activeLesson === i
+                            ? "border-[#1C1810] bg-cream-100"
+                            : "border-border bg-surface hover:bg-cream-50"
+                        }`}
+                      >
+                        <span className="text-text-muted font-mono mr-1.5">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        {l.title}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Desktop: vertical lesson list */}
+              <aside className="hidden lg:block rounded border border-border bg-surface p-2">
                 <p className="label-track px-2 py-1">Lessons</p>
                 <ul className="space-y-0.5">
                   {draft.lessons.map((l, i) => (
@@ -238,7 +263,7 @@ function LessonEditor({
       </div>
       {tab === "edit" ? (
         <textarea
-          rows={14}
+          rows={9}
           value={lesson.markdown}
           onChange={(e) => onChange({ markdown: e.target.value })}
           className="w-full rounded border border-border bg-background px-3 py-2 text-sm font-mono"

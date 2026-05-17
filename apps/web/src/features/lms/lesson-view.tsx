@@ -89,8 +89,8 @@ export function LessonView({ courseId, lessonId }: Props) {
     <AppShell title={lesson.title}>
       <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <div className="space-y-4">
-          {/* Top toolbar */}
-          <div className="flex flex-wrap items-center gap-2 rounded border border-border bg-surface p-3">
+          {/* Top toolbar — wraps freely on mobile, tighter gaps below sm */}
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2 rounded border border-border bg-surface p-3">
             <Link
               href={`/student/learn/${courseId}`}
               className="text-xs text-[#2F567A] hover:underline"
@@ -160,8 +160,9 @@ export function LessonView({ courseId, lessonId }: Props) {
           )}
         </div>
 
-        {/* AI doubt chat sidebar */}
-        <aside className="self-start sticky top-4">
+        {/* AI doubt chat sidebar — sticky only on lg+; on mobile it flows
+            inline below the lesson body so it doesn't trap scrolling. */}
+        <aside className="lg:self-start lg:sticky lg:top-4">
           <DoubtChat lessonTitle={lesson.title} lessonBody={markdownBody} />
         </aside>
       </div>
@@ -192,7 +193,7 @@ function ContentBlock({ block }: { block: LessonContentBlock }) {
     return (
       <div className="rounded border border-border bg-surface p-3">
         <p className="label-track mb-2">Slides</p>
-        <iframe src={block.data} className="w-full h-[480px] rounded" />
+        <iframe src={block.data} className="w-full h-[300px] md:h-[480px] rounded" />
       </div>
     );
   }
@@ -206,6 +207,13 @@ function CodeSandbox({ starter }: { starter: string }) {
   const [code, setCode] = useState(starter);
   const [output, setOutput] = useState<string>("");
   const [running, setRunning] = useState(false);
+  // On mobile (<md) Pyodide's 12 MB download would burn the user's data
+  // before they've even decided to run anything. Lazy-mount the editor +
+  // run wiring behind a tap; desktop renders immediately.
+  const [opened, setOpened] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.matchMedia("(min-width: 768px)").matches;
+  });
 
   const run = async () => {
     setRunning(true);
@@ -242,6 +250,20 @@ function CodeSandbox({ starter }: { starter: string }) {
       setRunning(false);
     }
   };
+
+  if (!opened) {
+    return (
+      <div className="rounded border border-border bg-surface p-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="label-track">Code Sandbox · Python</p>
+          <p className="text-xs text-text-muted mt-0.5">
+            Loads ~12 MB Python runtime. Tap to open on mobile data.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setOpened(true)}>▶ Launch</Button>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded border border-border bg-surface p-3 space-y-2">

@@ -32,11 +32,43 @@ export function CourseModulesPage({ courseId }: Props) {
     [modules, activeModuleId],
   );
 
+  // Mobile tab switch — on <lg the 3-col grid collapses and would stack
+  // Modules → Lessons → Mastery vertically. That's a 5-screen scroll on a
+  // phone. Tabs keep each panel one tap away. On lg+ all three render.
+  const [mobileTab, setMobileTab] = useState<"modules" | "lessons" | "mastery">("lessons");
+
   return (
     <AppShell title="Learn">
+      {/* Mobile-only tab bar (hidden on lg+) */}
+      <div className="lg:hidden mb-3 flex rounded border border-border bg-surface text-xs">
+        {([
+          { key: "modules", label: "Modules" },
+          { key: "lessons", label: "Lessons" },
+          { key: "mastery", label: "Mastery" },
+        ] as const).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setMobileTab(t.key)}
+            className={cn(
+              "flex-1 py-2 transition-colors",
+              mobileTab === t.key
+                ? "bg-[#1C1810] text-cream-50"
+                : "text-text-muted hover:bg-cream-50",
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[260px_1fr_320px]">
-        {/* Module list */}
-        <aside className="rounded border border-border bg-surface p-3">
+        {/* Module list — visible on lg+ always; on <lg only when mobileTab === 'modules' */}
+        <aside
+          className={cn(
+            "rounded border border-border bg-surface p-3 lg:block",
+            mobileTab === "modules" ? "block" : "hidden",
+          )}
+        >
           <p className="label-track mb-2">Modules · {courseId}</p>
           {loadingModules && (
             <p className="text-xs text-text-muted">Loading…</p>
@@ -67,7 +99,7 @@ export function CourseModulesPage({ courseId }: Props) {
         </aside>
 
         {/* Lessons */}
-        <section>
+        <section className={cn("lg:block", mobileTab === "lessons" ? "block" : "hidden")}>
           {activeModule ? (
             <LessonList module={activeModule} progressList={progressList} courseId={courseId} />
           ) : (
@@ -76,7 +108,12 @@ export function CourseModulesPage({ courseId }: Props) {
         </section>
 
         {/* Mastery graph rail */}
-        <aside className="rounded border border-border bg-surface p-3 self-start">
+        <aside
+          className={cn(
+            "rounded border border-border bg-surface p-3 lg:self-start lg:block",
+            mobileTab === "mastery" ? "block" : "hidden",
+          )}
+        >
           <p className="label-track mb-2">Mastery</p>
           <MasteryGraph mastery={mastery} />
         </aside>
