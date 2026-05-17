@@ -308,7 +308,7 @@ function CallLogsTab() {
       </div>
 
       <div className="overflow-x-auto rounded border border-border">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm min-w-[600px]">
           <thead className="bg-surface border-b border-border">
             <tr>
               <th className="px-3 py-2 text-left font-medium text-text-secondary">Student USN</th>

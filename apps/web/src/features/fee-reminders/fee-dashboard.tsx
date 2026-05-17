@@ -203,7 +203,7 @@ export default function FeeDashboard() {
         ) : fees.length === 0 ? (
           <div className="p-10 text-center text-sm text-text-muted">No outstanding fees match the current filters.</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="bg-cream-200 border-b border-border">
                 {['Student', 'Dept', 'Fee Type', 'Balance', 'Due Date', 'Risk', 'Action', ''].map(h => (

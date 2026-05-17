@@ -49,9 +49,9 @@ export function ReportGeneratorPage() {
 
   return (
     <AppShell title="Report Generator">
-      <div className="flex gap-6 h-full">
+      <div className="flex flex-col lg:flex-row gap-3 lg:gap-6 h-full">
         {/* Preset selector */}
-        <aside className="w-64 shrink-0 flex flex-col gap-2">
+        <aside className="w-full lg:w-64 shrink-0 flex flex-col gap-2">
           <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-1">Report Type</p>
           {REPORT_PRESETS.map(p => (
             <button

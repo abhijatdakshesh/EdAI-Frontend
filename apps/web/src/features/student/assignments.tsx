@@ -105,7 +105,7 @@ export function MyAssignments() {
 
   return (
     <AppShell title="Assignments">
-      <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
+      <div className="grid gap-5 md:grid-cols-[1fr_380px]">
         <div className="grid gap-4">
           {/* Filter tabs */}
           <div className="flex gap-1 border-b border-border">

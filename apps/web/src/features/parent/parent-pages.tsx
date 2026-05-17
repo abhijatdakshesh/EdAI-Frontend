@@ -263,7 +263,7 @@ export function ParentResults() {
             </div>
             {latestSem && (
               <div className="overflow-x-auto rounded border border-border">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm min-w-[600px]">
                   <thead className="bg-cream-200">
                     <tr>
                       {["Code", "Subject", "IA", "Exam", "Total", "Grade"].map((h) => (
@@ -363,7 +363,7 @@ export function ParentCalls() {
   return (
     <AppShell title="AI Call History">
       <div className="grid gap-5 max-w-2xl">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {[
             { label: "Total Calls", value: isLoading ? "—" : calls.length },
             { label: "Answered", value: isLoading ? "—" : answered },
@@ -435,7 +435,7 @@ export function ParentAnnouncements() {
 
   return (
     <AppShell title="Announcements">
-      <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
+      <div className="grid gap-4 md:grid-cols-[1fr_400px]">
         <div className="grid gap-2">
           {isLoading ? (
             [1, 2, 3].map((i) => (
@@ -529,7 +529,7 @@ export function ParentMessages() {
 
   return (
     <AppShell title="Messages">
-      <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
+      <div className="grid gap-4 md:grid-cols-[1fr_420px]">
         <div className="grid gap-2">
           <div className="flex justify-end">
             <Button size="sm" onClick={() => setShowCompose((v) => !v)}>

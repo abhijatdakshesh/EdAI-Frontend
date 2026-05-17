@@ -37,7 +37,7 @@ export function ClassManagement() {
     <AppShell title="Class Management">
       <div className="grid gap-5">
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: "Total Classes", value: classes.length },
             { label: "Departments", value: departments.length },
@@ -144,7 +144,7 @@ export function ClassManagement() {
         {/* Table + student panel */}
         <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
           <div className="overflow-x-auto rounded border border-border">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[600px]">
               <thead className="bg-cream-200">
                 <tr>
                   {[

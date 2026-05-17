@@ -101,7 +101,7 @@ export function StudentFees() {
       <div className="grid gap-5">
         {/* Summary cards */}
         {loadingSummary ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-pulse">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="rounded border border-border bg-surface p-4 h-20" />
             ))}
@@ -115,7 +115,7 @@ export function StudentFees() {
               .filter(Boolean)
               .sort()[0];
             return (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: "Total Fee", value: `₹${(summary.totalDue ?? 0).toLocaleString()}`, warn: false },
                   { label: "Paid", value: `₹${(summary.totalPaid ?? 0).toLocaleString()}`, warn: false },
@@ -164,7 +164,7 @@ export function StudentFees() {
                 </p>
                 {/* r21 — itemised fee table matching Results Portal layout. */}
                 <div className="overflow-x-auto rounded border border-border">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm min-w-[600px]">
                     <thead className="bg-cream-200">
                       <tr>
                         {["", "Component", "Semester", "Year", "Due Date", "Amount", "Status"].map((h) => (
@@ -242,7 +242,7 @@ export function StudentFees() {
               </p>
             ) : (
               <div className="overflow-x-auto rounded border border-border">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm min-w-[600px]">
                   <thead className="bg-cream-200">
                     <tr>
                       {["Component", "Semester", "Amount", "Paid On", "Receipt", "Status"].map((h) => (

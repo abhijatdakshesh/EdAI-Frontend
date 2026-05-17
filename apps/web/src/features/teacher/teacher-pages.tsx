@@ -357,7 +357,7 @@ export function IAVTUMarks() {
           <p className="text-sm text-text-muted">Loading marks…</p>
         ) : (
           <div className="overflow-x-auto rounded border border-border">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[600px]">
               <thead className="bg-cream-200">
                 <tr>
                   {["USN", "Student", "IA-1 (/25)", "IA-2 (/25)", "Avg", "Best of 2", "VTU Marks"].map(
@@ -543,7 +543,7 @@ export function TeacherSchedule() {
         ) : (
           <>
             <div className="overflow-x-auto rounded border border-border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-cream-200">
                   <tr>
                     {["Day", "Time", "Class", "Course", "Room"].map((h) => (
@@ -838,7 +838,7 @@ export function TeacherVTU() {
           <div className="h-32 rounded border border-border bg-surface animate-pulse" />
         ) : (
           <>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {[
                 { label: "Total Students", value: eligibility.length },
                 { label: "Eligible", value: eligible },
@@ -851,7 +851,7 @@ export function TeacherVTU() {
               ))}
             </div>
             <div className="overflow-x-auto rounded border border-border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-cream-200">
                   <tr>
                     {["USN", "Student", "Attendance", "Eligible", "Reason"].map((h) => (

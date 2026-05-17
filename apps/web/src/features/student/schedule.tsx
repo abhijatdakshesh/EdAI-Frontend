@@ -95,7 +95,7 @@ export function StudentSchedule() {
           <div>
             <p className="label-track mb-3">Weekly Overview</p>
             <div className="overflow-x-auto rounded border border-border">
-              <table className="w-full text-xs">
+              <table className="w-full text-xs min-w-[700px]">
                 <thead className="bg-cream-200">
                   <tr>
                     <th className="px-3 py-2 text-left label-track">Time</th>
