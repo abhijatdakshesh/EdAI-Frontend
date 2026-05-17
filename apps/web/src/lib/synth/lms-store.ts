@@ -21,6 +21,7 @@ export interface CheckpointQuestion {
 
 export interface StoredModule {
   id: string;
+  collegeId: string;
   courseId: string;
   title: string;
   description?: string;
@@ -31,6 +32,7 @@ export interface StoredModule {
 
 export interface StoredLesson {
   id: string;
+  collegeId: string;
   moduleId: string;
   title: string;
   order: number;
@@ -41,6 +43,7 @@ export interface StoredLesson {
 }
 
 export interface StoredProgress {
+  collegeId: string;
   studentUsn: string;
   lessonId: string;
   state: ProgressState;
@@ -49,11 +52,15 @@ export interface StoredProgress {
 }
 
 export interface StoredMastery {
+  collegeId: string;
   studentUsn: string;
   courseId: string;
   topic: string;
   masteryScore: number;
 }
+
+export const DEFAULT_COLLEGE_ID =
+  (process.env.NEXT_PUBLIC_DEFAULT_COLLEGE_ID ?? 'default') as string;
 
 const SAMPLE_CODE = `# FCFS scheduling example
 processes = [("P1", 5), ("P2", 3), ("P3", 8)]
@@ -66,6 +73,7 @@ print(f"Average completion time: {time / len(processes):.1f}")`;
 export const lmsModules: StoredModule[] = [
   {
     id: 'mod-os-scheduling',
+    collegeId: DEFAULT_COLLEGE_ID,
     courseId: 'CS501',
     title: 'Process Scheduling',
     description: 'How the OS decides which process runs next on the CPU.',
@@ -77,7 +85,7 @@ export const lmsModules: StoredModule[] = [
 
 export const lmsLessons: StoredLesson[] = [
   {
-    id: 'les-fcfs', moduleId: 'mod-os-scheduling', title: 'First-Come First-Served (FCFS)',
+    id: 'les-fcfs', collegeId: DEFAULT_COLLEGE_ID, moduleId: 'mod-os-scheduling', title: 'First-Come First-Served (FCFS)',
     order: 1, published: true, topicTags: ['scheduling', 'fcfs'],
     contentBlocks: [
       { kind: 'MARKDOWN', data: '## FCFS Scheduling\n\nFirst-Come First-Served is the simplest CPU scheduling algorithm. Processes are executed strictly in the order they arrive in the ready queue.\n\n**Pros:** simple, fair in arrival order.\n\n**Cons:** *convoy effect* — one long process delays many short ones.\n\n### Example\nIf P1 (burst 24ms), P2 (3ms), P3 (3ms) arrive in that order, P2 and P3 wait 24ms each despite needing only 3ms.' },
@@ -90,7 +98,7 @@ export const lmsLessons: StoredLesson[] = [
     ],
   },
   {
-    id: 'les-sjf', moduleId: 'mod-os-scheduling', title: 'Shortest Job First (SJF)',
+    id: 'les-sjf', collegeId: DEFAULT_COLLEGE_ID, moduleId: 'mod-os-scheduling', title: 'Shortest Job First (SJF)',
     order: 2, published: true, topicTags: ['scheduling', 'sjf'],
     contentBlocks: [
       { kind: 'MARKDOWN', data: '## Shortest Job First\n\nSJF picks the process with the smallest next CPU burst. Optimal for minimum average waiting time, but predicting the next burst is hard in practice.' },
@@ -103,7 +111,7 @@ export const lmsLessons: StoredLesson[] = [
     ],
   },
   {
-    id: 'les-rr', moduleId: 'mod-os-scheduling', title: 'Round Robin (RR)',
+    id: 'les-rr', collegeId: DEFAULT_COLLEGE_ID, moduleId: 'mod-os-scheduling', title: 'Round Robin (RR)',
     order: 3, published: true, topicTags: ['scheduling', 'round-robin', 'time-slice'],
     contentBlocks: [
       { kind: 'MARKDOWN', data: '## Round Robin\n\nEach process gets a fixed *time quantum* (e.g. 10ms) then is preempted. Good for interactive systems. Choosing the quantum is the key tuning knob.' },
@@ -119,6 +127,18 @@ export const lmsLessons: StoredLesson[] = [
 export const lmsProgress: StoredProgress[] = [];
 export const lmsMastery: StoredMastery[] = [];
 
-export function findLesson(id: string): StoredLesson | undefined {
-  return lmsLessons.find(l => l.id === id);
+/** Tenant-aware lookup. Falls back to bare id-match for backwards compat. */
+export function findLesson(id: string, collegeId: string = DEFAULT_COLLEGE_ID): StoredLesson | undefined {
+  return (
+    lmsLessons.find(l => l.id === id && l.collegeId === collegeId) ??
+    lmsLessons.find(l => l.id === id)
+  );
+}
+
+/** Resolves the college for the current request. The Next auth session
+ *  may eventually carry `collegeId` on the JWT (Clerk Orgs); for now we
+ *  pull from a custom claim or env default so single-tenant prod works. */
+export function resolveCollegeId(req: unknown): string {
+  const auth = (req as { auth?: { user?: { collegeId?: string; institutionId?: string } } })?.auth;
+  return auth?.user?.collegeId ?? auth?.user?.institutionId ?? DEFAULT_COLLEGE_ID;
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { lmsMastery } from '@/lib/synth/lms-store';
+import { lmsMastery, resolveCollegeId } from '@/lib/synth/lms-store';
 
 const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
 
@@ -14,7 +14,12 @@ export const GET = auth(async (req) => {
     });
     if (res.ok) return NextResponse.json(await res.json());
   } catch { /* fall through */ }
+  const collegeId = resolveCollegeId(req);
   const courseId = new URL(req.url).searchParams.get('courseId') ?? 'CS501';
   const usn = (req.auth as { user?: { sapId?: string } } | undefined)?.user?.sapId ?? 'demo';
-  return NextResponse.json(lmsMastery.filter(m => m.studentUsn === usn && m.courseId === courseId));
+  return NextResponse.json(
+    lmsMastery.filter(
+      m => m.collegeId === collegeId && m.studentUsn === usn && m.courseId === courseId,
+    ),
+  );
 });

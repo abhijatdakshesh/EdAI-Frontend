@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { lmsProgress } from '@/lib/synth/lms-store';
+import { lmsProgress, resolveCollegeId } from '@/lib/synth/lms-store';
 
 const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
 
@@ -14,6 +14,9 @@ export const GET = auth(async (req) => {
     });
     if (res.ok) return NextResponse.json(await res.json());
   } catch { /* fall through */ }
+  const collegeId = resolveCollegeId(req);
   const usn = (req.auth as { user?: { sapId?: string } } | undefined)?.user?.sapId ?? 'demo';
-  return NextResponse.json(lmsProgress.filter(p => p.studentUsn === usn));
+  return NextResponse.json(
+    lmsProgress.filter(p => p.collegeId === collegeId && p.studentUsn === usn),
+  );
 });

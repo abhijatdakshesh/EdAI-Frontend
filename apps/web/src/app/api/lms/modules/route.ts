@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { lmsModules } from '@/lib/synth/lms-store';
+import { lmsModules, resolveCollegeId } from '@/lib/synth/lms-store';
 
 const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
 
@@ -20,7 +20,10 @@ export const GET = auth(async (req) => {
       if (Array.isArray(data) && data.length > 0) return NextResponse.json(data);
     }
   } catch { /* fall through */ }
-  return NextResponse.json(lmsModules.filter(m => m.courseId === courseId));
+  const collegeId = resolveCollegeId(req);
+  return NextResponse.json(
+    lmsModules.filter(m => m.courseId === courseId && m.collegeId === collegeId),
+  );
 });
 
 /** POST /api/lms/modules — create a module (faculty co-pilot). */
@@ -39,8 +42,10 @@ export const POST = auth(async (req) => {
     if (res.ok) return NextResponse.json(await res.json(), { status: 201 });
   } catch { /* fall through */ }
   const id = `mod-${Date.now().toString(36)}`;
+  const collegeId = resolveCollegeId(req);
   const created = {
     id,
+    collegeId,
     courseId: body.courseId,
     title: body.title,
     ...(body.description ? { description: body.description } : {}),

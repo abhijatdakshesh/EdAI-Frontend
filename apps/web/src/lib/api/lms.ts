@@ -169,6 +169,24 @@ export function useDraftModule() {
   });
 }
 
+export interface FeatureFlags {
+  lms_assignments: boolean;
+  lms_quizzes: boolean;
+  lms_discussions: boolean;
+  lms_voice_tutor: boolean;
+  lms_revision_call: boolean;
+  lms_parent_digest: boolean;
+  vtu_integration: boolean;
+}
+
+export function useLmsFeatures() {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "features"],
+    queryFn: () => apiGet<{ collegeId: string; features: FeatureFlags }>("/api/lms/features"),
+    staleTime: 300_000,
+  });
+}
+
 export function useCreateModule() {
   const qc = useQueryClient();
   return useMutation({

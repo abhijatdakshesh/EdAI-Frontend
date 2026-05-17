@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
-import { lmsLessons } from '@/lib/synth/lms-store';
+import { lmsLessons, resolveCollegeId } from '@/lib/synth/lms-store';
 
 const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
 
@@ -18,5 +18,10 @@ export const GET = auth(async (req) => {
       if (Array.isArray(data) && data.length > 0) return NextResponse.json(data);
     }
   } catch { /* fall through */ }
-  return NextResponse.json(lmsLessons.filter(l => l.moduleId === moduleId).sort((a, b) => a.order - b.order));
+  const collegeId = resolveCollegeId(req);
+  return NextResponse.json(
+    lmsLessons
+      .filter(l => l.moduleId === moduleId && l.collegeId === collegeId)
+      .sort((a, b) => a.order - b.order),
+  );
 });
