@@ -32,6 +32,12 @@ const BFF_PREFIXES = [
   "/api/parent-comms/messages",  // KAN-41 parent send-message synth
   "/api/automation/rules",       // KAN-52 admin automation rule create
   "/api/lms/",                   // LMS: modules, lessons, progress, mastery, eli5, narrate, authoring
+  "/api/teacher/reports/generate", // KAN-74 teacher report download synth
+  "/api/admin/comms/test-send",  // KAN-62 admin comms test message
+  "/api/ia/submissions/",        // KAN-63 IA remind/confirm synth
+  "/api/ia/teacher/marks",       // KAN-73 teacher marks save/submit synth
+  "/api/fees/payment/initiate",  // KAN-78 fee payment initiate synth
+  "/api/vtu/teacher/",           // VTU eligibility + submit synth
 ];
 
 /**
@@ -185,7 +191,10 @@ export async function apiDownload(path: string, filename: string): Promise<void>
   const accessToken = session?.accessToken;
   const headers: Record<string, string> = {};
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-  const res = await fetch(`${API_BASE}${path}`, { headers });
+  // Route through resolveRequestUrl so BFF-handled paths stay same-origin
+  // and hit the Next route handler (which proxies to the backend or
+  // returns a synth response).
+  const res = await fetch(resolveRequestUrl(path, "GET"), { headers });
   if (!res.ok) throw new Error(`Download failed: ${res.status}`);
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
@@ -204,7 +213,9 @@ export async function apiDownloadPost(path: string, body: unknown, filename: str
   const accessToken = session?.accessToken;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-  const res = await fetch(`${API_BASE}${path}`, {
+  // resolveRequestUrl keeps BFF-handled POSTs same-origin so synth-fallback
+  // routes (e.g. /api/teacher/reports/generate) work in prod.
+  const res = await fetch(resolveRequestUrl(path, "POST"), {
     method: "POST",
     headers,
     body: JSON.stringify(body),
