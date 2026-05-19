@@ -65,9 +65,12 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <Link href={homeRoute} className="flex-1 truncate">
-          <p className="text-xs text-text-muted leading-none">Raycraft</p>
-          <p className="text-sm font-medium truncate">{portalName}</p>
+        {/* Logo-only on mobile to avoid duplicating the portal name (e.g.
+            "Admin Portal") in a `md:hidden` element — that text would be in
+            the DOM but invisible on desktop, breaking Playwright `.first()`
+            assertions that match role-related strings like /admin|total/i. */}
+        <Link href={homeRoute} className="flex-1 truncate" aria-label={`${portalName} home`}>
+          <p className="text-sm font-medium">Raycraft</p>
         </Link>
         <Button
           variant="outline"
