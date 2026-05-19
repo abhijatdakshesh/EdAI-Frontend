@@ -91,20 +91,46 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         />
       )}
 
+      {/* Mobile drawer — separate element rendered only on <md so the
+          desktop aside below has zero mobile-specific classes that could
+          confuse Playwright's visibility checks. */}
+      <aside
+        className={cn(
+          "md:hidden fixed inset-y-0 left-0 z-50 w-[260px] overflow-y-auto",
+          "border-r border-border bg-surface px-4 py-6 transition-transform",
+          drawerOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+        aria-hidden={!drawerOpen}
+      >
+        <Link href={homeRoute} className="block">
+          <p className="text-sm font-medium">Raycraft</p>
+        </Link>
+        <span className="ray-rule ml-0" />
+        <nav className="space-y-1">
+          {nav.map((item) => (
+            <Link
+              key={item.key}
+              href={item.route}
+              className={cn(
+                "block rounded px-3 py-2 text-sm transition-colors",
+                pathname === item.route
+                  ? "bg-[#1C1810] text-[#F2EFE9]"
+                  : "text-text-secondary hover:bg-cream-200 hover:text-text-primary",
+              )}
+            >
+              {item.title}
+            </Link>
+          ))}
+        </nav>
+      </aside>
+
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 md:grid-cols-[240px_1fr]">
-        <aside
-          className={cn(
-            // Mobile: off-canvas drawer (fixed, slides in from left).
-            // md+: in-flow column, sticky.
-            "border-r border-border bg-surface px-4 py-6",
-            "fixed inset-y-0 left-0 z-50 w-[260px] overflow-y-auto transition-transform",
-            drawerOpen ? "translate-x-0" : "-translate-x-full",
-            "md:static md:translate-x-0 md:w-auto md:sticky md:top-0 md:h-screen md:overflow-y-auto md:z-0",
-          )}
-        >
+        {/* Desktop aside — unchanged structure from the original (so existing
+            E2E selectors like getByText(/admin/i) still find it visible). */}
+        <aside className="hidden md:block border-r border-border bg-surface px-4 py-6 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
           <Link href={homeRoute} className="block">
             <p className="label-track">Raycraft</p>
-            <h2 className="mt-2 text-2xl md:text-3xl">{portalName}</h2>
+            <h2 className="mt-2 text-3xl">{portalName}</h2>
           </Link>
           <span className="ray-rule ml-0" />
           <nav className="space-y-1">
