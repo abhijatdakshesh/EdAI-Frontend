@@ -7,14 +7,19 @@ on:
     branches: [main]
 
 # ─── Reusable setup steps ────────────────────────────────────────────────────
-# Shared env for all CI jobs — headless always true in CI
+# Shared env for all CI jobs — headless always true in CI.
+#
+# Note: BASE_URL is intentionally NOT set. Previously this pointed at the
+# prod deploy (https://app.raycraft.in), which meant E2E ran against
+# whatever was live in production — not the code in the PR. When prod was
+# slow or degraded, every test hit a 14 s wall-clock timeout, blocking
+# every PR including unrelated ones (PR #31, PR #30 merge). With BASE_URL
+# unset, playwright.config.ts launches a local mocked Next.js server and
+# tests the actual branch code.
 env:
   NEXT_PUBLIC_USE_MOCKS: "true"
-  NEXTAUTH_URL: https://app.raycraft.in
-  # Self-hosted runner shares port 3000 with local dev. Point Playwright at
-  # the prod deploy so playwright.config.ts treats it as production and skips
-  # the embedded webServer launch entirely.
-  BASE_URL: https://app.raycraft.in
+  NEXT_PUBLIC_USE_MOCK: "true"
+  NEXTAUTH_URL: http://localhost:3000
   CI: "true"
 
 jobs:
@@ -22,7 +27,7 @@ jobs:
   playwright-p0:
     name: "P0 — Release Gate (BLOCKS)"
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v3
@@ -32,6 +37,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
         working-directory: apps/web
+      - name: Build app (mocked)
+        run: pnpm --filter @rv/web build
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
       - name: Run P0 tests
         run: pnpm --filter @rv/web test:e2e:p0
         env:
@@ -50,7 +59,7 @@ jobs:
   playwright-p1-p2-report:
     name: "P1+P2 — Full suite (must pass)"
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     needs: playwright-p0
     steps:
       - uses: actions/checkout@v4
@@ -61,6 +70,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: npx playwright install --with-deps chromium
         working-directory: apps/web
+      - name: Build app (mocked)
+        run: pnpm --filter @rv/web build
+        env:
+          AUTH_SECRET: ${{ secrets.AUTH_SECRET || 'ci-test-secret-32-chars-minimum00' }}
       - name: Run P1 tests
         run: pnpm --filter @rv/web test:e2e:p1
         env:
