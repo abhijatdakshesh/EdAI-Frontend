@@ -79,7 +79,7 @@ export function UserManagement() {
       <div className="grid gap-5">
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { label: "Total Users", value: total },
             { label: "Shown", value: users.length },
@@ -201,7 +201,7 @@ export function UserManagement() {
 
         {/* Table */}
         <div className="overflow-x-auto rounded border border-border">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-[600px]">
             <thead className="bg-cream-200">
               <tr>
                 {["Name", "Email", "Role", "Department", "Status", "SAP ID", "Actions"].map((h) => (

@@ -78,9 +78,34 @@ export function DoubtChat({
     }
   };
 
+  // Mobile-friendly collapse: under sm the chat is hidden by default so it
+  // doesn't push the lesson body off-screen. User taps "Show" to expand.
+  // On sm+ the panel is always open at its full height.
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !window.matchMedia("(min-width: 640px)").matches;
+  });
+
   return (
-    <div className="rounded border border-border bg-surface p-3 flex flex-col h-[600px]">
-      <p className="label-track mb-2">Ask Ed8AI · This lesson</p>
+    <div
+      className={cn(
+        "rounded border border-border bg-surface p-3 flex flex-col",
+        collapsed ? "h-auto" : "max-h-[60vh] sm:h-[600px]",
+      )}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <p className="label-track">Ask Ed8AI · This lesson</p>
+        <button
+          onClick={() => setCollapsed((c) => !c)}
+          className="sm:hidden text-xs text-[#2F567A] hover:underline"
+        >
+          {collapsed ? "Show" : "Hide"}
+        </button>
+      </div>
+      {collapsed ? (
+        <p className="text-xs text-text-muted">Tap “Show” to ask a doubt about this lesson.</p>
+      ) : (
+      <>
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {messages.map((m) => (
           <div
@@ -120,6 +145,8 @@ export function DoubtChat({
           Send
         </Button>
       </form>
+      </>
+      )}
     </div>
   );
 }

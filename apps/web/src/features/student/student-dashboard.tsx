@@ -111,7 +111,7 @@ export function StudentDashboard() {
         )}
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           {isLoading
             ? [1, 2, 3, 4].map((i) => (
                 <div key={i} className="rounded border border-border bg-surface p-4 h-20 animate-pulse" />
@@ -132,7 +132,7 @@ export function StudentDashboard() {
 
         {/* Wellness signals */}
         {stats && (stats.riskScore !== undefined || stats.studyPlanStreak !== undefined) && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
             {stats.riskScore !== undefined && (
               <div className={cn("rounded border-l-4 bg-surface p-3",
                 stats.riskScore > 70 ? "border-l-[#8B2F2F]"

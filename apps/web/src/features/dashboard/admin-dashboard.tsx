@@ -127,7 +127,7 @@ export function AdminDashboard() {
 
             <p className="label-track">Campus Health Matrix</p>
             <div className="overflow-x-auto rounded border border-border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-cream-200">
                   <tr>
                     {["Campus", "Attendance", "Fee Collection", "At-Risk", "Grievances", "Health Score"].map(

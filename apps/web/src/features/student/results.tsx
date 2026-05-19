@@ -32,7 +32,7 @@ export function ResultsPortal() {
     <AppShell title="Results Portal">
       <div className="grid gap-5">
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-pulse">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
             {[1, 2, 3, 4].map((i) => <div key={i} className="rounded border border-border bg-surface p-4 h-20" />)}
           </div>
         ) : isError ? (
@@ -46,7 +46,7 @@ export function ResultsPortal() {
         ) : (
           <>
             {/* CGPA summary */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <div className="col-span-2 rounded border-l-4 border-l-[#3D6B4F] bg-surface p-4">
                 <p className="label-track">CGPA</p>
                 <p className="text-4xl font-light mt-1">
@@ -77,7 +77,7 @@ export function ResultsPortal() {
             {/* Results table */}
             {result && (
               <div className="overflow-x-auto rounded border border-border">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm min-w-[600px]">
                   <thead className="bg-cream-200">
                     <tr>
                       {["Code", "Subject", "Credits", "IA Marks", "External", "Total", "Grade"].map((h) => (

@@ -130,7 +130,7 @@ export function ParentFees() {
           <>
             {/* Summary */}
             {loadingFees ? (
-              <div data-testid="fees-loading-skeleton" className="grid grid-cols-2 gap-3 sm:grid-cols-4 animate-pulse">
+              <div data-testid="fees-loading-skeleton" className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 animate-pulse">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="rounded border border-border bg-surface h-20" />
                 ))}
@@ -140,7 +140,7 @@ export function ParentFees() {
                 No fee data available.
               </p>
             ) : (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                   { label: "Total Due", value: `₹${(fees.totalDue ?? 0).toLocaleString()}` },
                   { label: "Paid", value: `₹${(fees.totalPaid ?? 0).toLocaleString()}` },
@@ -216,7 +216,7 @@ export function ParentFees() {
               <div>
                 <p className="label-track mb-2">Payment History</p>
                 <div className="overflow-x-auto rounded border border-border">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm min-w-[600px]">
                     <thead className="bg-cream-200">
                       <tr>
                         {["Component", "Sem", "Amount", "Paid On", "Receipt"].map((h) => (

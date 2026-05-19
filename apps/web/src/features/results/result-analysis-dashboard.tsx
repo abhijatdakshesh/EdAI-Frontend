@@ -292,7 +292,7 @@ export function ResultAnalysisDashboard() {
             </div>
 
             <div className="overflow-x-auto rounded border border-border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-cream-200">
                   <tr>
                     {["#", "USN", "Name", "Branch", "Attendance %", "IA Avg /25", "Risk"].map((h) => (
@@ -343,7 +343,7 @@ export function ResultAnalysisDashboard() {
           <div>
             <p className="label-track mb-2">Faculty Pass Rate — HOD Performance View</p>
             <div className="overflow-x-auto rounded border border-border">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm min-w-[600px]">
                 <thead className="bg-cream-200">
                   <tr>
                     {["Faculty", "Dept", "Subjects", "Avg Pass %", "Trend"].map((h) => (

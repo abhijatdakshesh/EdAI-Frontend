@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { LmsMastery } from "@/lib/api/lms";
 
 /**
@@ -30,15 +30,22 @@ export function MasteryGraph({ mastery }: { mastery: LmsMastery[] }) {
   }));
 
   const masteredCount = nodes.filter((n) => n.masteryScore >= 0.66).length;
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [, force] = useState(0);
 
-  return (
-    <div>
-      <div className="flex items-center gap-3 mb-3 text-xs text-text-muted">
-        <span className="rounded-full px-2 py-0.5 bg-[#EBF3EE] text-[#3D6B4F] font-medium">
-          {masteredCount} / {nodes.length} mastered
-        </span>
-      </div>
-      <svg viewBox={`0 0 280 ${Math.max(180, 30 + Math.ceil(nodes.length / cols) * cellH + 40)}`} className="w-full">
+  const openExpand = () => {
+    dialogRef.current?.showModal();
+    force((v) => v + 1);
+  };
+  const closeExpand = () => dialogRef.current?.close();
+
+  const svgBody = (
+    <svg
+      viewBox={`0 0 280 ${Math.max(180, 30 + Math.ceil(nodes.length / cols) * cellH + 40)}`}
+      className="w-full h-full"
+      aria-label="Topic mastery graph"
+      role="img"
+    >
         {/* Edges (linear chain, prereq) */}
         {positions.slice(1).map((p, i) => {
           const prev = positions[i]!;
@@ -93,6 +100,39 @@ export function MasteryGraph({ mastery }: { mastery: LmsMastery[] }) {
           );
         })}
       </svg>
+  );
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 mb-3 text-xs text-text-muted">
+        <span className="rounded-full px-2 py-0.5 bg-[#EBF3EE] text-[#3D6B4F] font-medium">
+          {masteredCount} / {nodes.length} mastered
+        </span>
+        <button
+          onClick={openExpand}
+          className="lg:hidden text-[#2F567A] hover:underline"
+          aria-label="Expand mastery graph"
+        >
+          ⤢ Expand
+        </button>
+      </div>
+      <div className="aspect-square sm:aspect-auto sm:h-auto">{svgBody}</div>
+
+      {/* Fullscreen overlay for tiny phones */}
+      <dialog
+        ref={dialogRef}
+        className="w-screen h-screen max-w-none max-h-none p-0 bg-background backdrop:bg-black/40"
+      >
+        <div className="flex flex-col h-full p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="label-track">Topic mastery</p>
+            <button onClick={closeExpand} className="text-sm text-[#2F567A] hover:underline">
+              Close
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto">{svgBody}</div>
+        </div>
+      </dialog>
     </div>
   );
 }
