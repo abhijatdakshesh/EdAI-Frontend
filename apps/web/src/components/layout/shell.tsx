@@ -102,26 +102,37 @@ export function AppShell({ title, children }: { title: string; children: ReactNo
         )}
         aria-hidden={!drawerOpen}
       >
-        <Link href={homeRoute} className="block">
-          <p className="text-sm font-medium">Raycraft</p>
-        </Link>
-        <span className="ray-rule ml-0" />
-        <nav className="space-y-1">
-          {nav.map((item) => (
-            <Link
-              key={item.key}
-              href={item.route}
-              className={cn(
-                "block rounded px-3 py-2 text-sm transition-colors",
-                pathname === item.route
-                  ? "bg-[#1C1810] text-[#F2EFE9]"
-                  : "text-text-secondary hover:bg-cream-200 hover:text-text-primary",
-              )}
-            >
-              {item.title}
+        {/* Only render drawer contents when actually open.
+            Previously these nav links lived in the DOM unconditionally with
+            CSS visibility controlled by `md:hidden` + transform. That meant
+            every page on desktop had two copies of every nav link — the
+            hidden mobile copy first in DOM order, then the visible desktop
+            one. Playwright's `getByText(...).first()` therefore latched
+            onto the hidden copy and 24 P0 tests failed `toBeVisible`. */}
+        {drawerOpen && (
+          <>
+            <Link href={homeRoute} className="block">
+              <p className="text-sm font-medium">Raycraft</p>
             </Link>
-          ))}
-        </nav>
+            <span className="ray-rule ml-0" />
+            <nav className="space-y-1">
+              {nav.map((item) => (
+                <Link
+                  key={item.key}
+                  href={item.route}
+                  className={cn(
+                    "block rounded px-3 py-2 text-sm transition-colors",
+                    pathname === item.route
+                      ? "bg-[#1C1810] text-[#F2EFE9]"
+                      : "text-text-secondary hover:bg-cream-200 hover:text-text-primary",
+                  )}
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </nav>
+          </>
+        )}
       </aside>
 
       <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 md:grid-cols-[240px_1fr]">
