@@ -176,7 +176,7 @@ export default function ChatbotWidget() {
     // Public (no session) path — call anonymous endpoint, no token, no conversationId
     if (!session) {
       try {
-        const res = await fetch(`${API_URL}/api/chatbot/public/ask`, {
+        const res = await fetch(`/api/chatbot/public/ask`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text }),
@@ -214,14 +214,14 @@ export default function ChatbotWidget() {
     } else {
       // REST fallback
       try {
-        const res = await fetch(`${API_URL}/api/chatbot/message`, {
+        // Relative URL — hits the Next.js /api/chatbot/message route which
+        // wraps the access token via next-auth and proxies to the chatbot
+        // service. Previously we called `${API_URL}/api/chatbot/message`
+        // which pointed at the identity service and 404'd — the visible
+        // symptom of KAN-22/33/36/39/43/44/47/50/53/60/64/70/71/76/79/86/88.
+        const res = await fetch(`/api/chatbot/message`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(session && 'accessToken' in session
-              ? { Authorization: `Bearer ${(session as { accessToken: string }).accessToken}` }
-              : {}),
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text, conversationId: state.conversationId }),
         });
         if (!res.ok) throw new Error(`${res.status}`);
@@ -242,7 +242,7 @@ export default function ChatbotWidget() {
         // fall back to the anonymous /chatbot/public/ask endpoint so the
         // user still gets a useful Gemini reply instead of an error.
         try {
-          const pub = await fetch(`${API_URL}/api/chatbot/public/ask`, {
+          const pub = await fetch(`/api/chatbot/public/ask`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: text }),
