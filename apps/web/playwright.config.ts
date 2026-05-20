@@ -3,14 +3,6 @@ import { defineConfig, devices } from '@playwright/test';
 const BASE_URL = process.env.BASE_URL ?? 'http://localhost:3000';
 const isProduction = !!process.env.BASE_URL;
 
-// In CI we want a faster, stable server than `next dev` (HMR + compile-on-
-// request makes 14 s page loads — that's the symptom that took down PR #31's
-// E2E gate even though prod was fine). Use the production build when on CI,
-// dev mode locally.
-const localServerCommand = process.env.CI
-  ? 'NEXT_PUBLIC_USE_MOCKS=true NEXT_PUBLIC_USE_MOCK=true pnpm start -p 3000'
-  : 'NEXT_PUBLIC_USE_MOCKS=true NEXT_PUBLIC_USE_MOCK=true pnpm dev';
-
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -31,9 +23,14 @@ export default defineConfig({
     { name: 'mobile',   use: { ...devices['iPhone 13'] } },
   ],
   webServer: isProduction ? undefined : {
-    command: localServerCommand,
+    // In CI we boot the production build via `next start` (much faster than
+    // `next dev` — no HMR / compile-on-request). Locally we keep `next dev`
+    // so devs get hot reload.
+    command: process.env.CI
+      ? 'NEXT_PUBLIC_USE_MOCKS=true NEXT_PUBLIC_USE_MOCK=true pnpm --filter @rv/web start -p 3000'
+      : 'NEXT_PUBLIC_USE_MOCKS=true NEXT_PUBLIC_USE_MOCK=true pnpm dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 180_000, // production build can take 2-3 min on a cold CI runner
+    timeout: 180_000,
   },
 });
