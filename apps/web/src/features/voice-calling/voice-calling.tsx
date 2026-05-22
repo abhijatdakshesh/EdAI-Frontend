@@ -130,7 +130,7 @@ function TriggerCallTab() {
             type="tel"
             value={parentPhone}
             onChange={(e) => { setParentPhone(e.target.value); }}
-            placeholder="+919113949714"
+            placeholder="+919741573296"
             className="w-full rounded border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-text-primary"
           />
         </div>
