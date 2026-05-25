@@ -62,6 +62,40 @@ export interface UpdateUserPayload {
   preferredLanguage?: Language;
 }
 
+// ─── Mock data (NEXT_PUBLIC_USE_MOCKS=true) ──────────────────────────────────
+//
+// CI runs the e2e gate with mocks on and no backend, so `apiGet('/api/users')`
+// would resolve to an empty list — breaking the @P1 admin user-table test
+// which asserts on the per-row Deactivate/Reset PWD buttons. Mirror the
+// pattern used in parent.ts / jobs.ts: when mocks are on, short-circuit the
+// query with a hand-crafted realistic dataset.
+
+const MOCK_USERS: User[] = [
+  { id: "u-001", name: "Arjun Kumar",       email: "arjun.kumar@rvce.edu",      role: "STUDENT",    institutionId: "rvce", sapId: "1RV21CS001", departmentCode: "CSE", preferredLanguage: "en", isActive: true,  createdAt: "2026-04-01T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+  { id: "u-002", name: "Priya Sharma",      email: "priya.sharma@rvce.edu",     role: "STUDENT",    institutionId: "rvce", sapId: "1RV21CS002", departmentCode: "CSE", preferredLanguage: "en", isActive: true,  createdAt: "2026-04-01T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+  { id: "u-003", name: "Dr. Suresh Babu",   email: "suresh.babu@rvce.edu",      role: "FACULTY",    institutionId: "rvce", sapId: "FAC-CS-014", departmentCode: "CSE", preferredLanguage: "en", isActive: true,  createdAt: "2025-08-15T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+  { id: "u-004", name: "Dr. Rekha Nair",    email: "rekha.nair@rvce.edu",       role: "HOD",        institutionId: "rvce", sapId: "FAC-CS-001", departmentCode: "CSE", preferredLanguage: "en", isActive: true,  createdAt: "2024-06-01T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+  { id: "u-005", name: "Mr. Ramesh Kumar",  email: "ramesh.kumar@gmail.com",    role: "PARENT",     institutionId: "rvce",                                              preferredLanguage: "kn", isActive: true,  createdAt: "2026-04-02T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+  { id: "u-006", name: "Mrs. Lakshmi Devi", email: "lakshmi.devi@gmail.com",    role: "PARENT",     institutionId: "rvce",                                              preferredLanguage: "kn", isActive: false, createdAt: "2026-04-02T09:00:00Z", updatedAt: "2026-05-10T09:00:00Z" },
+  { id: "u-007", name: "Dr. Anitha Rao",    email: "anitha.rao@rvce.edu",       role: "PRINCIPAL",  institutionId: "rvce", sapId: "PRIN-001",                          preferredLanguage: "en", isActive: true, createdAt: "2024-04-01T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+  { id: "u-008", name: "Prof. Kavitha Menon",email: "kavitha.menon@rvce.edu",   role: "FACULTY",    institutionId: "rvce", sapId: "FAC-CS-022", departmentCode: "CSE", preferredLanguage: "en", isActive: true,  createdAt: "2025-08-15T09:00:00Z", updatedAt: "2026-05-01T09:00:00Z" },
+];
+
+function mockUsersList(filters: UsersFilter): UsersListResult {
+  let rows = [...MOCK_USERS];
+  if (filters.role) rows = rows.filter(u => u.role === filters.role);
+  if (filters.status === "active")   rows = rows.filter(u => u.isActive);
+  if (filters.status === "inactive") rows = rows.filter(u => !u.isActive);
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    rows = rows.filter(u => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+  }
+  const page = filters.page ?? 1;
+  const limit = filters.limit ?? 20;
+  const start = (page - 1) * limit;
+  return { data: rows.slice(start, start + limit), total: rows.length, page, limit };
+}
+
 // ─── Query Keys ───────────────────────────────────────────────────────────────
 
 export const userKeys = {
@@ -83,9 +117,13 @@ export function useUsers(filters: UsersFilter = {}) {
   if (filters.limit) params.set("limit", String(filters.limit));
   const qs = params.toString();
 
+  const USE_MOCKS = process.env.NEXT_PUBLIC_USE_MOCKS === "true";
+
   return useQuery<UsersListResult>({
     queryKey: userKeys.list(filters),
-    queryFn: () => apiGet<UsersListResult>(`/api/users${qs ? `?${qs}` : ""}`),
+    queryFn: USE_MOCKS
+      ? () => Promise.resolve(mockUsersList(filters))
+      : () => apiGet<UsersListResult>(`/api/users${qs ? `?${qs}` : ""}`),
   });
 }
 
