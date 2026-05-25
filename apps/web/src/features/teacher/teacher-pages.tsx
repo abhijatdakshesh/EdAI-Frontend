@@ -746,6 +746,23 @@ export function GenerateReports() {
             {error}
           </div>
         )}
+
+        {/* KAN-74 follow-up: full Excel → per-student PDF + ZIP flow */}
+        <a
+          href="/teacher/reports/attendance-generator"
+          className="rounded border border-border bg-surface p-4 flex gap-3 hover:bg-cream-50 transition-colors"
+        >
+          <span className="text-2xl shrink-0">📈</span>
+          <div className="flex-1">
+            <p className="font-medium text-sm">Attendance Report Generator</p>
+            <p className="text-xs text-text-muted mt-0.5">
+              Upload the marks sheet, generate one signed-format PDF per
+              student, and download as a ZIP — ready to mail to parents.
+            </p>
+            <p className="text-xs text-[#3D6B4F] mt-2">Open generator →</p>
+          </div>
+        </a>
+
         <div className="grid gap-3 sm:grid-cols-2">
           {REPORT_TYPES.map((r) => (
             <div key={r.title} className="rounded border border-border bg-surface p-4 flex gap-3">
