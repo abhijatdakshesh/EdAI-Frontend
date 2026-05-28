@@ -10,6 +10,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
+import { expectMainTitle } from './helpers/page';
 
 // ─── auth helper ─────────────────────────────────────────────────────────────
 
@@ -208,7 +209,7 @@ test('@P0 teacher: IA marks entry page loads with class/subject selector and inp
   await page.goto('/teacher/ia-marks');
   await expect(page).toHaveURL(/teacher\/ia-marks/);
 
-  await expect(page.getByText(/ia marks|internal assessment|marks entry/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /ia \/ vtu marks/i);
   // Class/subject selector should be present
   const selector = page.locator('select').first().or(page.getByRole('combobox').first());
   await expect(selector).toBeVisible({ timeout: 8_000 });
@@ -219,7 +220,7 @@ test('@P0 teacher: IA marks — page loads with subject code input and class sel
   await page.goto('/teacher/marks-entry');
   await expect(page).toHaveURL(/teacher\/marks-entry/);
 
-  await expect(page.getByText(/ia marks entry|marks|internal/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /ia marks entry/i);
   // Subject Code input is always visible
   await expect(page.locator('input[placeholder*="21CS"]').or(page.locator('input[placeholder*="subject"]')).first()).toBeVisible({ timeout: 8_000 });
   // Class selector is always visible
@@ -231,7 +232,7 @@ test('@P0 teacher: create assignment button opens form modal', async ({ page }) 
   await page.goto('/teacher/assignments');
   await expect(page).toHaveURL(/teacher\/assignments/);
 
-  await expect(page.getByText(/assignment/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /^assignments$/i);
   const createBtn = page.getByRole('button', { name: /create|add|new assignment/i });
   await expect(createBtn.first()).toBeVisible({ timeout: 8_000 });
   await createBtn.first().click();

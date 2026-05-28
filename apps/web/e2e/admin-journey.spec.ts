@@ -10,6 +10,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
+import { expectMainTitle } from './helpers/page';
 
 async function loginAsAdmin(page: Page) {
   await loginAs(page, 'admin');
@@ -22,7 +23,7 @@ test('@P0 admin: user management page renders search, filters, and stats', async
   await page.goto('/admin/users');
   await expect(page).toHaveURL(/admin\/users/);
 
-  await expect(page.getByText(/user management|users/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /user management/i);
   // Search input
   await expect(page.getByRole('textbox', { name: /search/i }).or(page.locator('input[placeholder*=search i]'))).toBeVisible({ timeout: 8_000 });
   // Role filter
@@ -53,7 +54,7 @@ test('@P0 admin: bulk import page renders type selector, template download, and 
   await page.goto('/admin/bulk-import');
   await expect(page).toHaveURL(/admin\/bulk-import/);
 
-  await expect(page.getByText(/bulk import/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /bulk import/i);
   // Type selector is a row of buttons (students / faculty / courses / attendance)
   const studentsBtn = page
     .getByRole('button', { name: /students/i })
@@ -70,7 +71,7 @@ test('@P0 admin: classes page renders department filter, class table, and add bu
   await page.goto('/admin/classes');
   await expect(page).toHaveURL(/admin\/classes/);
 
-  await expect(page.getByText(/class management|classes/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /class management/i);
   // Add class button
   await expect(page.getByRole('button', { name: /add class|create class|new class/i })).toBeVisible({ timeout: 8_000 });
   // Department filter or class list
@@ -86,7 +87,7 @@ test('@P0 admin: IA submission review — table with approve/reject buttons', as
   await page.goto('/admin/ia-submission');
   await expect(page).toHaveURL(/admin\/ia-submission/);
 
-  await expect(page.getByText(/ia submission|internal assessment|marks submission/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /ia submission dashboard/i);
   // Status badges or action buttons
   const reviewContent = page
     .getByRole('button', { name: /approve|reject/i })

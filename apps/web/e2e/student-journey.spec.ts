@@ -12,6 +12,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
+import { expectMainTitle } from './helpers/page';
 
 // ─── auth helper ─────────────────────────────────────────────────────────────
 
@@ -212,7 +213,7 @@ test('@P0 student: results page renders grade table and CGPA', async ({ page }) 
   await page.goto('/student/results');
   await expect(page).toHaveURL(/student\/results/);
 
-  await expect(page.getByText(/results|grades|cgpa/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /results portal/i);
   // CGPA value or results table must be present
   const resultsContent = page
     .getByText(/cgpa/i)
@@ -228,7 +229,7 @@ test('@P0 student: study plan page renders AI plan cards', async ({ page }) => {
   await page.goto('/student/study-plan');
   await expect(page).toHaveURL(/student\/study-plan/);
 
-  await expect(page.getByText(/study plan/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /study plan/i);
   // Study plan content, streak counter, or empty state should render
   const planContent = page
     .getByText(/streak|schedule|today|week|plan/i)
@@ -241,7 +242,7 @@ test('@P0 student: document centre renders request form elements', async ({ page
   await page.goto('/student/documents');
   await expect(page).toHaveURL(/student\/documents/);
 
-  await expect(page.getByText(/document|bonafide|certificate/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Form hidden by default — click "New Request" to reveal
   await page.getByRole('button', { name: /new request/i }).click();
   // Native <select> elements for document type and purpose
@@ -254,7 +255,7 @@ test('@P0 student: document request form — select type, check consent, submit'
   await loginAsStudent(page);
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   await page.getByRole('button', { name: /new request/i }).click();
 
   // Select purpose (required — second <select>)
