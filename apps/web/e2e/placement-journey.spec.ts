@@ -6,6 +6,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
+import { expectMainTitle } from './helpers/page';
 
 // ─── Admin: Placement Dashboard (/admin/placement) ───────────────────────────
 
@@ -14,7 +15,7 @@ test('@P0 admin: placement dashboard renders analytics cards and company list', 
   await page.goto('/admin/placement');
   await expect(page).toHaveURL(/admin\/placement/);
 
-  await expect(page.getByText(/placement/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: /placement intelligence/i }).first()).toBeVisible({ timeout: 10_000 });
   // Analytics cards — placed count, avg CTC, or similar stats
   const analyticsContent = page
     .getByText(/placed|ctc|offer|company|readiness/i)
@@ -43,7 +44,7 @@ test('@P0 student: placement view renders readiness score and matched companies'
   await page.goto('/student/placement');
   await expect(page).toHaveURL(/student\/placement/);
 
-  await expect(page.getByText(/placement/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /^placement$/i);
   // Readiness score or matched companies
   const placementContent = page
     .getByText(/readiness|score|matched|cgpa|fit score/i)

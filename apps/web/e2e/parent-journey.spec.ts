@@ -6,6 +6,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
+import { expectMainTitle } from './helpers/page';
 
 async function loginAsParent(page: Page) {
   await loginAs(page, 'parent');
@@ -18,7 +19,7 @@ test('@P0 parent: dashboard renders child info card and KPI cards', async ({ pag
   await page.goto('/parent/dashboard');
   await expect(page).toHaveURL(/parent\/dashboard/);
 
-  await expect(page.getByText(/dashboard/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /^dashboard$/i);
   // Child info card — "My Child" label is always rendered (hardcoded mock data)
   const childInfo = page
     .getByText(/my child|arjun|1rvce/i)
@@ -47,8 +48,7 @@ test('@P0 parent: fees page renders breakdown table and status indicators', asyn
   await page.goto('/parent/fees');
   await expect(page).toHaveURL(/parent\/fees/);
 
-  // Wait for the page shell (AppShell title) to confirm hydration is done.
-  await expect(page.getByText(/fee|payment/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /^fees$/i);
 
   // Wait until the fee skeleton is gone — i.e. wait until the resolved state is painted.
   // This prevents asserting during the brief animate-pulse window between the two React
@@ -70,7 +70,7 @@ test('@P0 parent: results page renders semester selector and grade info', async 
   await page.goto('/parent/results');
   await expect(page).toHaveURL(/parent\/results/);
 
-  await expect(page.getByText(/result|grade|cgpa/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /^results$/i);
   // Result content — table or cards
   const resultsContent = page
     .getByText(/cgpa|semester|subject|marks/i)

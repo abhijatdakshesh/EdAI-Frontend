@@ -8,6 +8,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
+import { expectMainTitle } from './helpers/page';
 
 async function loginAsAdmin(page: Page) {
   await loginAs(page, 'admin');
@@ -125,7 +126,7 @@ test('@P0 admin: VTU page renders with tab navigation', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/vtu');
   await expect(page).toHaveURL(/admin\/vtu/);
-  await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /vtu registration/i);
   await expect(page.getByRole('button', { name: /registration windows/i })).toBeVisible({ timeout: 8_000 });
   await expect(page.getByRole('button', { name: /pending students/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /dept overview/i })).toBeVisible();
@@ -135,7 +136,7 @@ test('@P0 admin: VTU page renders with tab navigation', async ({ page }) => {
 test('@P0 admin: VTU + New Window button opens create form with all required fields', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/vtu');
-  await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /vtu registration/i);
   const newWindowBtn = page.getByRole('button', { name: /new window/i });
   await expect(newWindowBtn).toBeVisible({ timeout: 8_000 });
   await newWindowBtn.click();
@@ -156,7 +157,7 @@ test('@P0 admin: VTU + New Window button opens create form with all required fie
 test('@P0 admin: VTU new window form Cancel button closes the form', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/vtu');
-  await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /vtu registration/i);
   await page.getByRole('button', { name: /new window/i }).click();
   const formHeading = page.getByText(/configure registration window/i);
   await expect(formHeading).toBeVisible({ timeout: 5_000 });
@@ -167,7 +168,7 @@ test('@P0 admin: VTU new window form Cancel button closes the form', async ({ pa
 test('@P1 admin: VTU windows list shows status badges or empty state', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/vtu');
-  await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /vtu registration/i);
   const windowContent = page
     .getByText(/upcoming|open|closed|processed/i)
     .or(page.getByRole('button', { name: /run eligibility check/i }))
@@ -179,7 +180,7 @@ test('@P1 admin: VTU windows list shows status badges or empty state', async ({ 
 test('@P1 admin: VTU Pending Students tab renders instruction or student list', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/vtu');
-  await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /vtu registration/i);
   await page.getByRole('button', { name: /pending students/i }).click();
   const content = page
     .getByText(/select a window/i)
@@ -191,7 +192,7 @@ test('@P1 admin: VTU Pending Students tab renders instruction or student list', 
 test('@P1 admin: VTU Dept Overview tab renders instruction or department cards', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/vtu');
-  await expect(page.getByText(/vtu registration/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /vtu registration/i);
   await page.getByRole('button', { name: /dept overview/i }).click();
   const content = page
     .getByText(/select a window/i)

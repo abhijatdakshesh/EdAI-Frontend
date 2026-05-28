@@ -6,6 +6,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
+import { expectMainTitle } from './helpers/page';
 
 // ─── Student Document Centre (/student/documents) ────────────────────────────
 
@@ -14,7 +15,7 @@ test('@P0 student: document centre renders type dropdown, purpose, consent check
   await page.goto('/student/documents');
   await expect(page).toHaveURL(/student\/documents/);
 
-  await expect(page.getByText(/document|bonafide|certificate/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Form is hidden behind "New Request" button — click to reveal
   await page.getByRole('button', { name: /new request/i }).click();
   // Document type selector (native <select>)
@@ -29,7 +30,7 @@ test('@P0 student: DPDP consent checkbox is required — submit blocked without 
   await loginAs(page, 'student');
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   await page.getByRole('button', { name: /new request/i }).click();
   const consentCheckbox = page.getByRole('checkbox').first();
   await expect(consentCheckbox).toBeVisible({ timeout: 8_000 });
@@ -50,7 +51,7 @@ test('@P0 student: full document request flow — select type, check consent, su
   await loginAs(page, 'student');
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Open the form
   await page.getByRole('button', { name: /new request/i }).click();
 
@@ -83,7 +84,7 @@ test('@P0 student: existing document requests show status badges', async ({ page
   await loginAs(page, 'student');
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Request history with status badges — or empty state
   const requestList = page
     .getByText(/pending|approved|rejected/i)
@@ -111,7 +112,7 @@ test('@P0 admin: document queue has approve and reject action buttons', async ({
   await loginAs(page, 'admin');
   await page.goto('/admin/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Approve / Reject buttons or empty state
   const actionContent = page
     .getByRole('button', { name: /approve|reject|review/i })
@@ -125,7 +126,7 @@ test('@P1 admin: approved document row has download action', async ({ page }) =>
   await loginAs(page, 'admin');
   await page.goto('/admin/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Download, approve/reject buttons, or any empty state text — page must render something
   const pageContent = page
     .getByRole('button', { name: /download|approve|reject/i })
