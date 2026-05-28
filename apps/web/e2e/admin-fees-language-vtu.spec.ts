@@ -19,10 +19,11 @@ test('@P0 admin: fees page renders summary cards and student records', async ({ 
   await loginAsAdmin(page);
   await page.goto('/admin/fees');
   await expect(page).toHaveURL(/admin\/fees/);
-  await expect(page.getByText(/fee|dues|outstanding/i).first()).toBeVisible({ timeout: 10_000 });
+  // Avoid matching hidden nav link "Alert Feed" (contains "fee").
+  await expect(page.getByRole('heading', { name: /fee collection intelligence/i })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/something went wrong|internal server error|http 500/i)).not.toBeVisible();
   const content = page
-    .getByText(/total|overdue|collected|₹/i)
+    .getByText(/collection snapshot|active invoices|refresh dues/i)
     .or(page.getByRole('table'))
     .or(page.getByText(/no outstanding fees/i));
   await expect(content.first()).toBeVisible({ timeout: 8_000 });
@@ -31,7 +32,7 @@ test('@P0 admin: fees page renders summary cards and student records', async ({ 
 test('@P0 admin: fees page has department filter and Overdue only checkbox', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/fees');
-  await expect(page.getByText(/fee|dues/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: /fee collection intelligence/i })).toBeVisible({ timeout: 10_000 });
   const deptSelect = page.locator('select').first();
   await expect(deptSelect).toBeVisible({ timeout: 8_000 });
   const overdueCheckbox = page.locator('input[type=checkbox]');
@@ -42,7 +43,7 @@ test('@P0 admin: fees page has department filter and Overdue only checkbox', asy
 test('@P1 admin: fees Overdue only checkbox is clickable and changes state', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/fees');
-  await expect(page.getByText(/fee|dues/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: /fee collection intelligence/i })).toBeVisible({ timeout: 10_000 });
   const checkbox = page.locator('input[type=checkbox]').first();
   await expect(checkbox).toBeVisible({ timeout: 8_000 });
   await checkbox.click();
@@ -53,7 +54,7 @@ test('@P1 admin: fees Overdue only checkbox is clickable and changes state', asy
 test('@P1 admin: fees Call Now button visible on fee records', async ({ page }) => {
   await loginAsAdmin(page);
   await page.goto('/admin/fees');
-  await expect(page.getByText(/fee|dues/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole('heading', { name: /fee collection intelligence/i })).toBeVisible({ timeout: 10_000 });
   const callContent = page
     .getByText(/📞 call now|call now/i)
     .or(page.getByText(/no outstanding fees/i))
