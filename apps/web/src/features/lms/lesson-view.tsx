@@ -17,6 +17,8 @@ import {
   type LessonContentBlock,
 } from "@/lib/api/lms";
 import { DoubtChat } from "./doubt-chat";
+import { LessonExtensionsPanel } from "./lesson-extensions-panel";
+import { useLmsStreak } from "@/lib/api/lms";
 import "highlight.js/styles/github.css";
 
 interface Props {
@@ -46,6 +48,9 @@ export function LessonView({ courseId, lessonId }: Props) {
   const eli5 = useEli5(lessonId);
   const narrate = useNarrate(lessonId);
   const [narrateLang, setNarrateLang] = useState<LangCode>("en");
+  const [lowBandwidth, setLowBandwidth] = useState(false);
+  const [dyslexiaMode, setDyslexiaMode] = useState(false);
+  const { data: streak } = useLmsStreak();
 
   // Pick which markdown to render: original lesson body OR ELI5 rewrite if present.
   const markdownBody = useMemo(() => {
@@ -127,11 +132,27 @@ export function LessonView({ courseId, lessonId }: Props) {
               <Button size="sm" variant="outline" onClick={handleNarrate} disabled={narrate.isPending}>
                 {narrate.isPending ? "…" : "Listen"}
               </Button>
+              <label className="flex items-center gap-1 text-xs">
+                <input type="checkbox" checked={lowBandwidth} onChange={(e) => setLowBandwidth(e.target.checked)} />
+                Low bandwidth
+              </label>
+              <label className="flex items-center gap-1 text-xs">
+                <input type="checkbox" checked={dyslexiaMode} onChange={(e) => setDyslexiaMode(e.target.checked)} />
+                Dyslexia-friendly
+              </label>
             </div>
           </div>
 
+          {streak && streak.currentStreak > 0 && (
+            <p className="text-xs text-[#3D6B4F]">🔥 {streak.currentStreak}-day learning streak</p>
+          )}
+
           {/* Content blocks */}
-          <article className="rounded border border-border bg-surface p-5 prose prose-sm max-w-none">
+          <article
+            className={`rounded border border-border bg-surface p-5 prose prose-sm max-w-none ${
+              dyslexiaMode ? "leading-loose tracking-wide [font-family:system-ui]" : ""
+            }`}
+          >
             {markdownBody && (
               <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                 {markdownBody}
@@ -144,10 +165,12 @@ export function LessonView({ courseId, lessonId }: Props) {
 
           {/* Other content blocks (video, slides, code) */}
           {lesson.contentBlocks
-            .filter((b) => b.kind !== "MARKDOWN")
+            .filter((b) => b.kind !== "MARKDOWN" && !(lowBandwidth && b.kind === "VIDEO"))
             .map((b, idx) => (
               <ContentBlock key={idx} block={b} />
             ))}
+
+          <LessonExtensionsPanel courseId={courseId} lessonId={lessonId} lowBandwidth={lowBandwidth} />
 
           {/* Checkpoint */}
           {lesson.checkpoint?.length > 0 && (
@@ -301,7 +324,13 @@ function Checkpoint({
   currentState?: string;
 }) {
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [result, setResult] = useState<{ score: number; total: number; state: string } | null>(null);
+  const [result, setResult] = useState<{
+    score: number;
+    total: number;
+    state: string;
+    explanations?: string[];
+    abcAward?: { awarded: boolean; credits?: number };
+  } | null>(null);
   const submit = useSubmitCheckpoint(lessonId, courseId);
 
   const canSubmit = questions.every((_, i) => typeof answers[i] === "number");
@@ -349,12 +378,20 @@ function Checkpoint({
           {submit.isPending ? "Submitting…" : "Submit checkpoint"}
         </Button>
         {result && (
-          <p className="text-sm">
-            Scored <strong>{result.score} / {result.total}</strong> ·{" "}
-            <span className={result.state === "MASTERED" ? "text-[#3D6B4F]" : "text-[#8B6914]"}>
-              {result.state === "MASTERED" ? "Mastered ✓" : "Try again"}
-            </span>
-          </p>
+          <div className="space-y-2">
+            <p className="text-sm">
+              Scored <strong>{result.score} / {result.total}</strong> ·{" "}
+              <span className={result.state === "MASTERED" ? "text-[#3D6B4F]" : "text-[#8B6914]"}>
+                {result.state === "MASTERED" ? "Mastered ✓" : "Try again"}
+              </span>
+              {result.abcAward?.awarded && (
+                <span className="ml-2 text-[#2F567A]">+{result.abcAward.credits} ABC micro-credit</span>
+              )}
+            </p>
+            {result.explanations?.map((ex, i) => (
+              <p key={i} className="text-xs text-text-muted">{i + 1}. {ex}</p>
+            ))}
+          </div>
         )}
       </div>
     </div>

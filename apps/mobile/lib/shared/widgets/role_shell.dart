@@ -24,6 +24,7 @@ class _NavItem {
 const _studentNav = [
   _NavItem(label: "Dashboard", route: AppRoutes.studentDashboard, icon: Icons.dashboard_outlined),
   _NavItem(label: "My Courses", route: AppRoutes.studentCourses, icon: Icons.book_outlined),
+  _NavItem(label: "Learn (LMS)", route: AppRoutes.studentLearn, icon: Icons.school_outlined),
   _NavItem(label: "Schedule", route: AppRoutes.studentSchedule, icon: Icons.calendar_today_outlined),
   _NavItem(label: "Results", route: AppRoutes.studentResults, icon: Icons.grade_outlined),
   _NavItem(label: "Attendance", route: AppRoutes.studentAttendance, icon: Icons.check_circle_outline),
