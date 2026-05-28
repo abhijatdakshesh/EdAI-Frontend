@@ -12,7 +12,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { expectMainTitle } from './helpers/page';
+import { expectMainTitle, main } from './helpers/page';
 
 // ─── auth helper ─────────────────────────────────────────────────────────────
 
@@ -230,10 +230,9 @@ test('@P0 student: study plan page renders AI plan cards', async ({ page }) => {
   await expect(page).toHaveURL(/student\/study-plan/);
 
   await expectMainTitle(page, /study plan/i);
-  // Study plan content, streak counter, or empty state should render
-  const planContent = page
-    .getByText(/streak|schedule|today|week|plan/i)
-    .or(page.getByText(/no study plan/i));
+  // Study plan content or empty state (avoid matching sidebar "Study Plan" nav link)
+  const planContent = main(page)
+    .getByText(/study progress|generate new plan|no study plan yet|today's tasks/i);
   await expect(planContent.first()).toBeVisible({ timeout: 10_000 });
 });
 

@@ -6,7 +6,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
-import { expectMainTitle } from './helpers/page';
+import { expectMainTitle, main } from './helpers/page';
 
 async function loginAsParent(page: Page) {
   await loginAs(page, 'parent');
@@ -20,13 +20,12 @@ test('@P0 parent: dashboard renders child info card and KPI cards', async ({ pag
   await expect(page).toHaveURL(/parent\/dashboard/);
 
   await expectMainTitle(page, /^dashboard$/i);
-  // Child info card — "My Child" label is always rendered (hardcoded mock data)
-  const childInfo = page
-    .getByText(/my child|arjun|1rvce/i)
-    .or(page.getByText(/your child|ward/i));
-  await expect(childInfo.first()).toBeVisible({ timeout: 10_000 });
+  // Child info card — mock child from useMyChildren (scope to main)
+  const childInfo = main(page)
+    .getByText(/my child|arjun|1rv21cs001/i);
+  await expect(childInfo.first()).toBeVisible({ timeout: 15_000 });
   // KPI cards — attendance, CGPA or similar
-  const kpiCard = page.getByText(/attendance|cgpa|gpa|fee/i).first();
+  const kpiCard = main(page).getByText(/attendance|cgpa|gpa|fee/i).first();
   await expect(kpiCard).toBeVisible({ timeout: 8_000 });
 });
 
