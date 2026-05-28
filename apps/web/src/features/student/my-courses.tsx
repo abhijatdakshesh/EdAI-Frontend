@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,17 @@ export function MyCourses() {
     queryFn: () => apiGet<{ courseIds: string[] }>("/api/student/courses"),
     enabled: !!usn,
   });
+  const { data: learnData } = useQuery({
+    queryKey: ["student", "learn", "courses"],
+    queryFn: () => apiGet<{ courses: Array<{ id: string; code: string; hasLms: boolean; learnUrl: string }> }>(
+      "/api/student/learn/courses",
+    ),
+    enabled: !!usn,
+  });
+  const lmsByCourseId = useMemo(
+    () => new Map((learnData?.courses ?? []).map((c) => [c.id, c])),
+    [learnData],
+  );
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -188,7 +200,12 @@ export function MyCourses() {
                 )}
               </dl>
 
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap gap-2">
+                {isEnrolledFor(selected.id) && lmsByCourseId.get(selected.id)?.hasLms && (
+                  <Button size="sm" asChild>
+                    <Link href={lmsByCourseId.get(selected.id)!.learnUrl}>Open Learn</Link>
+                  </Button>
+                )}
                 {isEnrolledFor(selected.id) ? (
                   <Button
                     size="sm"

@@ -26,6 +26,7 @@ import "../../features/student/counselor_screen.dart";
 import "../../features/student/vtu_screen.dart";
 import "../../features/student/dashboard_screen.dart" as stu;
 import "../../features/student/hr_staff_screen.dart";
+import "../../features/learn/learn_screen.dart";
 
 // ── Teacher screens ───────────────────────────────────────────────────────────
 import "../../features/teacher/teacher_dashboard_screen.dart";
@@ -80,6 +81,7 @@ abstract class AppRoutes {
   static const studentVtu = "/student/vtu";
   static const studentProfile = "/student/profile";
   static const studentHr = "/student/hr";
+  static const studentLearn = "/student/learn";
 
   // Teacher
   static const teacherDashboard = "/teacher/dashboard";
@@ -207,6 +209,7 @@ List<RouteBase> _studentRoutes() => [
   GoRoute(path: AppRoutes.studentVtu, builder: (_, __) => const StudentVtuScreen()),
   GoRoute(path: AppRoutes.studentProfile, builder: (_, __) => const ProfileScreen()),
   GoRoute(path: AppRoutes.studentHr, builder: (_, __) => const HrStaffScreen()),
+  GoRoute(path: AppRoutes.studentLearn, builder: (_, __) => const LearnScreen()),
 ];
 
 List<RouteBase> _teacherRoutes() => [

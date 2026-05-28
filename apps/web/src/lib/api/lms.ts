@@ -130,10 +130,13 @@ export function useSubmitCheckpoint(lessonId: string, courseId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (answers: number[]) =>
-      apiPost<{ score: number; total: number; state: ProgressState }>(
-        `/api/lms/lessons/${lessonId}/checkpoint`,
-        { answers },
-      ),
+      apiPost<{
+        score: number;
+        total: number;
+        state: ProgressState;
+        explanations?: string[];
+        abcAward?: { awarded: boolean; credits?: number };
+      }>(`/api/lms/lessons/${lessonId}/checkpoint`, { answers }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: lmsKeys.lesson(lessonId) });
       qc.invalidateQueries({ queryKey: lmsKeys.progress(courseId) });
@@ -193,5 +196,81 @@ export function useCreateModule() {
     mutationFn: (payload: { courseId: string; title: string; description?: string; published?: boolean }) =>
       apiPost<LmsModule>("/api/lms/modules", payload),
     onSuccess: (m) => qc.invalidateQueries({ queryKey: lmsKeys.modules(m.courseId) }),
+  });
+}
+
+// ── Phase 2–6 extensions ───────────────────────────────────────────────────
+
+export function useLmsAssignments(lessonId: string) {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "assignments", lessonId],
+    queryFn: () => apiGet<Array<{ id: string; title: string; description?: string }>>(
+      `/api/lms/lessons/${lessonId}/assignments`,
+    ),
+    enabled: !!lessonId,
+  });
+}
+
+export function useSubmitAssignment(assignmentId: string) {
+  return useMutation({
+    mutationFn: (body: string) =>
+      apiPost<{ score?: number; feedback?: string }>(`/api/lms/assignments/${assignmentId}/submit`, { body }),
+  });
+}
+
+export function useAdaptiveQuiz(courseId: string) {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "quiz", courseId],
+    queryFn: () =>
+      apiGet<Array<{ id: string; question: string; options: string[] }>>(
+        `/api/lms/quizzes/adaptive?courseId=${courseId}`,
+      ),
+    enabled: !!courseId,
+  });
+}
+
+export function useLmsDiscussions(lessonId: string) {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "discussions", lessonId],
+    queryFn: () =>
+      apiGet<Array<{ id: string; authorUsn: string; authorRole: string; body: string; pinned: boolean }>>(
+        `/api/lms/lessons/${lessonId}/discussions`,
+      ),
+    enabled: !!lessonId,
+  });
+}
+
+export function useLmsStreak() {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "streak"],
+    queryFn: () => apiGet<{ currentStreak: number; longestStreak: number }>("/api/lms/streak"),
+  });
+}
+
+export function useLmsHeartbeat(courseId: string, lessonId: string) {
+  return useMutation({
+    mutationFn: () => apiPost<{ currentStreak: number; hours: number }>("/api/lms/heartbeat", { courseId, lessonId }),
+  });
+}
+
+export function useFacultyHeatmap(courseId: string) {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "heatmap", courseId],
+    queryFn: () =>
+      apiGet<{ topics: Array<{ topic: string; avgMastery: number; studentCount: number }> }>(
+        `/api/lms/faculty/heatmap?courseId=${courseId}`,
+      ),
+    enabled: !!courseId,
+  });
+}
+
+export function usePlacementLmsRecs(courseId: string) {
+  return useQuery({
+    queryKey: [...lmsKeys.all, "placement-recs", courseId],
+    queryFn: () =>
+      apiGet<Array<{ topic: string; masteryScore: number; recommendedAction: string }>>(
+        `/api/lms/placement/recommendations?courseId=${courseId}`,
+      ),
+    enabled: !!courseId,
   });
 }

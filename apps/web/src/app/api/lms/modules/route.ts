@@ -1,25 +1,16 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { lmsModules, resolveCollegeId } from '@/lib/synth/lms-store';
+import { proxyLmsGet, proxyLmsMutation } from '@/lib/api/lms-proxy';
 
-const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
-
-/** GET /api/lms/modules?courseId=CS501 — list modules for a course.
- *  Backend-first, synth-store fallback. */
+/** GET /api/lms/modules?courseId=CS501 — identity-first; synth only if API down. */
 export const GET = auth(async (req) => {
   if (!req.auth?.accessToken) return NextResponse.json({ error: 'Unauthenticated' }, { status: 401 });
   const url = new URL(req.url);
   const courseId = url.searchParams.get('courseId');
   if (!courseId) return NextResponse.json({ error: 'courseId required' }, { status: 400 });
-  try {
-    const res = await fetch(`${IDENTITY_SERVICE_URL}${url.pathname}${url.search}`, {
-      headers: { Authorization: `Bearer ${req.auth.accessToken}` },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) return NextResponse.json(data);
-    }
-  } catch { /* fall through */ }
+  const res = await proxyLmsGet(`${url.pathname}${url.search}`, req.auth.accessToken);
+  if (res?.ok) return NextResponse.json(await res.json());
   const collegeId = resolveCollegeId(req);
   return NextResponse.json(
     lmsModules.filter(m => m.courseId === courseId && m.collegeId === collegeId),
@@ -32,15 +23,12 @@ export const POST = auth(async (req) => {
   let body: { courseId?: string; title?: string; description?: string; order?: number; published?: boolean } = {};
   try { body = await req.json(); } catch { /* ignore */ }
   if (!body.courseId || !body.title) return NextResponse.json({ error: 'courseId + title required' }, { status: 400 });
-  try {
-    const url = new URL(req.url);
-    const res = await fetch(`${IDENTITY_SERVICE_URL}${url.pathname}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${req.auth.accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) return NextResponse.json(await res.json(), { status: 201 });
-  } catch { /* fall through */ }
+  const url = new URL(req.url);
+  const res = await proxyLmsMutation(url.pathname, req.auth.accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  if (res?.ok) return NextResponse.json(await res.json(), { status: res.status });
   const id = `mod-${Date.now().toString(36)}`;
   const collegeId = resolveCollegeId(req);
   const created = {
