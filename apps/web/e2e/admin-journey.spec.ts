@@ -53,7 +53,7 @@ test('@P0 admin: bulk import page renders type selector, template download, and 
   await page.goto('/admin/bulk-import');
   await expect(page).toHaveURL(/admin\/bulk-import/);
 
-  await expect(page.getByText(/bulk import|import/i).first()).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/bulk import/i).first()).toBeVisible({ timeout: 10_000 });
   // Type selector is a row of buttons (students / faculty / courses / attendance)
   const studentsBtn = page
     .getByRole('button', { name: /students/i })
