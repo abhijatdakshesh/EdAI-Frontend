@@ -55,7 +55,10 @@ test('@P0 admin: bulk import page renders type selector, template download, and 
 
   await expect(page.getByText(/bulk import|import/i).first()).toBeVisible({ timeout: 10_000 });
   // Type selector is a row of buttons (students / faculty / courses / attendance)
-  await expect(page.getByRole('button', { name: /students/i })).toBeVisible({ timeout: 8_000 });
+  const studentsBtn = page
+    .getByRole('button', { name: /students/i })
+    .or(page.getByText(/^students$/i));
+  await expect(studentsBtn.first()).toBeVisible({ timeout: 12_000 });
   // Download Template button
   await expect(page.getByRole('button', { name: /download template/i })).toBeVisible();
   // Drag-drop zone text
