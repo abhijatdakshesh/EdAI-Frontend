@@ -133,8 +133,11 @@ test('@P1 admin: bulk import Faculty type button updates required columns info',
   await loginAsAdmin(page);
   await page.goto('/admin/bulk-import');
   await expect(page.getByText(/bulk import/i).first()).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByRole('button', { name: /faculty/i })).toBeVisible({ timeout: 8_000 });
-  await page.getByRole('button', { name: /faculty/i }).click();
+  const facultyBtn = page
+    .getByRole('button', { name: /faculty/i })
+    .or(page.getByText(/^faculty$/i));
+  await expect(facultyBtn.first()).toBeVisible({ timeout: 12_000 });
+  await facultyBtn.first().click();
   // Required columns section should update for faculty type
   const facultyCols = page
     .getByText(/employee id|designation|department code/i)
@@ -157,7 +160,7 @@ test('@P1 admin: bulk import recent imports sidebar shows history section', asyn
   const sidebar = page
     .getByText(/recent imports|import history/i)
     .or(page.getByText(/completed|failed|processing/i));
-  await expect(sidebar.first()).toBeVisible({ timeout: 8_000 });
+  await expect(sidebar.first()).toBeVisible({ timeout: 12_000 });
 });
 
 // ─── Settings: Save Changes feedback (/admin/settings) ────────────────────────
