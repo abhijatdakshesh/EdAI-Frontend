@@ -18,3 +18,14 @@ export async function expectMainTitle(
     timeout: options?.timeout ?? 10_000,
   });
 }
+
+/** Pages without AppShell (standalone layout) — heading is outside `<main>`. */
+export async function expectHeading(
+  page: Page,
+  name: string | RegExp,
+  options?: { timeout?: number },
+) {
+  await expect(page.getByRole('heading', { name }).first()).toBeVisible({
+    timeout: options?.timeout ?? 10_000,
+  });
+}

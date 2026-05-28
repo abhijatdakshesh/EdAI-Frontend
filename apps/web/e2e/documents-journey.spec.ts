@@ -6,7 +6,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
-import { expectMainTitle } from './helpers/page';
+import { expectHeading, expectMainTitle } from './helpers/page';
 
 // ─── Student Document Centre (/student/documents) ────────────────────────────
 
@@ -99,12 +99,12 @@ test('@P0 admin: document approval queue renders table with status badges', asyn
   await page.goto('/admin/documents');
   await expect(page).toHaveURL(/admin\/documents/);
 
-  await expect(page.getByText(/document|approval queue|requests/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectHeading(page, /document centre/i);
   // Approval queue — table or empty state
   const queueContent = page
     .getByRole('table')
-    .or(page.getByText(/pending|approved|rejected/i))
-    .or(page.getByText(/no pending requests|no documents/i));
+    .or(page.getByText(/no pending requests/i))
+    .or(page.getByText(/pending request/i));
   await expect(queueContent.first()).toBeVisible({ timeout: 8_000 });
 });
 
@@ -112,11 +112,11 @@ test('@P0 admin: document queue has approve and reject action buttons', async ({
   await loginAs(page, 'admin');
   await page.goto('/admin/documents');
 
-  await expectMainTitle(page, /my documents/i);
+  await expectHeading(page, /document centre/i);
   // Approve / Reject buttons or empty state
   const actionContent = page
-    .getByRole('button', { name: /approve|reject|review/i })
-    .or(page.getByText(/no pending|no documents/i));
+    .getByRole('button', { name: /approve|reject/i })
+    .or(page.getByText(/no pending requests/i));
   await expect(actionContent.first()).toBeVisible({ timeout: 8_000 });
 });
 
@@ -126,7 +126,7 @@ test('@P1 admin: approved document row has download action', async ({ page }) =>
   await loginAs(page, 'admin');
   await page.goto('/admin/documents');
 
-  await expectMainTitle(page, /my documents/i);
+  await expectHeading(page, /document centre/i);
   // Download, approve/reject buttons, or any empty state text — page must render something
   const pageContent = page
     .getByRole('button', { name: /download|approve|reject/i })

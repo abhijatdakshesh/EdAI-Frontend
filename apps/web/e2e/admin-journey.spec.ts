@@ -10,7 +10,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
-import { expectMainTitle } from './helpers/page';
+import { expectMainTitle, main } from './helpers/page';
 
 async function loginAsAdmin(page: Page) {
   await loginAs(page, 'admin');
@@ -74,12 +74,11 @@ test('@P0 admin: classes page renders department filter, class table, and add bu
   await expectMainTitle(page, /class management/i);
   // Add class button
   await expect(page.getByRole('button', { name: /add class|create class|new class/i })).toBeVisible({ timeout: 8_000 });
-  // Department filter or class list
-  const classContent = page
+  // Department filter or class list (scope to main — nav also contains "Classes")
+  const classContent = main(page)
     .getByRole('table')
-    .or(page.locator('[class*=grid]'))
-    .or(page.getByText(/department|semester|section/i));
-  await expect(classContent.first()).toBeVisible();
+    .or(main(page).getByText(/total classes|all departments/i));
+  await expect(classContent.first()).toBeVisible({ timeout: 12_000 });
 });
 
 test('@P0 admin: IA submission review — table with approve/reject buttons', async ({ page }) => {
