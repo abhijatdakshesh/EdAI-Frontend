@@ -64,6 +64,8 @@ export const navItems: NavItem[] = [
   { key: "promotion",         title: "Student Promotion",       route: "/admin/promotion",        allowedRoles: ["ADMIN","HOD","PRINCIPAL"],                      group: "Admin" },
   { key: "data-exports",      title: "Data Exports",            route: "/admin/exports",          allowedRoles: ["ADMIN","HOD","PRINCIPAL","DEAN"],               group: "Admin" },
   { key: "result-analysis",   title: "Result Analysis",         route: "/admin/results",          allowedRoles: ["ADMIN","PRINCIPAL","HOD","DEAN"],               group: "Admin" },
+  { key: "hostel-mgmt",       title: "Hostel Management",       route: "/admin/hostel",           allowedRoles: ["ADMIN","PRINCIPAL","HOD"],                      group: "Admin" },
+  { key: "transport-mgmt",    title: "Transport Management",    route: "/admin/transport",        allowedRoles: ["ADMIN","PRINCIPAL","HOD"],                      group: "Admin" },
 
   // ── TEACHER PORTAL ────────────────────────────────────────────────────────
 
@@ -122,6 +124,7 @@ export const navItems: NavItem[] = [
   { key: "par-announce",      title: "Announcements",           route: "/parent/announcements",   allowedRoles: ["PARENT"],                                       group: "Parent" },
   { key: "par-messages",      title: "Messages",                route: "/parent/messages",        allowedRoles: ["PARENT"],                                       group: "Parent" },
   { key: "par-scholarship",   title: "Scholarship Eligibility", route: "/parent/scholarship",     allowedRoles: ["PARENT"],                                       group: "Parent" },
+  { key: "par-hostel",        title: "Hostel & Transport",      route: "/parent/hostel",          allowedRoles: ["PARENT"],                                       group: "Parent" },
   { key: "par-chatbot",       title: "Ask Ed8AI",                route: "/parent/chatbot",         allowedRoles: ["PARENT"],                                       group: "Parent" },
 
   // ── TEACHER CHATBOT ────────────────────────────────────────────────────────
