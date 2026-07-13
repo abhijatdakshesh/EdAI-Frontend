@@ -3,30 +3,9 @@
 import { useState } from "react";
 import { AppShell } from "@/components/layout/shell";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { apiGet, apiPost } from "@/lib/api/client";
 import { useAuth } from "@/lib/auth/use-auth";
-
-interface HostelInfo {
-  block: string;
-  roomNumber: string;
-  bedNumber: string;
-  floor: string;
-  warden: string;
-  wardenContact: string;
-  messType: string;
-  feesStatus: string;
-}
-
-interface TransportInfo {
-  routeName: string;
-  busNumber: string;
-  driver: string;
-  driverContact: string;
-  morningPickup: string;
-  eveningDrop: string;
-  feesStatus: string;
-}
+import { useStudentHostel, useRaiseComplaint, useRequestLeave } from "@/lib/api/hostel";
+import { useStudentTransport } from "@/lib/api/transport";
 
 export function HostelTransport() {
   const { session } = useAuth();
@@ -34,21 +13,16 @@ export function HostelTransport() {
   const [complaintMsg, setComplaintMsg] = useState<string | null>(null);
   const [leaveMsg, setLeaveMsg] = useState<string | null>(null);
 
-  const { data: hostel } = useQuery<HostelInfo>({
-    queryKey: ["hostel", usn],
-    queryFn: () => apiGet<HostelInfo>(`/api/hostel/student/${usn}`),
-    enabled: !!usn,
-  });
-
-  const { data: transport } = useQuery<TransportInfo>({
-    queryKey: ["transport", usn],
-    queryFn: () => apiGet<TransportInfo>(`/api/transport/student/${usn}`),
-    enabled: !!usn,
-  });
+  const { data: hostel } = useStudentHostel(usn);
+  const { data: transport } = useStudentTransport(usn);
+  const raiseComplaint = useRaiseComplaint(usn);
+  const requestLeave = useRequestLeave(usn);
 
   async function handleComplaint() {
+    const description = window.prompt("Describe the issue (e.g. water leakage in bathroom):");
+    if (!description) return;
     try {
-      await apiPost("/api/hostel/complaints", { studentUsn: usn });
+      await raiseComplaint.mutateAsync({ category: "GENERAL", description });
       setComplaintMsg("Complaint raised. Warden will contact you within 24 hours.");
     } catch {
       setComplaintMsg("Failed to raise complaint. Please try again.");
@@ -56,32 +30,41 @@ export function HostelTransport() {
   }
 
   async function handleLeaveRequest() {
+    const fromDate = window.prompt("Leave from (YYYY-MM-DD):");
+    const toDate = fromDate ? window.prompt("Leave to (YYYY-MM-DD):") : null;
+    const reason = toDate ? window.prompt("Reason:") : null;
+    if (!fromDate || !toDate || !reason) return;
     try {
-      await apiPost("/api/hostel/leave-requests", { studentUsn: usn });
-      setLeaveMsg("Leave request submitted.");
+      await requestLeave.mutateAsync({ fromDate, toDate, reason });
+      setLeaveMsg("Leave request submitted for warden approval.");
     } catch {
       setLeaveMsg("Failed to submit leave request.");
     }
   }
 
-  const hostelRows = hostel ? [
-    ["Room Number", hostel.roomNumber],
-    ["Bed Number", hostel.bedNumber],
-    ["Floor", hostel.floor],
-    ["Warden", hostel.warden],
-    ["Warden Contact", hostel.wardenContact],
-    ["Mess Type", hostel.messType],
-    ["Fees Status", hostel.feesStatus],
-  ] : [];
+  const hostelRows = hostel
+    ? [
+        ["Room Number", hostel.roomNumber],
+        ["Bed Number", String(hostel.bedNo)],
+        ["Floor", String(hostel.floor)],
+        ["Warden", hostel.warden ?? "—"],
+        ["Warden Contact", hostel.wardenPhone ?? "—"],
+        ["Mess Type", hostel.messType],
+        ["Status", hostel.status],
+      ]
+    : [];
 
-  const transportRows = transport ? [
-    ["Bus Number", transport.busNumber],
-    ["Driver", transport.driver],
-    ["Driver Contact", transport.driverContact],
-    ["Morning Pickup", transport.morningPickup],
-    ["Evening Drop", transport.eveningDrop],
-    ["Transport Fees", transport.feesStatus],
-  ] : [];
+  const transportRows = transport
+    ? [
+        ["Bus Number", transport.vehicleNo ?? "—"],
+        ["Driver", transport.driverName ?? "—"],
+        ["Driver Contact", transport.driverPhone ?? "—"],
+        ["Boarding Stop", transport.stopName ?? "—"],
+        ["Pickup Time", transport.pickupTime ?? "—"],
+        ["Pass", transport.passStatus],
+        ["Transport Fees", transport.feeStatus],
+      ]
+    : [];
 
   return (
     <AppShell title="Hostel & Transport">
@@ -103,6 +86,21 @@ export function HostelTransport() {
                     </div>
                   ))}
                 </dl>
+                {hostel.messMenu.length > 0 && (
+                  <div className="rounded bg-cream-100 p-3">
+                    <p className="text-xs text-text-muted mb-1">This Week&apos;s Mess Menu</p>
+                    <ul className="text-xs grid gap-1">
+                      {hostel.messMenu.map((m) => (
+                        <li key={m.day} className="flex justify-between gap-2">
+                          <span className="font-medium">{m.day}</span>
+                          <span className="text-text-muted text-right">
+                            {[m.breakfast, m.lunch, m.dinner].filter(Boolean).join(" · ")}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               <p className="text-sm text-text-muted">No hostel allocation found.</p>
@@ -126,9 +124,23 @@ export function HostelTransport() {
           <div className="mt-3 grid gap-3">
             {transport ? (
               <>
-                <div className="rounded bg-cream-100 p-3">
-                  <p className="text-xs text-text-muted">Bus Route</p>
-                  <p className="font-medium">{transport.routeName}</p>
+                {/* Live tracking banner */}
+                <div className="rounded bg-cream-100 p-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-text-muted">{transport.routeCode} — {transport.routeName}</p>
+                    <p className="font-medium">
+                      {transport.live
+                        ? transport.etaMinutes != null
+                          ? `Arriving in ~${transport.etaMinutes} min`
+                          : "On the way"
+                        : "Not currently tracking"}
+                    </p>
+                  </div>
+                  {transport.live && (
+                    <span className="inline-flex items-center gap-1 text-xs text-[#3D6B4F]">
+                      <span className="h-2 w-2 rounded-full bg-[#3D6B4F] animate-pulse" /> LIVE
+                    </span>
+                  )}
                 </div>
                 <dl className="grid gap-2 text-sm">
                   {transportRows.map(([k, v]) => (
@@ -141,9 +153,6 @@ export function HostelTransport() {
             ) : (
               <p className="text-sm text-text-muted">No transport allocation found.</p>
             )}
-            <Button size="sm" variant="outline" aria-label="Track bus location">
-              Track Bus
-            </Button>
           </div>
         </div>
 

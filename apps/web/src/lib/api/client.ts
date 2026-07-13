@@ -19,8 +19,7 @@ const API_BASE =
  */
 const BFF_PREFIXES = [
   "/api/jobs/",                  // jobs/:id/apply synth fallback
-  "/api/hostel/",                // hostel/student, complaints, leave-requests
-  "/api/transport/",             // transport/student/:usn synth
+  // hostel + transport now served by the real identity backend (hostel/transport modules)
   "/api/hr/",                    // hr/grievances, hr/service-requests synth
   "/api/wellness/stress-assessment", // synth scoring
   "/api/timetable/student/",     // weekly schedule synth (backend has no route yet)
