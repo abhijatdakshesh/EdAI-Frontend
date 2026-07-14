@@ -85,6 +85,8 @@ export const navItems: NavItem[] = [
   { key: "teacher-profile",   title: "Profile",                 route: "/teacher/profile",        allowedRoles: ["FACULTY","HOD","COUNSELLOR"],                   group: "Teacher" },
   { key: "gen-reports",       title: "Generate Reports",        route: "/teacher/reports",        allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
   { key: "vtu-teacher",       title: "VTU Registration",        route: "/teacher/vtu",            allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
+  { key: "lms-analytics",     title: "LMS Analytics",           route: "/teacher/lms-analytics",  allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
+  { key: "lms-import",        title: "LMS Bulk Import",         route: "/teacher/lms-import",     allowedRoles: ["FACULTY","HOD"],                                group: "Teacher" },
   { key: "perf-drop",         title: "Performance Drop Alert",  route: "/teacher/perf-drop",      allowedRoles: ["FACULTY","HOD","COUNSELLOR"],                   group: "Teacher" },
   { key: "grievance-t",       title: "Grievance Cases",         route: "/grievance",              allowedRoles: ["FACULTY","HOD","COUNSELLOR"],                   group: "Teacher" },
   { key: "mentorship-t",      title: "Mentorship",              route: "/mentorship",             allowedRoles: ["FACULTY","HOD","COUNSELLOR"],                   group: "Teacher" },
@@ -93,7 +95,7 @@ export const navItems: NavItem[] = [
 
   { key: "stu-dashboard",     title: "Dashboard",               route: "/student/dashboard",      allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-courses",       title: "Courses",                 route: "/student/courses",        allowedRoles: ["STUDENT"],                                      group: "Student" },
-  { key: "stu-learn",         title: "Learn (LMS)",             route: "/student/learn/CS501",    allowedRoles: ["STUDENT"],                                      group: "Student" },
+  { key: "stu-learn",         title: "Learn (LMS)",             route: "/student/learn",          allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-schedule",      title: "Schedule",                route: "/student/schedule",       allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-results",       title: "Results Portal",          route: "/student/results",        allowedRoles: ["STUDENT"],                                      group: "Student" },
   { key: "stu-attendance",    title: "Attendance",              route: "/student/attendance",     allowedRoles: ["STUDENT"],                                      group: "Student" },

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { findLesson, lmsProgress, lmsMastery, resolveCollegeId, type ProgressState } from '@/lib/synth/lms-store';
-
-const IDENTITY_SERVICE_URL = process.env.IDENTITY_SERVICE_URL ?? 'http://localhost:3001';
+import { proxyLmsMutation } from '@/lib/api/lms-proxy';
 
 /** POST /api/lms/lessons/:id/checkpoint  body: { answers: number[] } */
 export const POST = auth(async (req) => {
@@ -12,14 +11,14 @@ export const POST = auth(async (req) => {
   let body: { answers?: number[] } = {};
   try { body = await req.json(); } catch { /* ignore */ }
 
-  try {
-    const res = await fetch(`${IDENTITY_SERVICE_URL}${url.pathname}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${req.auth.accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (res.ok) return NextResponse.json(await res.json());
-  } catch { /* fall through */ }
+  const res = await proxyLmsMutation(url.pathname, req.auth.accessToken, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  if (res?.ok) return NextResponse.json(await res.json());
+  if (res && !res.ok) {
+    return NextResponse.json(await res.json().catch(() => ({ error: res.statusText })), { status: res.status });
+  }
 
   const collegeId = resolveCollegeId(req);
   const lesson = findLesson(lessonId, collegeId);
