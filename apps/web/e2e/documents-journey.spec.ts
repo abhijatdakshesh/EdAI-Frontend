@@ -6,6 +6,7 @@
 
 import { test, expect, Page } from '@playwright/test';
 import { loginAs } from './helpers/auth';
+import { expectHeading, expectMainTitle } from './helpers/page';
 
 // ─── Student Document Centre (/student/documents) ────────────────────────────
 
@@ -14,7 +15,7 @@ test('@P0 student: document centre renders type dropdown, purpose, consent check
   await page.goto('/student/documents');
   await expect(page).toHaveURL(/student\/documents/);
 
-  await expect(page.getByText(/document|bonafide|certificate/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Form is hidden behind "New Request" button — click to reveal
   await page.getByRole('button', { name: /new request/i }).click();
   // Document type selector (native <select>)
@@ -29,7 +30,7 @@ test('@P0 student: DPDP consent checkbox is required — submit blocked without 
   await loginAs(page, 'student');
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   await page.getByRole('button', { name: /new request/i }).click();
   const consentCheckbox = page.getByRole('checkbox').first();
   await expect(consentCheckbox).toBeVisible({ timeout: 8_000 });
@@ -50,7 +51,7 @@ test('@P0 student: full document request flow — select type, check consent, su
   await loginAs(page, 'student');
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Open the form
   await page.getByRole('button', { name: /new request/i }).click();
 
@@ -83,7 +84,7 @@ test('@P0 student: existing document requests show status badges', async ({ page
   await loginAs(page, 'student');
   await page.goto('/student/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectMainTitle(page, /my documents/i);
   // Request history with status badges — or empty state
   const requestList = page
     .getByText(/pending|approved|rejected/i)
@@ -98,12 +99,12 @@ test('@P0 admin: document approval queue renders table with status badges', asyn
   await page.goto('/admin/documents');
   await expect(page).toHaveURL(/admin\/documents/);
 
-  await expect(page.getByText(/document|approval queue|requests/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectHeading(page, /document centre/i);
   // Approval queue — table or empty state
   const queueContent = page
     .getByRole('table')
-    .or(page.getByText(/pending|approved|rejected/i))
-    .or(page.getByText(/no pending requests|no documents/i));
+    .or(page.getByText(/no pending requests/i))
+    .or(page.getByText(/pending request/i));
   await expect(queueContent.first()).toBeVisible({ timeout: 8_000 });
 });
 
@@ -111,11 +112,11 @@ test('@P0 admin: document queue has approve and reject action buttons', async ({
   await loginAs(page, 'admin');
   await page.goto('/admin/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectHeading(page, /document centre/i);
   // Approve / Reject buttons or empty state
   const actionContent = page
-    .getByRole('button', { name: /approve|reject|review/i })
-    .or(page.getByText(/no pending|no documents/i));
+    .getByRole('button', { name: /approve|reject/i })
+    .or(page.getByText(/no pending requests/i));
   await expect(actionContent.first()).toBeVisible({ timeout: 8_000 });
 });
 
@@ -125,7 +126,7 @@ test('@P1 admin: approved document row has download action', async ({ page }) =>
   await loginAs(page, 'admin');
   await page.goto('/admin/documents');
 
-  await expect(page.getByText(/document/i).first()).toBeVisible({ timeout: 10_000 });
+  await expectHeading(page, /document centre/i);
   // Download, approve/reject buttons, or any empty state text — page must render something
   const pageContent = page
     .getByRole('button', { name: /download|approve|reject/i })
